@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   ============================================================
-  BUILD: 2026-11-03 11:07:02 (local)
+  BUILD: 2026-11-04 20:49:12 (local)
   ------------------------------------------------------------
   MAINTENANCE RULE — READ BEFORE EDITING THIS FILE:
   Whenever the code in this file is modified in any way,
@@ -58,6 +58,12 @@
 
     .header { display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 100; height: 56px; }
     .brand { display: flex; align-items: center; gap: 10px; font-family: 'Inter', system-ui, sans-serif; font-weight: 600; font-size: 1.05rem; color: var(--text); padding-right: 14px; border-right: 1px solid var(--border); }
+    .busy-overlay { position: fixed; inset: 0; z-index: 20000; display: none; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.30); cursor: progress; }
+    .busy-overlay.show { display: flex; }
+    .busy-card { background: var(--surface); color: var(--text); border: 1px solid var(--border-hi); border-radius: 14px; padding: 18px 26px; display: flex; align-items: center; gap: 14px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28); font-size: 0.9rem; font-weight: 500; max-width: 80vw; }
+    .busy-spinner { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--border-hi); border-top-color: var(--accent); animation: busy-spin 0.8s linear infinite; }
+    @keyframes busy-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .busy-spinner { animation-duration: 2.4s; } }
     .brand-mark img { width: 100%; height: 100%; display: block; object-fit: cover; }
     .brand-mark { overflow: hidden; width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), #365314); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.78rem; box-shadow: 0 2px 8px rgba(77, 124, 15, 0.25); }
     .header-spacer { flex: 1; }
@@ -676,6 +682,8 @@
     .statusbar { flex-shrink: 0; display: flex; align-items: center; gap: 2px; height: 28px; padding: 0 8px; background: var(--surface); border-top: 1px solid var(--border); font-size: 0.72rem; color: var(--text-2); z-index: 50; }
     .sb-seg { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; height: 22px; border-radius: 6px; white-space: nowrap; border: none; background: transparent; color: inherit; font: inherit; }
     button.sb-seg { cursor: pointer; }
+    .sb-seg.sb-sev1 { color: #15803d; } .sb-seg.sb-sev2 { color: #b45309; } .sb-seg.sb-sev3 { color: #dc2626; font-weight: 600; }
+    .sb-seg[hidden] { display: none; }
     button.sb-seg:hover { background: var(--surface-2); color: var(--text); }
     .sb-coords { font-family: 'IBM Plex Mono', monospace; min-width: 200px; }
     .sb-spacer { flex: 1; }
@@ -844,10 +852,58 @@
     .lk-group-head i:nth-child(2) { color: var(--text-3); font-size: 0.72rem; }
     .lk-group-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .lk-group-count { font-size: 0.68rem; font-weight: 500; color: var(--text-3); }
+
+.rail-btn[hidden]{display:none}
+#boot{position:fixed;inset:0;z-index:30000;background:var(--surface);overflow:hidden}
+#boot.out{opacity:0;transition:opacity .5s ease;pointer-events:none}
+#boot img{position:fixed;left:50%;top:50%;width:180px;height:180px;margin:-90px 0 0 -90px;border-radius:22%;opacity:0;will-change:transform}
+#boot img.pulse{opacity:1;animation:bootPulse 1.6s ease-in-out infinite}
+@keyframes bootPulse{50%{transform:scale(1.08)}}
+.ph-ic{box-sizing:border-box;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;background-color:#64748b}
+.photo-panel{position:absolute;top:0;right:0;bottom:0;width:var(--photo-w,420px);max-width:100%;background:var(--surface);border-left:1px solid var(--border-hi);z-index:1700;display:none;flex-direction:column;box-shadow:-12px 0 40px rgba(0,0,0,.2)}
+.photo-panel.open{display:flex}.photo-panel.full{width:100%!important;border-left:none}
+.photo-resizer{position:absolute;left:-5px;top:0;bottom:0;width:10px;cursor:ew-resize;z-index:3;touch-action:none}
+.photo-resizer:hover,.photo-resizer:focus-visible{background:var(--accent-soft-hi);outline:none}
+.photo-body{flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;background:#0b0c08}
+.photo-body img{max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in}
+.photo-body img.zoom{max-width:none;max-height:none;cursor:zoom-out}
+.photo-err{color:#d3d8c8;padding:30px;text-align:center;font-size:.85rem}
+.photo-meta{flex-shrink:0;max-height:34%;overflow:auto;padding:10px 16px;border-top:1px solid var(--border);font-size:.78rem}
+.ph-thumb{width:44px;height:44px;border-radius:6px;object-fit:cover;background:var(--surface-3);flex-shrink:0}
+.ph-row{gap:10px;padding:5px 7px}.ph-row.sel{background:var(--accent-soft);border-color:var(--accent-border)}
+.ph-row .fx-label{white-space:normal;word-break:break-word}
 </style>
 </head>
 <body>
+<div id="boot" aria-hidden="true"><img id="boot-img" alt=""></div>
+<script>
+(function(){
+ var boot=document.getElementById('boot'),img=document.getElementById('boot-img');
+ var l=document.querySelector('link[rel="apple-touch-icon"]'); if(l) img.src=l.href;
+ var q=new URLSearchParams(location.search);
+ var skip=q.has('nointro')||q.has('skipintro')||q.get('intro')==='0'||q.get('intro')==='off'||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+ var ready=new Promise(function(r){window.__bootResolve=r;setTimeout(r,20000);});
+ function hide(){boot.classList.add('out');setTimeout(function(){boot.remove();},650);}
+ if(skip||!img.animate){img.classList.add('pulse');ready.then(hide);return;}
+ (async function(){
+  var W=innerWidth,H=innerHeight,full=Math.max(W,H)*1.6/180;
+  var A=function(kf,o){return img.animate(kf,Object.assign({fill:'forwards'},o)).finished;};
+  await A([{transform:'scale(.25)',opacity:0},{transform:'scale(.45)',opacity:1,offset:.15},{transform:'scale('+full+')',opacity:1}],{duration:1500,easing:'cubic-bezier(.5,0,.2,1)'});
+  await A([{transform:'scale('+full+')'},{transform:'scale(1.15)'}],{duration:900,easing:'cubic-bezier(.3,0,.2,1)'});
+  var rx=W*.34,ry=Math.max(40,H*.3),N=48,kf=[{transform:'translate(0px,0px) rotate(0deg) scale(1.15)',offset:0}];
+  for(var k=0;k<=N;k++){var o=.12+.76*k/N,th=Math.PI/2+2*Math.PI*k/N;
+   kf.push({transform:'translate('+(-rx*Math.cos(th)).toFixed(1)+'px,'+(ry*Math.sin(th)).toFixed(1)+'px) rotate('+(900*o).toFixed(0)+'deg) scale(1.15)',offset:o});}
+  kf.push({transform:'translate(0px,0px) rotate(900deg) scale(1.15)',offset:1});
+  await A(kf,{duration:2800,easing:'linear'});
+  await ready;
+  await A([{transform:'translate(0px,0px) rotate(900deg) scale(1.15)',opacity:1},{transform:'translate('+W*.7+'px,'+(-H*.7)+'px) rotate(1440deg) scale(.3)',opacity:0}],{duration:900,easing:'cubic-bezier(.5,0,1,.6)'});
+  hide();
+ })();
+})();
+</script>
+
     <div class="app-progress" id="app-progress"><div id="app-progress-fill"></div></div>
+    <div class="busy-overlay" id="busy-overlay" role="status" aria-live="polite" aria-hidden="true"><div class="busy-card"><div class="busy-spinner"></div><div id="busy-text">Working…</div></div></div>
 
     <div class="header">
         <div class="brand">
@@ -881,7 +937,8 @@
         <div class="rail" id="rail">
             <button class="rail-btn active" data-subrail="places" aria-label="Places" data-tooltip="Places"><i class="fas fa-map-location-dot"></i></button>
             <button class="rail-btn" data-subrail="draw" aria-label="Draw tools" data-tooltip="Draw tools"><i class="fas fa-pen-ruler"></i></button>
-            <button class="rail-btn" data-subrail="links" aria-label="Links" data-tooltip="Links"><i class="fas fa-link"></i></button>
+            <button class="rail-btn" id="rail-links" hidden data-subrail="links" aria-label="Links" data-tooltip="Links"><i class="fas fa-link"></i></button>
+            <button class="rail-btn" id="rail-photos" hidden data-subrail="photos" aria-label="Photos" data-tooltip="Photos"><i class="fas fa-images"></i></button>
             <button class="rail-btn" data-subrail="terrain" aria-label="Terrain (HGT)" data-tooltip="Terrain (HGT)"><i class="fas fa-mountain"></i></button>
             <button class="rail-btn" data-subrail="layers" aria-label="Layers" data-tooltip="Layers"><i class="fas fa-layer-group"></i></button>
             <div class="rail-spacer"></div>
@@ -927,6 +984,8 @@
                 <button class="map-tool" id="tool-measure-area"><i class="fas fa-vector-square"></i> Area</button>
                 <span class="map-tool-sep" role="separator"></span>
                 <button class="map-tool" id="tool-los"><i class="fas fa-satellite-dish"></i> Link</button>
+                <span class="map-tool-sep" role="separator"></span>
+                <button class="map-tool" id="tool-photos"><i class="fas fa-images"></i> Photos</button>
             </div>
             <div class="map-zoom" id="map-zoom">
                 <button id="zoom-in" aria-label="Zoom in" title="Zoom in"><i class="fas fa-plus"></i></button>
@@ -964,6 +1023,18 @@
                 </div>
             </div>
 
+            <div class="photo-panel" id="photo-panel" role="dialog" aria-label="Photo preview">
+                <div class="photo-resizer" id="photo-resizer" role="separator" aria-orientation="vertical" tabindex="0" title="Drag to resize · double-click to cover the map"></div>
+                <div class="editor-panel-header">
+                    <div class="editor-panel-title"><span id="photo-title">Photo</span><small id="photo-sub"></small></div>
+                    <button class="editor-panel-close" id="photo-prev" title="Previous (←)" aria-label="Previous photo"><i class="fas fa-chevron-left"></i></button>
+                    <button class="editor-panel-close" id="photo-next" title="Next (→)" aria-label="Next photo"><i class="fas fa-chevron-right"></i></button>
+                    <button class="editor-panel-close" id="photo-full" title="Cover the map" aria-label="Expand over the map"><i class="fas fa-expand"></i></button>
+                    <button class="editor-panel-close" id="photo-close" title="Close (Esc)" aria-label="Close preview"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="photo-body" id="photo-body"><img id="photo-img" alt=""><div class="photo-err" id="photo-err" hidden>This browser cannot display this image format.</div></div>
+                <div class="photo-meta" id="photo-meta"></div>
+            </div>
             <div class="editor-panel" id="editor-panel">
                 <div class="editor-panel-header">
                     <div class="editor-panel-title" id="editor-panel-title">
@@ -1005,10 +1076,15 @@
         <button class="sb-seg sb-coords" id="sb-coords" title="Click to copy coordinates"><i class="fas fa-location-crosshairs"></i> <span id="sb-coords-text">—</span></button>
         <span class="sb-seg" id="sb-elev" title="Ground elevation (needs HGT terrain)">Elev —</span>
         <span class="sb-seg" id="sb-zoom" title="Zoom level and approximate scale">z—</span>
+        <span class="sb-seg" id="sb-thin" hidden></span>
+        <span class="sb-seg" id="sb-simp" hidden></span>
         <span class="sb-spacer"></span>
+        <button class="sb-seg" id="sb-minimap" title="Show or hide the minimap"><i class="fas fa-map"></i> Minimap</button>
+        <button class="sb-seg" id="sb-stress" title="Temporary: stress-test the display with generated data"><i class="fas fa-flask"></i> Stress test</button>
+        <button class="sb-seg" id="sb-perf" title="Temporary: map complexity and frame rate. Click to copy diagnostics."><i class="fas fa-gauge-high"></i> <span id="sb-perf-text">…</span></button>
         <span class="sb-seg sb-progress" id="sb-progress" hidden><span id="sb-progress-label"></span><span class="sb-progress-track"><span class="sb-progress-fill" id="sb-progress-fill"></span></span></span>
         <div class="terrain-status" id="terrain-status"><i class="fas fa-circle" style="font-size: 0.5rem; color: var(--text-3);"></i> No terrain loaded</div>
-        <!-- BUILD-FOOTER --><span class="sb-seg sb-build" id="sb-build" title="Build date and time (local)">Build 2026-11-03 11:07:02</span>
+        <!-- BUILD-FOOTER --><span class="sb-seg sb-build" id="sb-build" title="Build date and time (local)">Build 2026-11-04 20:49:12</span>
     </div>
 
     <input type="file" id="file-input" accept=".hgt,.HGT" multiple style="display:none">
@@ -1085,7 +1161,7 @@
 
             const FLAGS = {
                 twoLineRows: false,
-                verticalCrumbs: false,
+                verticalCrumbs: true,
                 minimap: true,
                 hoverPreview: true,
                 liveDraw: true,
@@ -1102,12 +1178,22 @@
                 perfCanvas: false,          // draw paths/polygons on one canvas (needs a reload)
                 perfSimplify: false,        // simplify long paths when zoomed out
                 perfSimplifyPx: 3,
+                perfVertexBudget: 15000,    // vertices in view at which simplification reaches full strength
                 perfVertexCull: true,       // vertex editor: only draw handles that are on screen
                 perfVertexCullMin: 200,     //   …for paths with at least this many vertices
                 perfVertexMax: 400,         //   …and none when more than this many are in view
                 perfCluster: false,         // cluster placemark markers
                 perfClusterRadius: 60,
-                perfClusterOffZoom: 16
+                perfClusterUser: false,     // true only when the user switched clustering on themselves
+                perfDeclutter: true,        // Google-Earth-style thinning of placemark icons when too many are in view
+                perfDeclutterCap: 1200,     // most placemark icons drawn at once
+
+                perfClusterOffZoom: 16,
+                perfMarkerCull: true,       // only keep markers that are (nearly) in view on the map
+                // Map labels
+                mapLabelStyle: 'halo',      // halo | plain | shadow | pill | glass | dark | color
+                mapLabelTextColor: 'auto',  // auto | marker | black | white
+                mapLabelMax: 600            // most labels drawn at once (nearest the centre win)
             };
             try {
                 const saved = localStorage.getItem('telco-flags');
@@ -1120,6 +1206,42 @@
                 FLAGS.visibleTiles = Array.from(visibleTiles);
                 saveFlags();
             }
+
+            // ==================== BUSY SPINNER ====================
+            // withBusy() puts a page spinner up, lets the browser paint it, then runs the (possibly slow) work.
+            // busyIf() only does that when the nodes involved are numerous enough to feel laggy.
+            const busyEl = document.getElementById('busy-overlay');
+            const busyTextEl = document.getElementById('busy-text');
+            let _busyDepth = 0;
+            function busyShow(label) { _busyDepth++; busyTextEl.textContent = label || 'Working…'; busyEl.classList.add('show'); busyEl.setAttribute('aria-hidden', 'false'); }
+            function busyHide() { _busyDepth = Math.max(0, _busyDepth - 1); if (!_busyDepth) { busyEl.classList.remove('show'); busyEl.setAttribute('aria-hidden', 'true'); } }
+            function busyLabel(label) { if (_busyDepth) busyTextEl.textContent = label; }
+            function nextPaint() {
+                return new Promise(res => {
+                    let done = false;
+                    const go = () => { if (!done) { done = true; res(); } };
+                    requestAnimationFrame(() => setTimeout(go, 0));
+                    setTimeout(go, 120);      // background tabs do not run animation frames
+                });
+            }
+            async function withBusy(label, fn) {
+                busyShow(label);
+                try { await nextPaint(); return await fn(); }
+                finally { busyHide(); }
+            }
+            function countDeep(nodes) {
+                let c = 0;
+                (function w(list) { for (const n of list) { c++; if (n.children) w(n.children); } })(Array.isArray(nodes) ? nodes : [nodes]);
+                return c;
+            }
+            const BUSY_MIN = 150;
+            function busyIf(nodes, label, fn) {
+                return countDeep(nodes) >= BUSY_MIN ? withBusy(label, fn) : Promise.resolve().then(fn);
+            }
+            // While suspended, renderTree() only notes that a refresh is due, so bulk loops redraw the list once at the end.
+            let _renderSuspend = 0, _renderPending = false;
+            function suspendRender() { _renderSuspend++; }
+            function resumeRender() { _renderSuspend = Math.max(0, _renderSuspend - 1); if (!_renderSuspend && _renderPending) { _renderPending = false; renderTree(); } }
 
             const fileInput = document.getElementById('file-input');
             const kmlInput = document.getElementById('kml-input');
@@ -1322,7 +1444,7 @@
                     });
                 }
                 const outer = r * 2;
-                const iconSize = Math.max(12, Math.round(outer * 0.6));
+                const iconSize = Math.min(Math.max(3, Math.round(outer * 0.6)), Math.max(3, outer - 2 * t));   // glyph always fits inside the ring
                 return L.divIcon({
                     className: '',
                     html: `<div style="
@@ -1392,6 +1514,27 @@
             // Path simplification: Leaflet drops vertices closer together than this many screen pixels (default 1).
             function applySimplify() { L.Polyline.prototype.options.smoothFactor = FLAGS.perfSimplify ? (FLAGS.perfSimplifyPx || 3) : 1; }
             applySimplify();
+            // Adaptive simplification: the tolerance is only as coarse as the amount of work in view demands. With few vertices on
+            // screen paths are drawn (almost) exactly; as the count approaches the budget the tolerance rises to the Settings value.
+            // Runs on 'moveend' before the layers re-clip (this handler is registered first), so a zoom-out never draws the whole
+            // detailed line first.
+            function adaptSimplifyTolerance() {
+                if (!FLAGS.perfSimplify) return false;
+                const sz = map.getSize(), tl = map.containerPointToLayerPoint([0, 0]), br = map.containerPointToLayerPoint([sz.x, sz.y]);
+                let want = 0;
+                for (const id in map._layers) {
+                    const l = map._layers[id];
+                    if (!(l instanceof L.Polyline) || !l._rings) continue;
+                    for (const r of l._rings) for (let i = 0; i < r.length; i++) { const p = r[i]; if (p.x >= tl.x && p.x <= br.x && p.y >= tl.y && p.y <= br.y) want++; }
+                }
+                const px = FLAGS.perfSimplifyPx || 3, B = Math.max(1000, +FLAGS.perfVertexBudget || 15000);
+                const f = Math.min(1, Math.max(0, (want / B - 0.25) / 0.75));
+                const tol = Math.round(Math.min(px, Math.max(0.3, px * f)) * 10) / 10;
+                if (Math.abs(tol - L.Polyline.prototype.options.smoothFactor) < 0.05) return false;
+                L.Polyline.prototype.options.smoothFactor = tol;
+                return true;
+            }
+            map.on('moveend', adaptSimplifyTolerance);
 
             map.createPane('terrainPane');
             map.getPane('terrainPane').style.zIndex = 350;
@@ -1425,6 +1568,7 @@
                 initialize: function (layers, options) {
                     L.FeatureGroup.prototype.initialize.call(this, layers, options);
                     this._inCluster = {}; this._cluster = null; this._useCluster = false;
+                    this._culled = {}; this._cullOn = false; this._cb = null; this._dec = {}; this._decOn = false; this._decPending = 0;
                 },
                 _wantCluster: function (layer) { return this._useCluster && this._cluster && layer instanceof L.Marker && !layer._pinned; },
                 isClustered: function (layer) { return !!(layer && this._inCluster[L.stamp(layer)]); },
@@ -1438,10 +1582,26 @@
                         this._cluster.addLayer(layer);
                         return this.fire('layeradd', { layer: layer });
                     }
+                    if ((this._cullOn || this._decOn) && layer instanceof L.Marker && !layer._pinned) {
+                        // keep the marker in the group but only put it on the map while it is (nearly) in view
+                        if (this.hasLayer(layer)) return this;
+                        const cid = L.stamp(layer);
+                        layer.addEventParent(this);
+                        this._layers[cid] = layer;
+                        if (this._map) {
+                            // during a big import stop putting markers on the map once the cap is reached; the declutter pass decides the rest
+                            const over = this._decOn && (++this._decPending > (FLAGS.perfDeclutterCap || 1200));
+                            if (!over && (!this._cullOn || this._cullBounds().contains(layer.getLatLng()))) this._map.addLayer(layer);
+                            else this._culled[cid] = true;
+                        }
+                        return this.fire('layeradd', { layer: layer });
+                    }
                     return L.FeatureGroup.prototype.addLayer.call(this, layer);
                 },
                 removeLayer: function (layer) {
                     const id = (typeof layer === 'number') ? layer : L.stamp(layer);
+                    if (this._culled[id]) delete this._culled[id];
+                    delete this._dec[id];
                     if (this._inCluster[id]) {
                         const l = this._layers[id];
                         if (l) {
@@ -1457,6 +1617,7 @@
                 clearLayers: function () {
                     if (this._cluster) this._cluster.clearLayers();
                     this._inCluster = {};
+                    this._culled = {}; this._dec = {};
                     return L.FeatureGroup.prototype.clearLayers.call(this);
                 },
                 onAdd: function (m) {
@@ -1476,16 +1637,93 @@
                         this._cluster.removeLayer(layer);
                         delete this._inCluster[id];
                         if (this._map) this._map.addLayer(layer);
+                    } else if (this._map && !layer._map) {
+                        delete this._culled[id];
+                        this._map.addLayer(layer);
                     }
                 },
                 unpin: function (layer) {
                     if (!layer) return;
                     layer._pinned = false;
+                    this.syncCull();
                     if (this._useCluster && this._cluster && this.hasLayer(layer) && !this._inCluster[L.stamp(layer)]) {
                         if (layer._map) layer._map.removeLayer(layer);
                         this._inCluster[L.stamp(layer)] = true;
                         this._cluster.addLayer(layer);
                     }
+                },
+                _cullBounds: function () { return this._cb || (this._cb = this._map.getBounds().pad(0.5)); },
+                // Markers outside the (padded) view are taken off the map; they come back when the view moves.
+                syncCull: function () {
+                    if ((!this._cullOn && !this._decOn) || !this._map || this._useCluster) return;
+                    this._cb = null;
+                    const b = this._cullOn ? this._cullBounds() : null;
+                    this.eachLayer(l => {
+                        if (!(l instanceof L.Marker) || l._pinned) return;
+                        const id = L.stamp(l);
+                        const inside = (!b || b.contains(l.getLatLng())) && !this._dec[id];
+                        if (inside && this._culled[id]) { delete this._culled[id]; this._map.addLayer(l); }
+                        else if (!inside && !this._culled[id] && l._map) { this._map.removeLayer(l); this._culled[id] = true; }
+                    });
+                },
+                // Google-Earth-style declutter: when more icons are in view than the cap, hide the ones that sit on top of each
+                // other (the spacing grows until the count fits). Icons with a rarer look are kept first, so a lone tower among
+                // hundreds of pins survives. The grid is in world pixels at the current zoom, so panning never makes icons flicker.
+                declutter: function (on) {
+                    if (on !== undefined) this._decOn = !!on;
+                    this._decPending = 0;
+                    if (!this._map) return;
+                    this._dec = {};
+                    if (!this._decOn || this._useCluster) { this._decStats = null; if (typeof updateThinFooter === 'function') updateThinFooter(); this.syncCull(); return; }
+                    const cap = Math.max(50, +FLAGS.perfDeclutterCap || 1200), z = this._map.getZoom();
+                    const b = this._map.getBounds().pad(0.5), items = [], freq = new Map();
+                    this.eachLayer(l => {
+                        if (!(l instanceof L.Marker) || l._pinned) return;
+                        const ll = l.getLatLng(); if (!b.contains(ll)) return;
+                        const ic = l.options.icon && l.options.icon.options || {};
+                        const key = ic.html || ic.iconUrl || ic.className || '';
+                        freq.set(key, (freq.get(key) || 0) + 1);
+                        const pt = this._map.project(ll, z);
+                        items.push({ id: L.stamp(l), key, x: pt.x, y: pt.y, size: (ic.iconSize && ic.iconSize[0]) || 30 });
+                    });
+                    let hidden = 0;
+                    if (items.length > cap) {
+                        items.sort((a, c) => (freq.get(a.key) - freq.get(c.key)) || (a.id - c.id));
+                        // keep icons greedily (rarest look first) at least `cell` px apart; null when more than `cap` would survive
+                        const pass = (cell) => {
+                            const grid = new Map(), keep = [];
+                            for (const it of items) {
+                                const cx = Math.floor(it.x / cell), cy = Math.floor(it.y / cell);
+                                let clash = false;
+                                for (let dx = -1; dx <= 1 && !clash; dx++) for (let dy = -1; dy <= 1 && !clash; dy++) {
+                                    const arr = grid.get((cx + dx) + ':' + (cy + dy));
+                                    if (arr) for (const o of arr) { if (Math.abs(o.x - it.x) < cell && Math.abs(o.y - it.y) < cell) { clash = true; break; } }
+                                }
+                                if (clash) continue;
+                                const k = cx + ':' + cy; (grid.get(k) || grid.set(k, []).get(k)).push(it); keep.push(it);
+                                if (keep.length > cap) return null;
+                            }
+                            return keep;
+                        };
+                        const sz = this._map.getSize();
+                        let hi = Math.max(8, Math.sqrt(sz.x * sz.y * 4 / cap) * 2), best = pass(hi);
+                        for (let g = 0; !best && g < 30; g++) { hi *= 1.5; best = pass(hi); }
+                        let lo = 2;
+                        for (let i = 0; best && i < 7; i++) { const mid = Math.sqrt(lo * hi), r = pass(mid); if (r) { hi = mid; best = r; } else lo = mid; }
+                        const keepIds = new Set((best || items.slice(0, cap)).map(i => i.id));
+                        items.forEach(i => { if (!keepIds.has(i.id)) { this._dec[i.id] = true; hidden++; } });
+                    }
+                    this._decStats = { total: items.length, shown: items.length - hidden, cap };
+                    if (typeof updateThinFooter === 'function') updateThinFooter();
+                    this.syncCull();
+                },
+                setCull: function (on) {
+                    this._cullOn = !!on;
+                    if (on || this._decOn) { this.syncCull(); return; }
+                    // switching off: bring every culled marker back
+                    const ids = Object.keys(this._culled);
+                    this._culled = {};
+                    if (this._map) ids.forEach(id => { const l = this._layers[id]; if (l && !l._map && !this._inCluster[id]) this._map.addLayer(l); });
                 },
                 _newCluster: function () {
                     const c = L.markerClusterGroup({
@@ -1506,12 +1744,13 @@
                     this.eachLayer(l => { if (l instanceof L.Marker && !l._pinned) ms.push(l); });
                     ms.forEach(l => {
                         const id = L.stamp(l);
+                        delete this._culled[id];
                         if (this._inCluster[id]) { this._cluster.removeLayer(l); delete this._inCluster[id]; }
                         else if (l._map) l._map.removeLayer(l);
                     });
                     this._useCluster = !!on;
                     if (on) { ms.forEach(l => { this._inCluster[L.stamp(l)] = true; }); this._cluster.addLayers(ms); }
-                    else if (this._map) ms.forEach(l => this._map.addLayer(l));
+                    else if (this._map) { ms.forEach(l => this._map.addLayer(l)); this.syncCull(); }
                     if (FLAGS.showMapLabels) updateMapLabels();
                 },
                 // Radius / stop-zoom changed: rebuild the cluster group with the new options.
@@ -1524,6 +1763,78 @@
                 }
             });
             const drawnItems = new DrawnGroup().addTo(map);
+            drawnItems.setCull(!!FLAGS.perfMarkerCull);
+            drawnItems._decOn = !!FLAGS.perfDeclutter;
+            let _decTimer = null;
+            function scheduleDeclutter(delay) { if (_decTimer) clearTimeout(_decTimer); _decTimer = setTimeout(() => { _decTimer = null; if (drawnItems._decOn) drawnItems.declutter(); scheduleStats(); }, delay == null ? 80 : delay); }
+            map.on('moveend zoomend', () => scheduleStats());
+            // ---- footer: how hard icons are being thinned / path vertices simplified ----
+            const sbThinEl = document.getElementById('sb-thin'), sbSimpEl = document.getElementById('sb-simp');
+            const _fmtN = (n) => Math.round(n).toLocaleString();
+            // 0 % removed = green, ~95 %+ removed = red, hue sliding through amber in between
+            const _sevColor = (pct) => 'hsl(' + Math.round(120 * (1 - Math.min(1, Math.max(0, pct) / 95))) + ', 72%, 38%)';
+            function _setSeg(el, pct, html, title) {
+                if (!el) return;
+                if (pct == null) { el.hidden = true; return; }
+                el.hidden = false; el.className = 'sb-seg'; el.style.color = _sevColor(pct); el.style.fontWeight = pct >= 60 ? '600' : '';
+                el.innerHTML = html; el.title = title;
+            }
+            function updateThinFooter() {
+                const st = drawnItems._decStats;
+                if (!drawnItems._decOn || !st || !st.total) { _setSeg(sbThinEl, null); return; }
+                const pct = (st.total - st.shown) / st.total * 100;
+                _setSeg(sbThinEl, pct, '<i class="fas fa-eye-slash"></i> Icons ' + _fmtN(st.shown) + '/' + _fmtN(st.total) + ' · ' + Math.round(pct) + '% hidden',
+                    'Placemark icons drawn vs. icons near the view. Overlapping ones are hidden to stay under the ' + _fmtN(st.cap) + ' icon cap (Settings → Performance). Green = nothing hidden, red = heavily thinned. Zoom in to see more.');
+            }
+            // Vertex simplification. Leaflet only drops a vertex when the drawn line stays within the tolerance (px) of the real one,
+            // so a high "% removed" can just mean a lot of redundant (nearly straight) vertices. What matters is the visual error:
+            // for every vertex in view that was skipped, how far (screen px) it lies from the line that is actually drawn.
+            function updateSimplifyStat() {
+                if (!FLAGS.perfSimplify) { _setSeg(sbSimpEl, null); return; }
+                if (adaptSimplifyTolerance()) { for (const id in map._layers) { const l = map._layers[id]; if (l instanceof L.Polyline && l._map && l._update) l._update(); } }
+                const sz = map.getSize(), tl = map.containerPointToLayerPoint([0, 0]), br = map.containerPointToLayerPoint([sz.x, sz.y]);
+                const x0 = tl.x, y0 = tl.y, x1 = br.x, y1 = br.y;
+                const inView = (p) => p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1;
+                const segDist = (p, a, b) => {
+                    const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy;
+                    let t = L2 ? ((p.x - a.x) * dx + (p.y - a.y) * dy) / L2 : 0; t = t < 0 ? 0 : t > 1 ? 1 : t;
+                    return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+                };
+                let want = 0, drawn = 0, lossless = 0, maxErr = 0;
+                for (const id in map._layers) {
+                    const l = map._layers[id];
+                    if (!(l instanceof L.Polyline) || !l._parts || !l._rings) continue;
+                    const kept = new Set();
+                    for (const r of l._parts) for (let i = 0; i < r.length; i++) { kept.add(r[i]); if (inView(r[i])) drawn++; }
+                    for (const r of l._rings) {
+                        // what an (invisible) 0.5 px simplification would keep: everything else is redundant and free to drop
+                        if (r.length > 1) for (const p of L.LineUtil.simplify(r, 0.5)) if (inView(p)) lossless++;
+                        let prev = null, gap = [];
+                        for (let i = 0; i < r.length; i++) {
+                            const p = r[i], v = inView(p);
+                            if (v) want++;
+                            if (kept.has(p)) {
+                                if (prev && gap.length) for (const q of gap) { const e = segDist(q, prev, p); if (e > maxErr) maxErr = e; }
+                                prev = p; gap = [];
+                            } else if (v) gap.push(p);
+                        }
+                    }
+                }
+                if (want < 5) { _setSeg(sbSimpEl, null); return; }
+                drawn = Math.min(drawn, want); lossless = Math.min(Math.max(lossless, drawn), want);
+                // two separate things: redundant vertices (nothing visible changes) and vertices cut for speed (the line shifts by up to the tolerance)
+                const pct = (n) => n / want * 100;
+                const cutAll = pct(want - drawn), redundant = pct(want - lossless), forSpeed = pct(lossless - drawn);
+                const needed = lossless ? (lossless - drawn) / lossless * 100 : 0;       // share of the vertices the shape needs that had to go
+                _setSeg(sbSimpEl, needed, '<i class="fas fa-bezier-curve"></i> Vertices ' + _fmtN(drawn) + '/' + _fmtN(want) + ' · ' + Math.round(cutAll) + '% cut · ' + Math.round(forSpeed) + '% for speed',
+                    Math.round(redundant) + '% of the vertices in view are redundant (dropping them changes nothing visible). A further ' + Math.round(forSpeed) + '% are cut to keep the map fast (tolerance now ' + L.Polyline.prototype.options.smoothFactor + ' px, up to ' + (FLAGS.perfSimplifyPx || 3) + ' px when the view is busy); the drawn line is at most ' + maxErr.toFixed(1) + ' px from the real one. Colour: green = only redundant vertices removed, red = a large share of the vertices the shape needs had to go. Zoom in for more detail.');
+            }
+            let _statTimer = null;
+            function scheduleStats() { if (_statTimer) clearTimeout(_statTimer); _statTimer = setTimeout(() => { _statTimer = null; updateSimplifyStat(); }, 250); }
+            const _viewSync = () => { if (drawnItems._decOn) drawnItems.declutter(); else drawnItems.syncCull(); };
+            map.on('moveend zoomend', _viewSync);
+            (function () { let last = 0; map.on('move', () => { const t = Date.now(); if (t - last > 180) { last = t; _viewSync(); } }); })();
+            if (FLAGS.perfCluster && !FLAGS.perfClusterUser) { FLAGS.perfCluster = false; saveFlags(); }
             if (FLAGS.perfCluster) {
                 drawnItems.setCluster(true).catch(err => {
                     FLAGS.perfCluster = false; saveFlags();
@@ -1624,6 +1935,7 @@
                 syncMinimap();
                 updateMinimapScale();
                 minimap.on('moveend zoomend', updateMinimapScale);
+                minimap.on('moveend zoomend', scheduleMinimapDraw);
             }
             function syncMinimapLive() {
                 if (!minimap || !minimapViewportRect) return;
@@ -1639,19 +1951,48 @@
                 }
                 updateMinimapScale();
             }
+            // The minimap shows placemarks as small borderless dots (v7 style), thinned to a cap instead of one
+            // SVG circle each, so thousands of placemarks stay cheap to draw and to re-project when the minimap moves.
+            let _mmPts = [], _mmTimer = null;
             function updateMinimapDots() {
+                scheduleDeclutter(30);
                 if (!minimapDots) return;
-                minimapDots.clearLayers();
-                function walk(nodes) {
-                    for (const n of nodes) {
+                const pts = [];
+                (function walk(list) {
+                    for (const n of list) {
                         if (n.visible === false) continue;
-                        if (n.type === 'placemark' && n.meta.lat != null) {
-                            minimapDots.addLayer(L.circleMarker([n.meta.lat, n.meta.lng], { radius: 2, color: n.meta.color || '#4d7c0f', fillColor: n.meta.color || '#4d7c0f', fillOpacity: 0.9, weight: 0 }));
-                        }
+                        if (n.type === 'placemark' && n.meta && n.meta.lat != null) pts.push([n.meta.lat, n.meta.lng, n.meta.color || '#4d7c0f']);
                         if (n.children) walk(n.children);
                     }
+                })(treeNodes);
+                _mmPts = pts;
+                drawMinimapClusters();
+            }
+            function scheduleMinimapDraw() {
+                if (_mmTimer) return;
+                _mmTimer = setTimeout(() => { _mmTimer = null; drawMinimapClusters(); }, 120);
+            }
+            function thinPoints(pts, max, z) {
+                // Grow a grid until at most `max` cells are occupied, keeping one point per cell: the closest pairs lose a member first.
+                const proj = pts.map(p => minimap.project([p[0], p[1]], z));
+                let cell = 2;
+                for (let guard = 0; guard < 40; guard++, cell *= 1.25) {
+                    const seen = new Map();
+                    for (let i = 0; i < pts.length; i++) {
+                        const k = Math.floor(proj[i].x / cell) + ':' + Math.floor(proj[i].y / cell);
+                        if (!seen.has(k)) seen.set(k, pts[i]);
+                    }
+                    if (seen.size <= max) return Array.from(seen.values());
                 }
-                walk(treeNodes);
+                return pts.slice(0, max);
+            }
+            function drawMinimapClusters() {
+                if (!minimapDots || !minimap) return;
+                minimapDots.clearLayers();
+                const MAX = 300, b = minimap.getBounds().pad(0.1), z = minimap.getZoom();
+                let pts = _mmPts.filter(p => b.contains([p[0], p[1]]));
+                if (pts.length > MAX) pts = thinPoints(pts, MAX, z);
+                pts.forEach(p => minimapDots.addLayer(L.circleMarker([p[0], p[1]], { radius: 2, color: p[2], fillColor: p[2], fillOpacity: 0.9, weight: 0, interactive: false })));
             }
             document.getElementById('minimap-close').addEventListener('click', () => {
                 FLAGS.minimap = false; saveFlags();
@@ -1917,7 +2258,7 @@
                 if (_persistTimer) { clearTimeout(_persistTimer); _persistTimer = null; }
                 return _doPersistTree();
             }
-            async function _doPersistTree() {
+            async function _doPersistTree0() {
                 function toPlain(node) {
                     return {
                         id: node.id, name: node.name, type: node.type,
@@ -1929,7 +2270,7 @@
                 }
                 try {
                     _trackUndo();
-                    await dbPut('places', { id: 'root', tree: treeNodes.map(toPlain), archive: archivedNodes.map(toPlain) });
+                    await dbPut('places', { id: 'root', tree: treeNodes.filter(n => !(n.meta && n.meta.stress)).map(toPlain), archive: archivedNodes.map(toPlain) });
                 } catch (e) { console.warn('persistTree failed', e); }
             }
             async function loadPersistedTree() {
@@ -2157,7 +2498,7 @@
                         if (n.children) buildLayersFor(n.children);
                     }
                 }
-            function rebuildLayers() {
+            function rebuildLayers0() {
                 drawnItems.clearLayers();
                 buildLayersFor(treeNodes);
                 if (drawnItems.bringToFront) drawnItems.bringToFront();
@@ -2167,63 +2508,100 @@
             }
 
             // ==================== MAP LABELS ====================
+            // Only labels inside the (padded) view are ever built, they are reused between refreshes, and refreshes are
+            // coalesced to one per frame - so renderTree() / selection changes no longer rebuild thousands of labels.
+            const LABEL_STYLES = {
+                halo:   { name: 'Crisp outline',            text: 'marker', css: (c, light) => `-webkit-text-stroke:4px ${light ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.96)'};paint-order:stroke fill;` },
+                plain:  { name: 'No background',            text: 'marker', css: () => '' },
+                shadow: { name: 'Soft shadow (blurred)',    text: 'marker', css: () => 'text-shadow:0 1px 3px rgba(255,255,255,0.95),0 0 3px rgba(255,255,255,0.9);' },
+                pill:   { name: 'White box',                text: 'dark',   css: () => 'background:#fff;padding:1px 6px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.3);' },
+                glass:  { name: 'Translucent white box',    text: 'dark',   css: () => 'background:rgba(255,255,255,0.72);padding:1px 6px;border-radius:6px;' },
+                dark:   { name: 'Dark box',                 text: 'white',  css: () => 'background:rgba(15,23,42,0.84);padding:1px 6px;border-radius:6px;' },
+                color:  { name: 'Marker-colour box',        text: 'white',  css: (c) => `background:${c};padding:1px 6px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.25);` }
+            };
+            function mapLabelCfg() {
+                const num = (v, d) => (v === undefined || v === null || isNaN(v)) ? d : v;
+                return {
+                    style: LABEL_STYLES[FLAGS.mapLabelStyle] ? FLAGS.mapLabelStyle : 'halo',
+                    textMode: FLAGS.mapLabelTextColor || 'auto',
+                    size: FLAGS.mapLabelSize || 12,
+                    font: FLAGS.mapLabelFont || 'Inter',
+                    offX: num(FLAGS.mapLabelOffsetX, 10),
+                    offY: num(FLAGS.mapLabelOffsetY, 0),
+                    showDesc: !!FLAGS.mapLabelShowDesc
+                };
+            }
+            function buildMapLabelHtml(name, desc, color, cfg) {
+                const st = LABEL_STYLES[cfg.style] || LABEL_STYLES.halo;
+                const mode = cfg.textMode === 'auto' ? st.text : cfg.textMode;
+                const textColor = mode === 'black' || mode === 'dark' ? '#111827' : (mode === 'white' ? '#ffffff' : color);
+                const light = (mode === 'white');
+                return `<div style="position:absolute;left:${cfg.offX}px;top:${cfg.offY}px;transform:translateY(-50%);font-family:'${cfg.font}',sans-serif;font-size:${cfg.size}px;font-weight:500;color:${textColor};${st.css(color, light)}white-space:nowrap;pointer-events:none;line-height:1.3;"><span style="font-weight:600;">${escapeHtml(name)}</span>${cfg.showDesc && desc ? `<br><span style="font-size:${Math.max(8, cfg.size - 3)}px;font-weight:400;opacity:0.8;">${escapeHtml(desc)}</span>` : ''}</div>`;
+            }
             let mapLabelGroup = null;
+            const labelCache = new Map();      // node id -> { marker, sig, lat, lng }
+            let _labelRaf = 0, _labelCapNoted = false;
             function updateMapLabels() {
-                if (mapLabelGroup) {
-                    map.removeLayer(mapLabelGroup);
-                    mapLabelGroup = null;
-                }
-                if (!FLAGS.showMapLabels) return;
+                if (_labelRaf) return;
+                _labelRaf = requestAnimationFrame(() => { _labelRaf = 0; drawMapLabelsNow(); });
+            }
+            function clearMapLabels() {
+                if (mapLabelGroup) { map.removeLayer(mapLabelGroup); mapLabelGroup = null; }
+                labelCache.clear();
+            }
+            function drawMapLabelsNow() {
+                if (!FLAGS.showMapLabels) { if (mapLabelGroup) clearMapLabels(); return; }
                 const _lz = map.getZoom();
-                if (_lz < (FLAGS.mapLabelMinZoom || 0) || _lz > (FLAGS.mapLabelMaxZoom || 22)) return;   // outside the chosen zoom range
-                mapLabelGroup = L.featureGroup();
-                const size = FLAGS.mapLabelSize || 12;
-                const font = FLAGS.mapLabelFont || 'Inter';
-                ensureLabelFont(font);
-                const showDesc = FLAGS.mapLabelShowDesc;
-                const offX = FLAGS.mapLabelOffsetX || 10;
-                const offY = FLAGS.mapLabelOffsetY || 0;
-                function buildLabelHtml(name, desc, color) {
-                    return `<div style="
-                        position:absolute;
-                        left:${offX}px;
-                        top:${offY}px;
-                        transform:translateY(-50%);
-                        font-family:'${font}',sans-serif;
-                        font-size:${size}px;
-                        font-weight:500;
-                        color:${color};
-                        text-shadow:0 1px 3px rgba(255,255,255,0.95),0 0 3px rgba(255,255,255,0.9);
-                        white-space:nowrap;
-                        pointer-events:none;
-                        line-height:1.3;
-                    "><span style="font-weight:600;">${escapeHtml(name)}</span>${showDesc && desc ? `<br><span style="font-size:${Math.max(8, size-3)}px;font-weight:400;color:var(--text-2);">${escapeHtml(desc)}</span>` : ''}</div>`;
-                }
-                function addLabelMarker(lat, lng, name, desc, color) {
-                    const inner = `<div style="position:relative;width:0;height:0;overflow:visible;">${buildLabelHtml(name, desc, color)}</div>`;
-                    const marker = L.marker([lat, lng], {
+                if (_lz < (FLAGS.mapLabelMinZoom || 0) || _lz > (FLAGS.mapLabelMaxZoom || 22)) { clearMapLabels(); return; }   // outside the chosen zoom range
+                if (!mapLabelGroup) mapLabelGroup = L.featureGroup().addTo(map);
+                const cfg = mapLabelCfg();
+                ensureLabelFont(cfg.font);
+                const bounds = map.getBounds().pad(0.15);
+                const cand = [];
+                (function walk(nodes) {
+                    for (const n of nodes) {
+                        if (n.visible === false) continue;
+                        let ll = null;
+                        if (n.type === 'placemark' && n.meta.lat != null) {
+                            const hiddenInCluster = n.layer && drawnItems.isClustered && drawnItems.isClustered(n.layer) && !n.layer._map;
+                            if (!hiddenInCluster) ll = [n.meta.lat, n.meta.lng];
+                        } else if ((n.type === 'path' || n.type === 'measure' || n.type === 'polygon' || n.type === 'measure-area') && n.meta.points && n.meta.points.length > 0) {
+                            ll = n.meta.points[Math.floor(n.meta.points.length / 2)];
+                        }
+                        if (ll && bounds.contains(ll)) cand.push({ id: n.id, lat: ll[0], lng: ll[1], name: n.name, desc: n.meta.desc, color: n.meta.color || '#4d7c0f' });
+                        if (n.children) walk(n.children);
+                    }
+                })(treeNodes);
+                const cap = Math.max(20, FLAGS.mapLabelMax || 600);
+                let use = cand;
+                if (cand.length > cap) {
+                    const c = map.getCenter();
+                    cand.forEach(x => { x._d = (x.lat - c.lat) * (x.lat - c.lat) + (x.lng - c.lng) * (x.lng - c.lng); });
+                    use = cand.sort((a, b) => a._d - b._d).slice(0, cap);
+                    if (!_labelCapNoted) { _labelCapNoted = true; showToast(`Showing the ${cap} labels nearest the centre — zoom in to see more`, 'fa-tag'); }
+                } else _labelCapNoted = false;
+                const keep = new Set();
+                for (const c of use) {
+                    keep.add(c.id);
+                    const sig = [cfg.style, cfg.textMode, cfg.size, cfg.font, cfg.offX, cfg.offY, cfg.showDesc ? 1 : 0, c.color, c.name, c.desc || ''].join('\u0001');
+                    const ent = labelCache.get(c.id);
+                    if (ent && ent.sig === sig) {
+                        if (ent.lat !== c.lat || ent.lng !== c.lng) { ent.marker.setLatLng([c.lat, c.lng]); ent.lat = c.lat; ent.lng = c.lng; }
+                        if (!mapLabelGroup.hasLayer(ent.marker)) mapLabelGroup.addLayer(ent.marker);
+                        continue;
+                    }
+                    if (ent) mapLabelGroup.removeLayer(ent.marker);
+                    const inner = `<div style="position:relative;width:0;height:0;overflow:visible;">${buildMapLabelHtml(c.name, c.desc, c.color, cfg)}</div>`;
+                    const marker = L.marker([c.lat, c.lng], {
                         icon: L.divIcon({ className: '', html: inner, iconSize: [0, 0], iconAnchor: [0, 0] }),
                         interactive: false, zIndexOffset: 500, keyboard: false
                     });
                     mapLabelGroup.addLayer(marker);
+                    labelCache.set(c.id, { marker, sig, lat: c.lat, lng: c.lng });
                 }
-                function walk(nodes) {
-                    for (const n of nodes) {
-                        if (n.visible === false) continue;
-                        if (n.type === 'placemark' && n.meta.lat != null) {
-                            const _hiddenInCluster = n.layer && drawnItems.isClustered && drawnItems.isClustered(n.layer) && !n.layer._map;
-                            if (!_hiddenInCluster) addLabelMarker(n.meta.lat, n.meta.lng, n.name, n.meta.desc, n.meta.color || '#4d7c0f');
-                        }
-                        if ((n.type === 'path' || n.type === 'measure' || n.type === 'polygon' || n.type === 'measure-area') && n.meta.points && n.meta.points.length > 0) {
-                            const mid = n.meta.points[Math.floor(n.meta.points.length / 2)];
-                            addLabelMarker(mid[0], mid[1], n.name, n.meta.desc, n.meta.color || '#4d7c0f');
-                        }
-                        if (n.children) walk(n.children);
-                    }
-                }
-                walk(treeNodes);
-                mapLabelGroup.addTo(map);
+                labelCache.forEach((ent, id) => { if (!keep.has(id)) { mapLabelGroup.removeLayer(ent.marker); labelCache.delete(id); } });
             }
+            map.on('moveend', () => { if (FLAGS.showMapLabels) updateMapLabels(); });
 
             // ==================== RENDER ====================
             const subrailBody = document.getElementById('subrail-body');
@@ -2253,7 +2631,7 @@
             };
             const SECTIONS = {
                 places: { title: 'Places' }, draw: { title: 'Draw tools' },
-                links: { title: 'Links' }, terrain: { title: 'Terrain (HGT)' }, layers: { title: 'Layers' }, settings: { title: 'Settings' }
+                links: { title: 'Links' }, photos: { title: 'Photos' }, terrain: { title: 'Terrain (HGT)' }, layers: { title: 'Layers' }, settings: { title: 'Settings' }
             };
 
             let activeSection = 'places';
@@ -2263,7 +2641,8 @@
                 return activeSection === 'places' && placesTab === 'places' && placesSearchQuery.trim().length > 0;
             }
 
-            function renderTree() {
+            function renderTree0() {
+                if (_renderSuspend) { _renderPending = true; return; } updateRailVisibility();
                 updateSubrailChrome();
                 if (activeSection === 'places') renderPlacesSection();
                 else renderStaticSection(activeSection);
@@ -2318,13 +2697,34 @@
                     const folder = currentFolderId ? findNode(currentFolderId) : null;
                     const nodes = folder ? (folder.children || []) : treeNodes;
                     let count = 0;
+                    const st = { folders: 0, placemarks: 0, paths: 0, pathVerts: 0, polys: 0, polyVerts: 0, links: 0, linkEnds: 0, other: 0 };
                     (function countAll(list) {
                         for (const n of list) {
                             if (n.name === 'Terrain (HGT)' || n.type === 'terrain') continue;
                             count++;
+                            const t = n.type, pts = (n.meta && n.meta.points) ? n.meta.points.length : 0;
+                            if (t === 'folder' || t === 'kml') st.folders++;
+                            else if (t === 'placemark') st.placemarks++;
+                            else if (t === 'path' || t === 'measure') { st.paths++; st.pathVerts += pts; }
+                            else if (t === 'polygon' || t === 'measure-area') { st.polys++; st.polyVerts += pts; }
+                            else if (t === 'los') { st.links++; st.linkEnds += (n.meta && n.meta.persistedP2P && n.meta.persistedP2P.lat != null) ? 2 : 1; }
+                            else st.other++;
                             if (n.children) countAll(n.children);
                         }
                     })(nodes);
+                    const f = (v) => v.toLocaleString();
+                    const totalPts = st.placemarks + st.pathVerts + st.polyVerts + st.linkEnds;
+                    subrailCount.title = [
+                        f(count) + ' object' + (count === 1 ? '' : 's') + (folder ? ' in this folder (including sub-folders)' : ' in Places'),
+                        f(st.placemarks) + ' placemark' + (st.placemarks === 1 ? '' : 's') + ' (markers)',
+                        f(st.paths) + ' path' + (st.paths === 1 ? '' : 's') + ' — ' + f(st.pathVerts) + ' vertices',
+                        f(st.polys) + ' polygon' + (st.polys === 1 ? '' : 's') + ' — ' + f(st.polyVerts) + ' vertices',
+                        f(st.links) + ' link' + (st.links === 1 ? '' : 's') + ' — ' + f(st.linkEnds) + ' end points',
+                        f(st.folders) + ' folder' + (st.folders === 1 ? '' : 's'),
+                        '',
+                        f(totalPts) + ' points in total (markers + vertices + link ends)'
+                    ].join('\n');
+                    subrailCount.style.cursor = 'help';
                     subrailCount.textContent = count;
                     subrailCount.style.display = '';
                 } else if (activeSection === 'places' && placesTab === 'archive') {
@@ -2437,7 +2837,30 @@
                 const actions = document.getElementById('modal-actions');
 
                 title.innerHTML = '<i class="fas fa-tag"></i> Map label settings';
+                const _cfg0 = mapLabelCfg();
+                const _selStyle = 'width:100%;padding:8px 12px;border:1px solid var(--border-hi);border-radius:8px;background:var(--surface);color:var(--text);font-family:inherit;';
                 body.innerHTML = `
+                    <div id="ml-preview" style="position:relative;height:58px;border-radius:8px;margin-bottom:14px;background:linear-gradient(120deg,#cfdcbf,#bcd0dc 55%,#dcd3bd);overflow:hidden;border:1px solid var(--border);">
+                        <div style="position:absolute;left:22px;top:29px;width:11px;height:11px;border-radius:50%;background:#4d7c0f;border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.35);"></div>
+                        <div id="ml-preview-label" style="position:absolute;left:22px;top:29px;width:0;height:0;"></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                        <div>
+                            <label>Label style</label>
+                            <select id="ml-style" style="${_selStyle}">
+                                ${Object.keys(LABEL_STYLES).map(k => `<option value="${k}" ${_cfg0.style === k ? 'selected' : ''}>${LABEL_STYLES[k].name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label>Text colour</label>
+                            <select id="ml-textcolor" style="${_selStyle}">
+                                <option value="auto" ${_cfg0.textMode === 'auto' ? 'selected' : ''}>Automatic</option>
+                                <option value="marker" ${_cfg0.textMode === 'marker' ? 'selected' : ''}>Marker colour</option>
+                                <option value="black" ${_cfg0.textMode === 'black' ? 'selected' : ''}>Black</option>
+                                <option value="white" ${_cfg0.textMode === 'white' ? 'selected' : ''}>White</option>
+                            </select>
+                        </div>
+                    </div>
                     <div style="margin-bottom:16px;">
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                             <input type="checkbox" id="ml-show-desc" ${FLAGS.mapLabelShowDesc ? 'checked' : ''}>
@@ -2491,7 +2914,29 @@
                     <button class="btn btn-primary" id="ml-save">Apply</button>
                 `;
 
+                const _readCfg = () => ({
+                    style: document.getElementById('ml-style').value,
+                    textMode: document.getElementById('ml-textcolor').value,
+                    size: parseInt(document.getElementById('ml-size').value) || 12,
+                    font: document.getElementById('ml-font').value || 'Inter',
+                    offX: parseInt(document.getElementById('ml-offset-x').value) || 0,
+                    offY: parseInt(document.getElementById('ml-offset-y').value) || 0,
+                    showDesc: document.getElementById('ml-show-desc').checked
+                });
+                const _updatePreview = () => {
+                    const c = _readCfg();
+                    ensureLabelFont(c.font);
+                    document.getElementById('ml-preview-label').innerHTML = buildMapLabelHtml('Site name', 'Description text', '#4d7c0f', c);
+                };
+                ['ml-style', 'ml-textcolor', 'ml-size', 'ml-font', 'ml-offset-x', 'ml-offset-y', 'ml-show-desc'].forEach(id => {
+                    const el = document.getElementById(id);
+                    el.addEventListener('input', _updatePreview);
+                    el.addEventListener('change', _updatePreview);
+                });
+                _updatePreview();
                 const finish = () => {
+                    FLAGS.mapLabelStyle = document.getElementById('ml-style').value;
+                    FLAGS.mapLabelTextColor = document.getElementById('ml-textcolor').value;
                     FLAGS.mapLabelSize = parseInt(document.getElementById('ml-size').value) || 12;
                     FLAGS.mapLabelFont = document.getElementById('ml-font').value || 'Inter';
                     FLAGS.mapLabelOffsetX = parseInt(document.getElementById('ml-offset-x').value) || 0;
@@ -3053,6 +3498,7 @@
                 row.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    selectOnRightClick(node, row);
                     if (multiSelection.size > 0 && multiSelection.has(node.id)) showBulkContextMenu(e.clientX, e.clientY);
                     else showContextMenu(e.clientX, e.clientY, node);
                 });
@@ -3169,6 +3615,7 @@
                 row.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    selectOnRightClick(node, row);
                     if (multiSelection.size > 0 && multiSelection.has(node.id)) showBulkContextMenu(e.clientX, e.clientY);
                     else showContextMenu(e.clientX, e.clientY, node);
                 });
@@ -3248,24 +3695,23 @@
                     }
                     if (isDescendant(dragged, node)) { showToast('Cannot drop folder into itself'); return; }
                     if (!target || target.node.id !== node.id) return;
+                    const _ids = (multiSelection.size > 1 && multiSelection.has(draggedId)) ? Array.from(multiSelection) : [draggedId];
+                    const _nodes = _ids.map(i => findNode(i)).filter(n => n && n.id !== node.id && !nodeContains(n, node.id));
+                    if (!_nodes.length) { showToast('Cannot move here'); return; }
+                    _nodes.forEach(n => removeNode(n.id));
                     if (target.type === 'inside') {
-                        removeNode(draggedId);
                         if (!node.children) node.children = [];
-                        node.children.push(dragged);
-                        renderTree();
-                        await persistTreeNow();
-                        showToast(`Moved "${dragged.name}" into ${node.name}`, 'fa-arrows-up-down-left-right');
+                        _nodes.forEach(n => node.children.push(n));
                     } else {
                         const loc = findParent(node.id);
                         if (!loc) { showToast('Cannot move here'); return; }
-                        removeNode(draggedId);
                         const idx = loc.list.findIndex(n => n.id === node.id);
-                        const insertAt = target.type === 'before' ? idx : idx + 1;
-                        loc.list.splice(insertAt, 0, dragged);
-                        renderTree();
-                        await persistTreeNow();
-                        showToast(`Moved "${dragged.name}"`, 'fa-arrows-up-down-left-right');
+                        loc.list.splice(target.type === 'before' ? idx : idx + 1, 0, ..._nodes);
                     }
+                    multiSelection.clear();
+                    renderTree();
+                    await persistTreeNow();
+                    showToast(_nodes.length > 1 ? 'Moved ' + _nodes.length + ' items' : 'Moved "' + _nodes[0].name + '"', 'fa-arrows-up-down-left-right');
                 });
 
                 return row;
@@ -3366,7 +3812,7 @@
                 header.querySelector('#archive-restore-all').addEventListener('click', async () => {
                     if (!confirm(`Restore all ${archivedNodes.length} archived item(s)?`)) return;
                     const toRestore = archivedNodes.slice();
-                    for (const n of toRestore) await restoreNode(n);
+                    await busyIf(toRestore, 'Restoring…', async () => { for (const n of toRestore) await _restoreNodeCore(n); });
                 });
                 archivedNodes.forEach(node => {
                     const row = document.createElement('div');
@@ -3449,9 +3895,9 @@
                 // 3 - organise
                 const organise = [];
                 if (node.visible === false) {
-                    organise.push({ label: 'Show', icon: 'fa-eye', action: async () => { setNodeVisible(node, true); renderTree(); await persistTreeNow(); }});
+                    organise.push({ label: 'Show', icon: 'fa-eye', action: () => setVisibleMany([node], true) });
                 } else {
-                    organise.push({ label: 'Hide', icon: 'fa-eye-slash', action: async () => { setNodeVisible(node, false); renderTree(); await persistTreeNow(); }});
+                    organise.push({ label: 'Hide', icon: 'fa-eye-slash', action: () => setVisibleMany([node], false) });
                 }
                 organise.push({ label: 'Move to…', icon: 'fa-folder-tree', action: () => { const px = x, py = y; setTimeout(() => showMoveToMenu(node, px, py), 0); } });
                 organise.push({ label: 'Archive', icon: 'fa-box-archive', action: () => archiveNode(node) });
@@ -3494,9 +3940,11 @@
 
                 // 6 - destructive, always last
                 groups.push([{ label: 'Delete', icon: 'fa-trash', danger: true, action: async () => {
-                                        await deleteNodeWithChildren(node);
-                    renderTree();
-                    await persistTreeNow();
+                    await busyIf([node], 'Deleting…', async () => {
+                        await deleteNodeWithChildren(node);
+                        renderTree();
+                        await persistTreeNow();
+                    });
                     showToast('Deleted “' + node.name + '”', 'fa-trash', { action: { label: 'Undo', fn: () => undoTree() } });
                 }}]);
 
@@ -3508,29 +3956,37 @@
                 });
                 buildContextMenu(x, y, node.name, items);
             }
+            // Right-clicking a place that is not part of the current selection selects it first (like a normal click would).
+            function selectOnRightClick(node, row) {
+                if (multiSelection.has(node.id) && multiSelection.size > 0) return;      // part of a multi-selection: keep it
+                if (selectedNodeId === node.id && multiSelection.size === 0) return;
+                selectedNodeId = node.id;
+                lastSelectedId = node.id;
+                multiSelection.clear();
+                subrailBody.querySelectorAll('.fx-row.active, .fx-row.multi-selected').forEach(r => { r.classList.remove('active'); r.classList.remove('multi-selected'); r.removeAttribute('aria-current'); });
+                if (row) { row.classList.add('active'); row.setAttribute('aria-current', 'true'); }
+                if (node.type !== 'folder' && node.type !== 'kml') bringNodeToFront(node);
+                followInspector(node);
+            }
             function showBulkContextMenu(x, y) {
                 const ids = Array.from(multiSelection);
                 const items = [
                     { label: `Edit ${ids.length} items…`, icon: 'fa-pen', action: () => openBulkEditorForSelection() },
+                    { label: `Export ${ids.length} items…`, icon: 'fa-file-export', action: () => openExportDialog(ids.map(id => findNode(id)).filter(Boolean)) },
                     { sep: true },
-                    { label: `Hide ${ids.length}`, icon: 'fa-eye-slash', action: async () => {
-                        ids.forEach(id => { const n = findNode(id); if (n) setNodeVisible(n, false); });
-                        renderTree(); await persistTreeNow();
-                    }},
-                    { label: `Show ${ids.length}`, icon: 'fa-eye', action: async () => {
-                        ids.forEach(id => { const n = findNode(id); if (n) setNodeVisible(n, true); });
-                        renderTree(); await persistTreeNow();
-                    }},
+                    { label: `Hide ${ids.length}`, icon: 'fa-eye-slash', action: () => setVisibleMany(ids.map(id => findNode(id)).filter(Boolean), false) },
+                    { label: `Show ${ids.length}`, icon: 'fa-eye', action: () => setVisibleMany(ids.map(id => findNode(id)).filter(Boolean), true) },
                     { sep: true },
                     { label: `Delete ${ids.length} items`, icon: 'fa-trash', danger: true, action: async () => {
-                                                for (const id of ids) {
-                            const n = findNode(id);
-                            if (n) await deleteNodeWithChildren(n);
-                        }
-                        multiSelection.clear();
-                        selectedNodeId = null;
-                        renderTree();
-                        await persistTreeNow();
+                        const doomed = ids.map(id => findNode(id)).filter(Boolean);
+                        await busyIf(doomed, 'Deleting…', async () => {
+                            for (const n of doomed) { if (findNode(n.id)) await deleteNodeWithChildren(n, { quiet: true }); }
+                            updateMinimapDots(); updateMapLabels();
+                            multiSelection.clear();
+                            selectedNodeId = null;
+                            renderTree();
+                            await persistTreeNow();
+                        });
                         showToast(`Deleted ${ids.length} item(s)`, 'fa-trash', { action: { label: 'Undo', fn: () => undoTree() } });
                     }}
                 ];
@@ -3548,14 +4004,8 @@
                 }
                 items.push({ sep: true });
                 const kids = folder ? (folder.children || []) : treeNodes;
-                items.push({ label: folder ? 'Show all in folder' : 'Show all', icon: 'fa-eye', action: async () => {
-                    kids.forEach(n => setNodeVisible(n, true));
-                    renderTree(); await persistTreeNow();
-                }});
-                items.push({ label: folder ? 'Hide all in folder' : 'Hide all', icon: 'fa-eye-slash', action: async () => {
-                    kids.forEach(n => setNodeVisible(n, false));
-                    renderTree(); await persistTreeNow();
-                }});
+                items.push({ label: folder ? 'Show all in folder' : 'Show all', icon: 'fa-eye', action: () => setVisibleMany(kids.slice(), true) });
+                items.push({ label: folder ? 'Hide all in folder' : 'Hide all', icon: 'fa-eye-slash', action: () => setVisibleMany(kids.slice(), false) });
                 items.push({ label: folder ? 'Zoom to contents' : 'Zoom to all', icon: 'fa-crosshairs', action: () => folder ? zoomToNode(folder) : fitToPlacesExtent() });
                 items.push({ sep: true });
                 items.push({ label: 'Export…', icon: 'fa-file-export', action: () => openExportDialog(folder || null) });
@@ -3568,10 +4018,12 @@
                     items.push({ sep: true });
                     items.push({ label: 'Delete folder', icon: 'fa-trash', danger: true, action: async () => {
                         const _fname = folder.name;
-                        await deleteNodeWithChildren(folder);
-                        currentFolderId = null;
-                        renderTree();
-                        await persistTreeNow();
+                        await busyIf([folder], 'Deleting…', async () => {
+                            await deleteNodeWithChildren(folder);
+                            currentFolderId = null;
+                            renderTree();
+                            await persistTreeNow();
+                        });
                         showToast('Deleted folder “' + _fname + '”', 'fa-trash', { action: { label: 'Undo', fn: () => undoTree() } });
                     }});
                 }
@@ -3616,6 +4068,8 @@
             document.addEventListener('click', (e) => { if (!ctxMenu.contains(e.target)) hideContextMenu(); });
             document.addEventListener('contextmenu', (e) => { if (e.defaultPrevented) return; if (!ctxMenu.contains(e.target)) hideContextMenu(); });
             document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideContextMenu(); });
+            document.addEventListener('mousedown', (e) => { if (!ctxMenu.contains(e.target)) hideContextMenu(); }, true);
+            map.on('mousedown click dragstart zoomstart', hideContextMenu);
 
             // ==================== PASTE PLACEMARK ====================
             async function pastePlacemarkInto(folder, atLatLng) {
@@ -3642,67 +4096,100 @@
             }
 
             // ==================== VISIBILITY / DELETE / ARCHIVE ====================
-            function setNodeVisible(node, visible) {
+            // Applies visibility to a node and its subtree with no side effects; callers refresh once afterwards.
+            function _applyVisible(node, visible) {
                 node.visible = visible;
-                if (node.layer) {
-                    if (visible) {
-                        if (!map.hasLayer(node.layer)) node.layer.addTo(map);
-                        if (!drawnItems.hasLayer(node.layer)) drawnItems.addLayer(node.layer);
-                    } else {
-                        if (map.hasLayer(node.layer)) map.removeLayer(node.layer);
-                        if (drawnItems.hasLayer(node.layer)) drawnItems.removeLayer(node.layer);
-                    }
+                const l = node.layer;
+                if (l) {
+                    if (visible) { if (!drawnItems.hasLayer(l)) drawnItems.addLayer(l); }
+                    else if (drawnItems.hasLayer(l)) drawnItems.removeLayer(l);
+                    else if (map.hasLayer(l)) map.removeLayer(l);
                 }
-                if (node.children) node.children.forEach(c => setNodeVisible(c, visible));
+                if (node.children) for (const c of node.children) _applyVisible(c, visible);
+            }
+            function _afterVisibilityChange() {
                 if (drawnItems.bringToFront) drawnItems.bringToFront();
                 updateMinimapDots();
                 updateMapLabels();
             }
-            async function deleteNodeWithChildren(node) {
-                if (node.children) for (const c of node.children.slice()) await deleteNodeWithChildren(c);
-                if (node.layer && map.hasLayer(node.layer)) map.removeLayer(node.layer);
-                if (node.layer && drawnItems.hasLayer(node.layer)) drawnItems.removeLayer(node.layer);
-                if (node.type === 'terrain' && node.meta && node.meta.key) {
-                    visibleTiles.delete(node.meta.key);
-                    terrainStore.delete(node.meta.key);
-                    await dbDelete('terrain', node.meta.key);
-                    recomputeGlobalScale();
-                    redrawTerrainOverlays();
-                    updateTerrainVisibility();
-                    saveVisibleTilesState();
+            function setNodeVisible(node, visible, opts) {
+                _applyVisible(node, visible);
+                if (!(opts && opts.quiet)) _afterVisibilityChange();
+            }
+            // Show/hide many nodes in one go (one refresh, one save) with a spinner when it is a big job.
+            async function setVisibleMany(nodes, visible) {
+                await busyIf(nodes, visible ? 'Showing…' : 'Hiding…', async () => {
+                    nodes.forEach(n => _applyVisible(n, visible));
+                    _afterVisibilityChange();
+                    renderTree();
+                    await persistTreeNow();
+                });
+            }
+            // opts.quiet skips the per-call refresh so callers deleting several nodes can refresh once.
+            async function deleteNodeWithChildren(node, opts) {
+                opts = opts || {};
+                const all = [];
+                (function collect(n) { all.push(n); if (n.children) n.children.forEach(collect); })(node);
+                for (const n of all) {
+                    const l = n.layer;
+                    if (!l) continue;
+                    if (drawnItems.hasLayer(l)) drawnItems.removeLayer(l);
+                    else if (map.hasLayer(l)) map.removeLayer(l);
                 }
-                removeNode(node.id);
-                if (selectedNodeId === node.id) selectedNodeId = null;
-                multiSelection.delete(node.id);
-                updateMapLabels();
+                for (const n of all) {
+                    if (n.type === 'terrain' && n.meta && n.meta.key) {
+                        visibleTiles.delete(n.meta.key);
+                        terrainStore.delete(n.meta.key);
+                        await dbDelete('terrain', n.meta.key);
+                        recomputeGlobalScale();
+                        redrawTerrainOverlays();
+                        updateTerrainVisibility();
+                        saveVisibleTilesState();
+                    }
+                }
+                removeNode(node.id);              // the subtree goes with its root
+                const dead = new Set(all.map(n => n.id));
+                if (dead.has(selectedNodeId)) selectedNodeId = null;
+                dead.forEach(id => multiSelection.delete(id));
+                if (!opts.quiet) { updateMinimapDots(); updateMapLabels(); }
             }
             async function archiveNode(node) {
                 if (!node) return;
-                const loc = findParent(node.id);
-                node.archivedFrom = loc && loc.parent ? loc.parent.id : null;
-                (function detach(n) {
-                    if (n.layer) {
-                        if (map.hasLayer(n.layer)) map.removeLayer(n.layer);
-                        if (drawnItems.hasLayer(n.layer)) drawnItems.removeLayer(n.layer);
-                    }
-                    if (n.children) n.children.forEach(detach);
-                })(node);
-                removeNode(node.id);
-                archivedNodes.push(node);
-                if (selectedNodeId === node.id) selectedNodeId = null;
-                multiSelection.delete(node.id);
-                renderTree();
-                await persistTreeNow();
-                showToast(`Archived "${node.name}"`, 'fa-box-archive');
+                await busyIf([node], 'Archiving…', async () => {
+                    const loc = findParent(node.id);
+                    node.archivedFrom = loc && loc.parent ? loc.parent.id : null;
+                    const ids = [];
+                    (function detach(n) {
+                        ids.push(n.id);
+                        if (n.layer) {
+                            if (drawnItems.hasLayer(n.layer)) drawnItems.removeLayer(n.layer);
+                            else if (map.hasLayer(n.layer)) map.removeLayer(n.layer);
+                        }
+                        if (n.children) n.children.forEach(detach);
+                    })(node);
+                    removeNode(node.id);
+                    archivedNodes.push(node);
+                    if (ids.includes(selectedNodeId)) selectedNodeId = null;
+                    ids.forEach(id => multiSelection.delete(id));
+                    updateMinimapDots();
+                    updateMapLabels();
+                    renderTree();
+                    await persistTreeNow();
+                    showToast(`Archived "${node.name}"`, 'fa-box-archive');
+                });
             }
             async function restoreNode(node) {
+                return busyIf([node], 'Restoring…', () => _restoreNodeCore(node));
+            }
+            async function _restoreNodeCore(node) {
                 const idx = archivedNodes.findIndex(n => n.id === node.id);
                 if (idx < 0) return;
                 archivedNodes.splice(idx, 1);
+                const _from = node.archivedFrom;      // remember where it came from before clearing it
                 node.archivedFrom = null;
                 let parent = null;
-                if (node.archivedFrom) {
-                    parent = findNode(node.archivedFrom);
+                if (_from) {
+                    parent = findNode(_from);
                     if (!parent || parent.type !== 'folder') parent = null;
                 }
                 if (parent) {
@@ -3741,6 +4228,8 @@
                     if (n.children) n.children.forEach(rebuild);
                 })(node);
                 if (drawnItems.bringToFront) drawnItems.bringToFront();
+                updateMinimapDots();
+                updateMapLabels();
                 renderTree();
                 await persistTreeNow();
                 showToast(`Restored "${node.name}"`, 'fa-rotate-left');
@@ -3929,6 +4418,7 @@
                         { group: 'Measure', icon: 'fa-ruler', label: 'Measure distance', desc: 'Multi-point measure', action: () => beginDraw('measure') },
                         { group: 'Measure', icon: 'fa-vector-square', label: 'Measure area', desc: 'Polygon area', action: () => beginDraw('measure-area') },
                         { group: 'Link', icon: 'fa-satellite-dish', label: 'Add link', desc: 'Line-of-sight analysis from a point', action: () => beginLOS() },
+                        { group: 'Photos', icon: 'fa-images', label: 'Photos', desc: photos.length ? photos.length + ' on the map · click to open the list' : 'Import geotagged photos', action: () => { if (photos.length) { const rb = document.getElementById('rail-photos'); if (rb) rb.click(); } else openPhotoImportDialog(); } },
                         { group: 'Clear', icon: 'fa-eraser', label: 'Clear all drawings', desc: 'Remove all objects', danger: true, action: () => clearAllDrawings() }
                     ];
                     let _lastGroup = null;
@@ -4061,7 +4551,7 @@
                             subrailBody.appendChild(row);
                         });
                     }
-                } else if (section === 'links') {
+                } else if (section === 'photos') { renderPhotosSection(); } else if (section === 'links') {
                     renderLinksSection();
                 } else if (section === 'layers') {
                     const groups = {};
@@ -4201,21 +4691,26 @@
                         });
                         return r;
                     };
-                    const rebuildAll = () => { if (editorState) closeEditorPanel(); rebuildLayers(); };
+                    const rebuildAll = () => withBusy('Redrawing map…', async () => { if (editorState) closeEditorPanel(); rebuildLayers(); });
                     subrailBody.appendChild(settingsHeading('Large datasets'));
                     subrailBody.appendChild(perfToggleRow('Canvas rendering', 'Draw paths and polygons on one canvas instead of one SVG element each — much faster with thousands of segments. Reloads the page.', 'perfCanvas', async () => {
                         await persistTreeNow();
                         showToast('Canvas rendering ' + (FLAGS.perfCanvas ? 'on' : 'off') + ' — reloading…', 'fa-rotate');
                         setTimeout(() => location.reload(), 700);
                     }));
-                    subrailBody.appendChild(perfToggleRow('Simplify paths when zoomed out', 'Skip vertices that fall closer together than the tolerance below, so long paths draw quickly. Shape and data are unchanged.', 'perfSimplify', async () => { applySimplify(); rebuildAll(); }));
-                    if (FLAGS.perfSimplify) subrailBody.appendChild(perfNumberRow('Simplify tolerance (px)', 'Higher is faster and rougher (default 3)', 'perfSimplifyPx', 1, 20, async () => { applySimplify(); rebuildAll(); }));
+                    subrailBody.appendChild(perfToggleRow('Simplify paths when zoomed out', 'Skip vertices that fall closer together than the tolerance below, so long paths draw quickly. Shape and data are unchanged.', 'perfSimplify', async () => { applySimplify(); rebuildAll(); scheduleStats(); }));
+                    if (FLAGS.perfSimplify) subrailBody.appendChild(perfNumberRow('Simplify tolerance (px)', 'Strongest simplification, used only when the view is busy; with fewer vertices in view paths are drawn almost exactly (default 3)', 'perfSimplifyPx', 1, 20, async () => { applySimplify(); rebuildAll(); scheduleStats(); }));
+                    if (FLAGS.perfSimplify) subrailBody.appendChild(perfNumberRow('Vertex budget', 'Vertices in view at which simplification reaches full strength. Below a quarter of this nothing visible is simplified (default 15000)', 'perfVertexBudget', 1000, 500000, async () => { scheduleStats(); }));
                     subrailBody.appendChild(perfToggleRow('Vertex handles: only those in view', 'When editing a long path, draw handles only for vertices on screen. Applies to paths at or above the vertex count below.', 'perfVertexCull', async () => { if (editorState && editorState.activeTab === 'vertices') openEditorPanel(editorState.node, 'vertices'); }));
                     if (FLAGS.perfVertexCull) {
                         subrailBody.appendChild(perfNumberRow('Apply to paths with at least (vertices)', 'Shorter paths always show every handle', 'perfVertexCullMin', 10, 100000, async () => {}));
                         subrailBody.appendChild(perfNumberRow('Max handles in view', 'If more would show, none are drawn until you zoom in', 'perfVertexMax', 20, 5000, async () => {}));
                     }
-                    subrailBody.appendChild(perfToggleRow('Cluster placemarks', 'Group nearby placemark markers into numbered clusters and keep off-screen markers out of the page. Loads a small library from the internet the first time it is turned on.', 'perfCluster', async (on) => { await drawnItems.setCluster(on); }));
+                    subrailBody.appendChild(perfToggleRow('Only draw markers in view', 'Keeps off-screen placemark markers out of the page and brings them back as you pan. Big speed-up with thousands of placemarks.', 'perfMarkerCull', async (on) => { drawnItems.setCull(on); }));
+                    subrailBody.appendChild(perfNumberRow('Max labels shown', 'Map labels are only built for placemarks in view; if more would show, the ones nearest the centre win (default 600)', 'mapLabelMax', 20, 5000, async () => { updateMapLabels(); }));
+                    subrailBody.appendChild(perfToggleRow('Declutter placemarks (Google Earth style)', 'When more icons are in view than the cap below, overlapping icons are hidden (look-alike icons first) and come back as you zoom in. No clusters.', 'perfDeclutter', async (on) => { drawnItems.declutter(on); }));
+                    if (FLAGS.perfDeclutter) subrailBody.appendChild(perfNumberRow('Max icons drawn at once', 'Safe render cap for placemark icons (default 1200). Lower is faster.', 'perfDeclutterCap', 100, 10000, async () => { drawnItems.declutter(); }));
+                    subrailBody.appendChild(perfToggleRow('Cluster placemarks', 'Group nearby placemark markers into numbered clusters and keep off-screen markers out of the page. Loads a small library from the internet the first time it is turned on.', 'perfCluster', async (on) => { FLAGS.perfClusterUser = !!on; saveFlags(); await drawnItems.setCluster(on); drawnItems.declutter(); }));
                     if (FLAGS.perfCluster) {
                         subrailBody.appendChild(perfNumberRow('Cluster radius (px)', 'Markers closer than this on screen are grouped (default 60)', 'perfClusterRadius', 10, 200, async () => { await drawnItems.reconfigureCluster(); }));
                         subrailBody.appendChild(perfNumberRow('Stop clustering at zoom', 'At this zoom and closer every placemark is shown individually (default 16)', 'perfClusterOffZoom', 3, 19, async () => { await drawnItems.reconfigureCluster(); }));
@@ -4233,7 +4728,7 @@
                     const dangerItems = [
                         { icon: 'fa-eye-slash', label: 'Clear view', desc: 'Hide all places and heatmaps', action: async () => {
                             if (!confirm('Hide all places and heatmaps from the map?')) return;
-                            treeNodes.forEach(n => setNodeVisible(n, false));
+                            await busyIf(treeNodes, 'Hiding…', async () => { treeNodes.forEach(n => _applyVisible(n, false)); _afterVisibilityChange(); });
                             visibleTiles.clear();
                             syncShowAllState();
                             saveVisibleTilesState();
@@ -4638,9 +5133,11 @@
                     delBtn.addEventListener('click', async () => {
                         const node = editorState.node;
                                                 closeEditorPanel();
-                        await deleteNodeWithChildren(node);
-                        renderTree();
-                        await persistTreeNow();
+                        await busyIf([node], 'Deleting…', async () => {
+                            await deleteNodeWithChildren(node);
+                            renderTree();
+                            await persistTreeNow();
+                        });
                         showToast('Deleted “' + node.name + '”', 'fa-trash', { action: { label: 'Undo', fn: () => undoTree() } });
                     });
                     editorFooter.appendChild(delBtn);
@@ -4710,7 +5207,7 @@
                     const r = bulkRingRadius || 0;
                     const t = bulkRingThickness || 0;
                     const outer = r > 0 && t > 0 ? r * 2 : 60;
-                    const iconSize = r > 0 && t > 0 ? Math.max(12, Math.round(outer * 0.4)) : 28;
+                    const iconSize = r > 0 && t > 0 ? Math.min(Math.max(3, Math.round(outer * 0.6)), Math.max(3, outer - 2 * t)) : 28;
                     return `<div style="position:relative;width:${outer}px;height:${outer}px;border-radius:50%;background:${r > 0 && t > 0 ? 'rgba(255,255,255,0.85)' : 'transparent'};border:${r > 0 && t > 0 ? `${t}px solid ${bulkColor}` : 'none'};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                         <i class="fas ${iconFa}" style="color:${bulkColor};font-size:${iconSize}px;text-shadow:0 1px 2px rgba(0,0,0,0.15);"></i>
                     </div>`;
@@ -4904,6 +5401,7 @@
                 multiSelection = new Set(editorState.selectionIds);
 
                 let count = 0;
+                const _bulkRun = async () => {
                 for (const id of editorState.selectionIds) {
                     const n = findNode(id);
                     if (!n) continue;
@@ -4932,12 +5430,16 @@
                 closeEditorPanel();
                 renderTree();
                 await persistTreeNow();
+                };
+                if (editorState.selectionIds.length >= 40) await withBusy('Updating ' + editorState.selectionIds.length.toLocaleString() + ' items…', _bulkRun);
+                else await _bulkRun();
                 showToast(`Updated ${count} item(s)`, 'fa-check');
             }
 
             // ============ PROPERTIES ============
             function renderPropertiesTab() {
                 const node = editorState.node;
+                const _p2pSet = !!(node.meta && node.meta.persistedP2P && node.meta.persistedP2P.lat != null);
                 const rows = [['Type', node.type], ['Visible', node.visible === false ? 'No' : 'Yes']];
                 if (node.type === 'placemark' && node.meta.lat != null) {
                     rows.push(['Latitude', node.meta.lat.toFixed(6) + copyBtnFor(node.meta.lat.toFixed(6))]);
@@ -5018,8 +5520,10 @@
                             <div class="editor-field"><label>Radius (m)</label><input type="number" id="los-radius" value="${node.meta.radius || 10000}" min="100" step="100"></div>
                             <div class="editor-field"><label>Lines</label><input type="number" id="los-lines" value="${node.meta.numLines || 36}" min="4" max="180" step="2"></div>
                         </div>
-                        <div class="editor-field"><label>Contour interval (m)</label><input type="number" id="los-contour" value="${node.meta.contourInterval || 500}" min="0" step="50"></div>
-                        <label class="editor-icon-bulk-toggle"><input type="checkbox" id="los-boundary" ${node.meta.showBoundary !== false ? 'checked' : ''}> Show boundary polygon</label>
+                        <label class="editor-icon-bulk-toggle"><input type="checkbox" id="los-boundary" ${_p2pSet ? 'disabled title="Not used while a remote end is set"' : (node.meta.showBoundary !== false ? 'checked' : '')}> Boundary polygon (where sight is first lost)</label>
+                        <label class="editor-icon-bulk-toggle"><input type="checkbox" id="los-regain" ${_p2pSet ? 'disabled title="Not used while a remote end is set"' : (node.meta.showRegain !== false ? 'checked' : '')}> Areas where visibility is regained</label>
+                        <label class="editor-icon-bulk-toggle"><input type="checkbox" id="los-radials" ${_p2pSet ? 'disabled title="Not used while a remote end is set"' : (node.meta.showRadials !== false ? 'checked' : '')}> Radial lines (the sampled bearings)</label>
+                        <div style="font-size:0.68rem;color:var(--text-2);line-height:1.45;margin:2px 0 8px;">The solid outline stops at the first point on each bearing where sight is lost. Shaded areas beyond it are places the remote end can see again. Radial lines are the sampled bearings.</div>
 
                         <div class="editor-section-label">Antennas</div>
                         <div class="editor-field-row">
@@ -5067,11 +5571,11 @@
                     });
                 }
                 if (editorState.isLOS) {
-                    ['#los-radius', '#los-lines', '#los-ch', '#los-th', '#los-contour', '#los-rh', '#los-freq', '#los-k', '#los-clutter'].forEach(sel => {
+                    ['#los-radius', '#los-lines', '#los-ch', '#los-th', '#los-rh', '#los-freq', '#los-k', '#los-clutter'].forEach(sel => {
                         const inp = editorBody.querySelector(sel);
                         if (inp) inp.addEventListener('input', scheduleLivePropertiesApply);
                     });
-                    ['#los-boundary', '#los-curvature'].forEach(sel => {
+                    ['#los-boundary', '#los-regain', '#los-radials', '#los-curvature'].forEach(sel => {
                         const inp = editorBody.querySelector(sel);
                         if (inp) inp.addEventListener('change', scheduleLivePropertiesApply);
                     });
@@ -5134,7 +5638,6 @@
                     const linesEl = editorBody.querySelector('#los-lines');
                     const chEl = editorBody.querySelector('#los-ch');
                     const thEl = editorBody.querySelector('#los-th');
-                    const ciEl = editorBody.querySelector('#los-contour');
                     const rhEl = editorBody.querySelector('#los-rh');
                     const freqEl = editorBody.querySelector('#los-freq');
                     const kEl = editorBody.querySelector('#los-k');
@@ -5143,14 +5646,17 @@
                     if (linesEl) node.meta.numLines = parseInt(linesEl.value, 10) || 36;
                     if (chEl) node.meta.centerHeight = parseFloat(chEl.value) || 0;
                     if (thEl) node.meta.targetHeight = parseFloat(thEl.value) || 0;
-                    if (ciEl) node.meta.contourInterval = parseFloat(ciEl.value) || 0;
                     if (rhEl) { const v = parseFloat(rhEl.value); node.meta.remoteHeight = (isFinite(v) && v >= 0) ? v : null; }
                     if (freqEl) { const v = parseFloat(freqEl.value); node.meta.freqGHz = (isFinite(v) && v > 0) ? v : null; }
                     if (kEl) { const v = parseFloat(kEl.value); node.meta.kFactor = (isFinite(v) && v > 0) ? v : null; }
                     if (clEl) node.meta.clutter = Math.max(0, parseFloat(clEl.value) || 0);
                     const boundaryEl = editorBody.querySelector('#los-boundary');
                     const curvatureEl = editorBody.querySelector('#los-curvature');
-                    if (boundaryEl) node.meta.showBoundary = boundaryEl.checked;
+                    if (boundaryEl && !boundaryEl.disabled) node.meta.showBoundary = boundaryEl.checked;
+                    const regainEl = editorBody.querySelector('#los-regain');
+                    const radialsEl = editorBody.querySelector('#los-radials');
+                    if (regainEl && !regainEl.disabled) node.meta.showRegain = regainEl.checked;
+                    if (radialsEl && !radialsEl.disabled) node.meta.showRadials = radialsEl.checked;
                     if (curvatureEl) node.meta.earthCurvature = curvatureEl.checked;
                     if (!node.meta.persistedP2P) node.meta.trackMouse = true;
                     rebuildLOSLayer(node);
@@ -5598,7 +6104,7 @@
                             }
                             await commitVertices({ keepHidden: true });
                         });
-                        marker.on('click', () => highlightRow(i));
+                        marker.on('click', () => highlightRow(i, true));
                         editorGroup.addLayer(marker);
                         vertexMarkers[i] = marker;
                     });
@@ -5658,9 +6164,56 @@
                 const listEl = editorBody.querySelector('#ed-vert-list');
                 const countEl = editorBody.querySelector('#ed-vert-count');
 
-                function renderRows() {
-                    listEl.innerHTML = '';
-                    work.forEach((v, i) => {
+                // Long paths: only the rows in view are built (fixed row height + spacer), so 8,000 vertices open instantly.
+                const ROW_H = 40, WIN_MIN = 150;
+                let _hlIdx = -1, _scrollRaf = 0;
+                function wireRowHandlers(root) {
+                    root.querySelectorAll('.ve-lat').forEach(inp => {
+                        inp.addEventListener('change', async () => {
+                            const i = parseInt(inp.dataset.idx, 10);
+                            const val = parseFloat(inp.value);
+                            if (isNaN(val) || val < -90 || val > 90) { inp.value = work[i].lat.toFixed(6); return; }
+                            work[i].lat = val;
+                            if (vertexMarkers[i]) vertexMarkers[i].setLatLng([work[i].lat, work[i].lng]);
+                            renderPreview();
+                            updateMidpointsOnly();
+                            await commitVertices({ keepHidden: true });
+                        });
+                    });
+                    root.querySelectorAll('.ve-lng').forEach(inp => {
+                        inp.addEventListener('change', async () => {
+                            const i = parseInt(inp.dataset.idx, 10);
+                            const val = parseFloat(inp.value);
+                            if (isNaN(val) || val < -180 || val > 180) { inp.value = work[i].lng.toFixed(6); return; }
+                            work[i].lng = val;
+                            if (vertexMarkers[i]) vertexMarkers[i].setLatLng([work[i].lat, work[i].lng]);
+                            renderPreview();
+                            updateMidpointsOnly();
+                            await commitVertices({ keepHidden: true });
+                        });
+                    });
+                    root.querySelectorAll('.ve-del').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            const i = parseInt(btn.dataset.idx, 10);
+                            if (work.length <= minVerts) { showToast(`Needs at least ${minVerts} vertices`, 'fa-exclamation-circle'); return; }
+                            work.splice(i, 1);
+                            renderRows();
+                            renderMarkers();
+                            renderMidpoints();
+                            await commitVertices({ keepHidden: true });
+                        });
+                    });
+                    root.querySelectorAll('.ve-copy').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const i = parseInt(btn.dataset.idx, 10);
+                            copyToClipboard(`${work[i].lat.toFixed(6)}, ${work[i].lng.toFixed(6)}`, 'Vertex coordinates');
+                        });
+                    });
+                }
+                function buildVertexRow(i) {
+                    const v = work[i];
                         const row = document.createElement('div');
                         row.className = 've-row';
                         row.dataset.idx = i;
@@ -5673,60 +6226,54 @@
                             <button class="ve-copy" data-idx="${i}" title="Copy coordinates" aria-label="Copy coordinates" style="width:22px;height:22px;border-radius:5px;background:transparent;border:1px solid transparent;color:var(--text-3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.62rem;"><i class="fas fa-copy"></i></button>
                         `;
                         row.addEventListener('mouseenter', () => { row.style.background = 'var(--surface-soft)'; });
-                        row.addEventListener('mouseleave', () => { row.style.background = ''; });
+                        row.addEventListener('mouseleave', () => { row.style.background = (i === _hlIdx) ? 'var(--accent-soft)' : ''; });
                         row.addEventListener('click', (e) => {
                             if (e.target.closest('input') || e.target.closest('button')) return;
                             highlightRow(i);
                             map.panTo([work[i].lat, work[i].lng]);
                         });
-                        listEl.appendChild(row);
-                    });
-                    listEl.querySelectorAll('.ve-lat').forEach(inp => {
-                        inp.addEventListener('change', async () => {
-                            const i = parseInt(inp.dataset.idx, 10);
-                            const val = parseFloat(inp.value);
-                            if (isNaN(val) || val < -90 || val > 90) { inp.value = work[i].lat.toFixed(6); return; }
-                            work[i].lat = val;
-                            if (vertexMarkers[i]) vertexMarkers[i].setLatLng([work[i].lat, work[i].lng]);
-                            renderPreview();
-                            updateMidpointsOnly();
-                            await commitVertices({ keepHidden: true });
-                        });
-                    });
-                    listEl.querySelectorAll('.ve-lng').forEach(inp => {
-                        inp.addEventListener('change', async () => {
-                            const i = parseInt(inp.dataset.idx, 10);
-                            const val = parseFloat(inp.value);
-                            if (isNaN(val) || val < -180 || val > 180) { inp.value = work[i].lng.toFixed(6); return; }
-                            work[i].lng = val;
-                            if (vertexMarkers[i]) vertexMarkers[i].setLatLng([work[i].lat, work[i].lng]);
-                            renderPreview();
-                            updateMidpointsOnly();
-                            await commitVertices({ keepHidden: true });
-                        });
-                    });
-                    listEl.querySelectorAll('.ve-del').forEach(btn => {
-                        btn.addEventListener('click', async (e) => {
-                            e.stopPropagation();
-                            const i = parseInt(btn.dataset.idx, 10);
-                            if (work.length <= minVerts) { showToast(`Needs at least ${minVerts} vertices`, 'fa-exclamation-circle'); return; }
-                            work.splice(i, 1);
-                            renderRows();
-                            renderMarkers();
-                            renderMidpoints();
-                            await commitVertices({ keepHidden: true });
-                        });
-                    });
-                    listEl.querySelectorAll('.ve-copy').forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const i = parseInt(btn.dataset.idx, 10);
-                            copyToClipboard(`${work[i].lat.toFixed(6)}, ${work[i].lng.toFixed(6)}`, 'Vertex coordinates');
-                        });
-                    });
+                    if (i === _hlIdx) row.style.background = 'var(--accent-soft)';
+                    wireRowHandlers(row);
+                    return row;
+                }
+                function paintWindow() {
+                    const sp = listEl.querySelector('#ed-vert-spacer');
+                    if (!sp) return;
+                    const top = listEl.scrollTop, h = listEl.clientHeight || 420;
+                    const first = Math.max(0, Math.floor(top / ROW_H) - 8);
+                    const last = Math.min(work.length - 1, Math.ceil((top + h) / ROW_H) + 8);
+                    sp.innerHTML = '';
+                    const frag = document.createDocumentFragment();
+                    for (let i = first; i <= last; i++) {
+                        const r = buildVertexRow(i);
+                        Object.assign(r.style, { position: 'absolute', left: '0', right: '0', top: (i * ROW_H) + 'px', height: ROW_H + 'px', boxSizing: 'border-box' });
+                        frag.appendChild(r);
+                    }
+                    sp.appendChild(frag);
+                    wireCopyButtons(sp);
+                }
+                function renderRows() {
+                    listEl.innerHTML = '';
+                    const windowed = work.length > WIN_MIN;
+                    listEl.style.maxHeight = windowed ? '420px' : '';
+                    listEl.style.overflowY = windowed ? 'auto' : '';
+                    listEl.style.position = windowed ? 'relative' : '';
+                    if (!windowed) {
+                        work.forEach((v, i) => listEl.appendChild(buildVertexRow(i)));
+                    } else {
+                        const sp = document.createElement('div');
+                        sp.id = 'ed-vert-spacer';
+                        sp.style.cssText = 'position:relative;height:' + (work.length * ROW_H) + 'px;';
+                        listEl.appendChild(sp);
+                        paintWindow();
+                    }
                     updateCount();
                     wireCopyButtons(listEl);
                 }
+                listEl.addEventListener('scroll', () => {
+                    if (_scrollRaf || work.length <= WIN_MIN) return;
+                    _scrollRaf = requestAnimationFrame(() => { _scrollRaf = 0; paintWindow(); });
+                });
                 function updateCount() { countEl.textContent = work.length; }
                 function updateRowInputs(i) {
                     const latInp = listEl.querySelector(`.ve-lat[data-idx="${i}"]`);
@@ -5734,7 +6281,13 @@
                     if (latInp) latInp.value = work[i].lat.toFixed(6);
                     if (lngInp) lngInp.value = work[i].lng.toFixed(6);
                 }
-                function highlightRow(i) {
+                function highlightRow(i, scrollTo) {
+                    _hlIdx = i;
+                    if (scrollTo && work.length > WIN_MIN) {
+                        const y = i * ROW_H;
+                        if (y < listEl.scrollTop || y > listEl.scrollTop + listEl.clientHeight - ROW_H) listEl.scrollTop = Math.max(0, y - listEl.clientHeight / 2);
+                        paintWindow();
+                    }
                     listEl.querySelectorAll('.ve-row').forEach(r => {
                         r.style.background = (parseInt(r.dataset.idx, 10) === i) ? 'var(--accent-soft)' : '';
                     });
@@ -6153,7 +6706,7 @@
                     updateMapToolsVisibility();
                 });
 
-                commitBtn.addEventListener('click', async () => {
+                const _commitSheetImport = async () => {
                     if (!rows.length) return;
                     const num = v => parseFloat(String(v || '').replace(/[°,\s]/g, ''));
                     const parent = targetFolderId ? findNode(targetFolderId) : null;
@@ -6246,6 +6799,15 @@
                         renderTree();
                         showToast('No valid coordinates found', 'fa-exclamation-circle');
                     }
+                };
+                commitBtn.addEventListener('click', () => {
+                    withBusy('Importing…', async () => {
+                        suspendRender();
+                        try { await _commitSheetImport(); }
+                        finally { resumeRender(); }
+                        updateMinimapDots();
+                        updateMapLabels();
+                    });
                 });
             }
 
@@ -6397,29 +6959,61 @@
                 return brg;
             }
 
-            function buildBoundaryPoints(node) {
+            // One pass of 180 rays out from the link centre. Each ray remembers its sampled profile so the boundary polygon,
+            // the regained-visibility areas and (when the bearing lines up) the radial lines all reuse it.
+            const COV_RAYS = 180;
+            function buildCoverageRays(node) {
                 if (terrainStore.size === 0) return null;
                 const center = { lat: node.meta.lat, lng: node.meta.lng };
                 if (getElevation(center.lat, center.lng) === null) return null;
-                const nB = 180;
-                const points = [];
-                const radius = node.meta.radius || 10000;
                 const cosLat = Math.cos(center.lat * Math.PI / 180);
-                for (let i = 0; i < nB; i++) {
-                    const brg = i * 360 / nB;
+                const rays = [], points = [];
+                for (let i = 0; i < COV_RAYS; i++) {
+                    const brg = i * 360 / COV_RAYS;
                     const geo = losLineGeometry(node, brg);
-                    if (!geo.pts || geo.pts.length < 2) continue;
+                    if (!geo.pts || geo.pts.length < 2) { rays.push(null); continue; }
+                    rays.push({ brg, geo });
                     const reach = geo.lostAt !== null ? geo.lostAt : geo.pts[geo.pts.length - 1].d;
                     const br = brg * Math.PI / 180;
-                    const pt = {
-                        lat: center.lat + (reach * Math.cos(br)) / 111320,
-                        lng: center.lng + (reach * Math.sin(br)) / (111320 * cosLat)
-                    };
-                    points.push([pt.lat, pt.lng]);
+                    points.push([center.lat + (reach * Math.cos(br)) / 111320, center.lng + (reach * Math.sin(br)) / (111320 * cosLat)]);
                 }
-                if (points.length < 3) return null;
-                points.push(points[0]);
-                return points;
+                let boundary = null;
+                if (points.length >= 3) { points.push(points[0]); boundary = points; }
+                return { rays, boundary };
+            }
+            function buildBoundaryPoints(node) {
+                const cov = buildCoverageRays(node);
+                return cov ? cov.boundary : null;
+            }
+            // The boundary polygon stops at the FIRST place each bearing loses sight. Beyond that, ground can come back into
+            // view. These are the stretches of each bearing (after the first loss) where the remote end is visible again,
+            // returned as 4-point sector rings that tile into shaded areas.
+            function buildRegainRings(node, cov) {
+                const center = L.latLng(node.meta.lat, node.meta.lng);
+                const cosLat = Math.cos(center.lat * Math.PI / 180);
+                const half = (360 / COV_RAYS) / 2;
+                const P = (brg, d) => { const r = brg * Math.PI / 180; return [center.lat + (d * Math.cos(r)) / 111320, center.lng + (d * Math.sin(r)) / (111320 * cosLat)]; };
+                const rings = [];
+                for (const ray of cov.rays) {
+                    if (!ray || ray.geo.lostAt === null) continue;
+                    const pts = ray.geo.pts, lost = ray.geo.lostAt;
+                    const step = pts[1].d - pts[0].d;
+                    let j = -1;
+                    for (let i = 0; i <= pts.length; i++) {
+                        const q = pts[i];
+                        const vis = !!(q && q.d > lost && q.visible);
+                        if (vis && j < 0) j = i;
+                        else if (!vis && j >= 0) {
+                            const a0 = pts[j].d, a1 = pts[i - 1].d;
+                            if (a1 - a0 >= 2 * step) {          // ignore one-sample flickers
+                                const d0 = Math.max(lost, a0 - step / 2), d1 = a1 + step / 2;
+                                rings.push([P(ray.brg - half, d0), P(ray.brg - half, d1), P(ray.brg + half, d1), P(ray.brg + half, d0)]);
+                            }
+                            j = -1;
+                        }
+                    }
+                }
+                return rings;
             }
 
             function linkColorFor(p) {
@@ -6427,6 +7021,7 @@
                 if (p.clearRatio !== undefined && p.clearRatio < 0.6) return '#f59e0b';
                 return '#22c55e';
             }
+            const NO_TERRAIN_LINK = '#64748b';
             function linkEndColor(geo) {
                 if (geo.lostAt !== null) return '#dc2626';
                 if (geo.minClearRatio !== null && geo.minClearRatio < 0.6) return '#f59e0b';
@@ -6477,30 +7072,50 @@
                             radius: 6, color: 'white', weight: 2,
                             fillColor: linkEndColor(link.geo), fillOpacity: 1
                         }));
+                    } else {
+                        // No terrain data under the link: still draw it (grey = not analysed) so the remote end can be placed
+                        layers.push(L.polyline([center, [node.meta.persistedP2P.lat, node.meta.persistedP2P.lng]], { color: NO_TERRAIN_LINK, weight: 3, dashArray: '4 6' }));
+                        layers.push(L.circleMarker([node.meta.persistedP2P.lat, node.meta.persistedP2P.lng], { radius: 6, color: 'white', weight: 2, fillColor: NO_TERRAIN_LINK, fillOpacity: 1 }));
                     }
                 } else {
-                    if (node.meta.showBoundary !== false) {
-                        const bpts = buildBoundaryPoints(node);
-                        if (bpts) {
-                            layers.push(L.polygon(bpts, {
-                                color, weight: 2.5, opacity: 0.9,
-                                fillColor: color, fillOpacity: 0.1, lineJoin: 'round'
-                            }));
+                    const wantBoundary = node.meta.showBoundary !== false;
+                    const wantRegain = node.meta.showRegain !== false;
+                    const wantRadials = node.meta.showRadials !== false;
+                    const cov = (wantBoundary || wantRegain || wantRadials) ? buildCoverageRays(node) : null;
+                    if (cov && wantRegain) {
+                        const rings = buildRegainRings(node, cov);
+                        if (rings.length) {
+                            const zone = L.polygon(rings, { stroke: true, color: color, weight: 1, opacity: 1, fillColor: color, fillOpacity: 1, interactive: true });
+                            zone.bindTooltip('Visibility is regained here, beyond an earlier obstruction', { sticky: true });
+                            layers.push(zone);
                         }
                     }
-                    for (let i = 0; i < numLines; i++) {
-                        const bearing = (360 / numLines) * i;
-                        const isHighlighted = highlightBearing !== undefined && Math.abs(bearing - highlightBearing) < 0.01;
-                        const geo = losLineGeometry(node, bearing);
-                        if (!geo.pts || geo.pts.length < 2) continue;
-                        const drawPts = truncateLOSPoints(geo.pts, geo.lostAt);
-                        const coords = drawPts.map(p => [p.lat, p.lng]);
-                        if (coords.length < 2) continue;
-                        layers.push(L.polyline(coords, {
-                            color: isHighlighted ? '#facc15' : color,
-                            weight: isHighlighted ? 5 : 2,
-                            opacity: isHighlighted ? 1 : 0.85
+                    if (cov && wantBoundary && cov.boundary) {
+                        layers.push(L.polygon(cov.boundary, {
+                            color, weight: 2.5, opacity: 0.9,
+                            fillColor: color, fillOpacity: 0.1, lineJoin: 'round'
                         }));
+                    }
+                    if (wantRadials) {
+                        for (let i = 0; i < numLines; i++) {
+                            const bearing = (360 / numLines) * i;
+                            const isHighlighted = highlightBearing !== undefined && Math.abs(bearing - highlightBearing) < 0.01;
+                            let geo = null;
+                            if (cov) {
+                                const idx = bearing * COV_RAYS / 360;
+                                if (Math.abs(idx - Math.round(idx)) < 1e-6) { const r = cov.rays[Math.round(idx) % COV_RAYS]; if (r) geo = r.geo; }
+                            }
+                            if (!geo) geo = losLineGeometry(node, bearing);
+                            if (!geo.pts || geo.pts.length < 2) continue;
+                            const drawPts = truncateLOSPoints(geo.pts, geo.lostAt);
+                            const coords = drawPts.map(q => [q.lat, q.lng]);
+                            if (coords.length < 2) continue;
+                            layers.push(L.polyline(coords, {
+                                color: isHighlighted ? '#facc15' : color,
+                                weight: isHighlighted ? 5 : 2,
+                                opacity: isHighlighted ? 1 : 0.85
+                            }));
+                        }
                     }
                 }
 
@@ -6602,12 +7217,15 @@
             // ---- export (all formats) ----
             // exportAs('kml', null) exports everything; exportAs('geojson', folderNode) exports that node (with its contents).
             function exportAs(fmtKey, node) {
+                return busyIf(node ? [node] : treeNodes, 'Preparing export…', async () => _exportAsCore(fmtKey, node));
+            }
+            function _exportAsCore(fmtKey, node) {
                 const fmt = IO_FORMATS.find(f => f.key === fmtKey);
                 if (!fmt) return;
-                const nodes = node ? [node] : exportableNodes(treeNodes);
-                const docName = node ? node.name : 'Andrew\'s Earth Export';
+                const nodes = Array.isArray(node) ? node.slice() : (node ? [node] : exportableNodes(treeNodes));
+                const docName = Array.isArray(node) ? 'Selection' : node ? node.name : 'Andrew\'s Earth Export';
                 const content = fmt.build(nodes, docName, node ? 'node' : 'all');
-                const base = node ? ioSafeName(node.name) : 'andrews-earth-export';
+                const base = Array.isArray(node) ? 'selection' : node ? ioSafeName(node.name) : 'andrews-earth-export';
                 downloadFile(content, base + '.' + fmt.exts[0], fmt.mime);
                 showToast(fmt.label + ' exported' + (fmt.note ? ' — geometry, names and descriptions only' : ''), 'fa-file-export');
             }
@@ -6626,11 +7244,12 @@
                 const title = document.getElementById('modal-title');
                 const body = document.getElementById('modal-body');
                 const actions = document.getElementById('modal-actions');
-                const isFolderish = !node || node.type === 'folder' || node.type === 'kml';
+                const multi = Array.isArray(node);
+                const isFolderish = multi || !node || node.type === 'folder' || node.type === 'kml';
                 const options = IO_FORMATS.map(f => ({ key: f.key, icon: f.icon, label: f.label, desc: f.shortDesc + (f.key === 'gpx' ? ' — folders, colours and metadata are not kept' : ' — folders, styles and metadata are kept') }));
                 if (isFolderish) options.push({ key: 'csv', icon: 'fa-file-csv', label: 'Site list (CSV)', desc: 'Placemarks and links with elevation and link status' });
                 let chosen = options[0].key;
-                const scopeText = node ? '“' + escapeHtml(node.name) + '”' + (isFolderish ? ' and its contents' : '') : 'all places';
+                const scopeText = multi ? node.length + ' selected items' : node ?  '“' + escapeHtml(node.name) + '”' + (isFolderish ? ' and its contents' : '') : 'all places';
                 title.innerHTML = '<i class="fas fa-file-export"></i> Export';
                 body.innerHTML = `<div style="font-size:0.78rem;color:var(--text-2);margin-bottom:12px;">Exporting ${scopeText}. Choose a format:</div>` +
                     '<div id="exp-opts" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">' +
@@ -6985,11 +7604,16 @@
                 if (!files || !files.length) return;
                 const opts = pendingImport || IMPORT_DEFAULTS;
                 pendingImport = null;
-                for (const file of files) {
-                    try { await importFileAs(file, opts); }
-                    catch (err) { showToast(`Import error: ${file.name}`, 'fa-times', { error: true, detail: err }); }
-                }
-                await persistTreeNow();
+                const fileList = Array.from(files);
+                await withBusy('Importing…', async () => {
+                    for (const file of fileList) {
+                        busyLabel(fileList.length > 1 ? `Importing ${file.name}…` : 'Importing…');
+                        try { await importFileAs(file, opts); }
+                        catch (err) { showToast(`Import error: ${file.name}`, 'fa-times', { error: true, detail: err }); }
+                    }
+                    busyLabel('Saving…');
+                    await persistTreeNow();
+                });
                 kmlInput.value = '';
                 kmlInput.setAttribute('accept', IO_ACCEPT);
             });
@@ -8366,6 +8990,9 @@
                         radius: 6, color: 'white', weight: 2,
                         fillColor: linkEndColor(link.geo), fillOpacity: 1
                     }));
+                } else {
+                    losPreviewGroup.addLayer(L.polyline([center, [endpoint.lat, endpoint.lng]], { color: NO_TERRAIN_LINK, weight: 3, dashArray: '4 6' }));
+                    losPreviewGroup.addLayer(L.circleMarker([endpoint.lat, endpoint.lng], { radius: 6, color: 'white', weight: 2, fillColor: NO_TERRAIN_LINK, fillOpacity: 1 }));
                 }
 
                 if (profileData && profileData.node === los && profilePanel.classList.contains('open')) {
@@ -8730,7 +9357,7 @@
                     const latlng = applySnapFromEvent(e, e.latlng);
                     const result = await openNewNodeModal({
                         type: 'los', name: 'New link',
-                        meta: { lat: latlng.lat, lng: latlng.lng, radius: 10000, numLines: 36, centerHeight: 30, targetHeight: 2, contourInterval: 500, color: '#ea580c', desc: '' }
+                        meta: { lat: latlng.lat, lng: latlng.lng, radius: 10000, numLines: 36, centerHeight: 30, targetHeight: 2, showRadials: false, showRegain: true, color: '#ea580c', desc: '' }
                     });
                     if (!result) return;
                     const finalLat = (result.lat !== undefined && result.lat !== null) ? result.lat : latlng.lat;
@@ -8741,7 +9368,7 @@
                             lat: finalLat, lng: finalLng,
                             radius: 10000, numLines: 36,
                             centerHeight: 30, targetHeight: 2,
-                            contourInterval: 500,
+                            showRadials: false, showRegain: true,
                             color: result.color || '#ea580c',
                             desc: result.desc,
                             showBoundary: true,
@@ -8779,7 +9406,7 @@
             // Loaded HGT tiles live outside the history, so the terrain folder is left out of snapshots.
             function _snapshotTree() {
                 return JSON.stringify({
-                    tree: treeNodes.filter(n => n.name !== 'Terrain (HGT)').map(_plainForUndo),
+                    tree: treeNodes.filter(n => n.name !== 'Terrain (HGT)' && !(n.meta && n.meta.stress)).map(_plainForUndo),
                     archive: archivedNodes.map(_plainForUndo)
                 });
             }
@@ -8811,7 +9438,7 @@
                     if (o.parent !== v.parent) moved.push(v); else if (o.idx !== v.idx) reordered.push(v);
                     if (o.metaStr !== v.metaStr) edited.push({ o, v });
                 });
-                const roots = (list, map) => list.filter(x => !list.some(y => y.n.id === x.parent));
+                const roots = (list) => { const ids = new Set(list.map(y => y.n.id)); return list.filter(x => !ids.has(x.parent)); };
                 const q = (v) => '“' + _short(v.n.name) + '”';
                 const many = (list, word) => word + ' ' + list.length + ' items';
                 const labels = [];
@@ -8887,6 +9514,9 @@
                 if (histPop && histPop.classList.contains('open')) renderHistoryPopover();
             }
             async function _gotoHistoryId(id) {
+                return countDeep(treeNodes) >= BUSY_MIN ? withBusy('Restoring…', () => _gotoHistoryCore(id)) : _gotoHistoryCore(id);
+            }
+            async function _gotoHistoryCore(id) {
                 if (drawState) { showToast('Finish or cancel drawing first', 'fa-pen-ruler'); return false; }
                 if (_persistTimer) await persistTreeNow();                 // capture any pending edit first (may add an entry)
                 const i = hist.findIndex(h => h.id === id);
@@ -9030,6 +9660,10 @@
                 return dp != null ? n.toFixed(dp) : String(n);
             }
             function exportSitesCSV(rootFolder) {
+                return busyIf(rootFolder ? [rootFolder] : treeNodes, 'Building site list…', async () => _exportSitesCSVCore(rootFolder));
+            }
+            function _exportSitesCSVCore(rootFolder) {
+                if (Array.isArray(rootFolder)) rootFolder = { name: 'Selection', children: rootFolder };
                 const header = ['Name', 'Type', 'Folder', 'Latitude', 'Longitude', 'Ground elevation (m)', 'Antenna height (m)',
                                 'Description', 'Link end lat', 'Link end lng', 'Link distance (m)', 'Link status', 'Min F1 clearance (x)',
                                 'Frequency (GHz)', 'k-factor'];
@@ -9521,6 +10155,9 @@
 
             // ==================== DRAG & DROP IMPORT ====================
             async function importDroppedFiles(files) {
+                return withBusy('Importing…', () => _importDroppedFilesCore(files));
+            }
+            async function _importDroppedFilesCore(files) {
                 const hgt = [], bad = [];
                 let imported = 0;
                 for (const f of files) {
@@ -9546,7 +10183,7 @@
                     if (!hasFiles(e)) return;
                     e.preventDefault();
                     depth = 0; ov.classList.remove('show');
-                    await importDroppedFiles(Array.from(e.dataTransfer.files));
+                    await importDroppedFilesOrPhotos(e.dataTransfer);
                 });
             })();
 
@@ -9579,6 +10216,10 @@
                     { title: 'Centre on Tasmania', icon: 'fa-map', run: () => { map.flyTo([-42.0, 146.6], 7, { duration: 1.2 }); } },
                     { title: 'Zoom to all places', icon: 'fa-expand', run: () => fitToPlacesExtent() },
                     { title: 'Toggle properties panel', icon: 'fa-table-columns', run: () => toggleInspector() },
+                    { title: 'Import photos…', icon: 'fa-images', run: () => openPhotoImportDialog() },
+                    { title: 'Show / hide minimap', icon: 'fa-map', run: () => setMinimap(!FLAGS.minimap) },
+                    { title: 'Stress test (temporary)', icon: 'fa-flask', run: () => openStressTest() },
+                    { title: 'Copy diagnostics (temporary)', icon: 'fa-gauge-high', run: () => copyDiagnostics() },
                     { title: 'Toggle snap to markers', icon: 'fa-magnet', run: () => { SETTINGS.snapToMarkers = !SETTINGS.snapToMarkers; saveSettings(); showToast('Snap to markers ' + (SETTINGS.snapToMarkers ? 'on' : 'off'), 'fa-magnet'); } },
                     { title: 'Theme: light', icon: 'fa-sun', run: () => setThemePref('light') },
                     { title: 'Theme: dark', icon: 'fa-moon', run: () => setThemePref('dark') },
@@ -10039,6 +10680,397 @@
                 }
             }
 
+            // ==================== ROUND 5 ====================
+            const PD = { photoSize: 56, photoShape: 'square', photoBorder: 3, photoBorderColor: '#ffffff', photoShow: true };
+            for (const k in PD) if (FLAGS[k] === undefined) FLAGS[k] = PD[k];
+            if (!FLAGS._vc2) { FLAGS.verticalCrumbs = true; FLAGS._vc2 = true; saveFlags(); }
+
+            const phPanel = document.getElementById('photo-panel'), phImg = document.getElementById('photo-img'), phErr = document.getElementById('photo-err');
+            const phMeta = document.getElementById('photo-meta'), phTitle = document.getElementById('photo-title'), phSub = document.getElementById('photo-sub');
+
+            // ---- diagnostics (temporary) ----
+            const PERF = { frames: [], long: 0, renderMs: 0, rebuildMs: 0, persistMs: 0, tilesAt: 0, treeAt: 0 };
+            (function () {
+                let last = performance.now();
+                const f = (t) => { PERF.frames.push(t - last); last = t; if (PERF.frames.length > 120) PERF.frames.shift(); requestAnimationFrame(f); };
+                requestAnimationFrame(f);
+                try { new PerformanceObserver(l => { PERF.long += l.getEntries().length; }).observe({ entryTypes: ['longtask'] }); } catch (e) {}
+            })();
+            let _mmT = null;
+            function renderTree() { const t = performance.now(); renderTree0(); PERF.renderMs = Math.round(performance.now() - t); clearTimeout(_mmT); _mmT = setTimeout(updateMinimapDots, 150); }
+            function rebuildLayers() { const t = performance.now(); rebuildLayers0(); PERF.rebuildMs = Math.round(performance.now() - t); }
+            async function _doPersistTree() { const t = performance.now(); const r = await _doPersistTree0(); PERF.persistMs = Math.round(performance.now() - t); return r; }
+            function perfStats() {
+                const s = { objects: 0, placemarks: 0, paths: 0, pathVerts: 0, polygons: 0, polyVerts: 0, links: 0, folders: 0, hidden: 0, maxDepth: 0, largestShapeVerts: 0, largestFolder: 0 };
+                (function w(l, d) {
+                    if (l.length > s.largestFolder) s.largestFolder = l.length;
+                    for (const n of l) {
+                        if (n.name === 'Terrain (HGT)' || n.type === 'terrain') continue;
+                        s.objects++; if (n.visible === false) s.hidden++; if (d > s.maxDepth) s.maxDepth = d;
+                        const t = n.type, k = (n.meta && n.meta.points) ? n.meta.points.length : 0;
+                        if (k > s.largestShapeVerts) s.largestShapeVerts = k;
+                        if (t === 'placemark') s.placemarks++;
+                        else if (t === 'path' || t === 'measure') { s.paths++; s.pathVerts += k; }
+                        else if (t === 'polygon' || t === 'measure-area') { s.polygons++; s.polyVerts += k; }
+                        else if (t === 'los') s.links++;
+                        else if (t === 'folder' || t === 'kml') s.folders++;
+                        if (n.children) w(n.children, d + 1);
+                    }
+                })(treeNodes, 1);
+                const f = PERF.frames.slice(1).sort((a, b) => a - b);
+                const avg = f.length ? f.reduce((a, b) => a + b, 0) / f.length : 0;
+                const dom = document.getElementsByTagName('*').length;
+                s.complexityScore = Math.round(s.placemarks + (s.pathVerts + s.polyVerts) * 0.15 + s.links * 150 + labelCache.size * 2 + dom / 40);
+                s.fps = avg ? Math.round(1000 / avg) : 0;
+                return { s, f, avg, dom };
+            }
+            function perfReport() {
+                const { s, f, avg, dom } = perfStats();
+                const q = (sel) => document.querySelectorAll(sel).length;
+                return {
+                    time: new Date().toISOString(), build: (document.getElementById('sb-build') || {}).textContent,
+                    data: s,
+                    onScreen: { domElements: dom, leafletLayersOnMap: Object.keys(map._layers).length, markerIcons: q('.leaflet-marker-icon'), svgPaths: q('.leaflet-overlay-pane path'), labelsDrawn: labelCache.size, minimapPoints: _mmPts.length, photos: photos.length, zoom: map.getZoom() },
+                    terrain: { tiles: terrainStore.size, visibleTiles: visibleTiles.size },
+                    timingsMs: { loadTilesDoneAt: PERF.tilesAt, loadTreeDoneAt: PERF.treeAt, lastRenderTree: PERF.renderMs, lastRebuildLayers: PERF.rebuildMs, lastPersist: PERF.persistMs },
+                    frames: { avgMs: +avg.toFixed(1), p95Ms: +((f[Math.floor(f.length * 0.95)] || 0)).toFixed(1), maxMs: +((f[f.length - 1] || 0)).toFixed(1), longTasksSinceLoad: PERF.long },
+                    settings: { canvas: FLAGS.perfCanvas, simplify: FLAGS.perfSimplify, vertexCull: FLAGS.perfVertexCull, markerCull: FLAGS.perfMarkerCull, cluster: FLAGS.perfCluster, labels: FLAGS.showMapLabels, labelMax: FLAGS.mapLabelMax, minimap: FLAGS.minimap, basemap: currentProviderKey },
+                    env: { viewport: innerWidth + 'x' + innerHeight, dpr: devicePixelRatio, cores: navigator.hardwareConcurrency, memGB: navigator.deviceMemory, heapMB: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : null, ua: navigator.userAgent }
+                };
+            }
+            function copyDiagnostics() { copyToClipboard(JSON.stringify(perfReport(), null, 2), 'Diagnostics'); }
+            const kfmt = (n) => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : String(n);
+            function updatePerfLabel() {
+                if (document.hidden) return;
+                const { s } = perfStats();
+                document.getElementById('sb-perf-text').textContent = kfmt(s.objects) + ' obj · ' + kfmt(s.pathVerts + s.polyVerts) + ' vtx · C' + kfmt(s.complexityScore) + ' · ' + s.fps + ' fps';
+            }
+            setInterval(updatePerfLabel, 3000); setTimeout(updatePerfLabel, 1500);
+            document.getElementById('sb-perf').addEventListener('click', copyDiagnostics);
+
+            // ---- minimap toggle ----
+            function setMinimap(on) {
+                FLAGS.minimap = !!on; saveFlags();
+                document.getElementById('minimap-wrap').classList.toggle('hidden', !on);
+                if (on) { if (!minimap) initMinimap(); else { minimap.invalidateSize(); syncMinimap(); updateMinimapDots(); } }
+            }
+            document.getElementById('sb-minimap').addEventListener('click', () => setMinimap(!FLAGS.minimap));
+
+            // ---- rail buttons that only exist when there is something to show ----
+            function updateRailVisibility() {
+                const hasL = hasNode(n => n.type === 'los');
+                document.getElementById('rail-links').hidden = !hasL;
+                document.getElementById('rail-photos').hidden = !photos.length;
+                if ((activeSection === 'links' && !hasL) || (activeSection === 'photos' && !photos.length)) {
+                    activeSection = 'places';
+                    document.querySelectorAll('.rail-btn[data-subrail]').forEach(b => b.classList.toggle('active', b.dataset.subrail === 'places' && subrail.classList.contains('open')));
+                }
+            }
+
+            // ---- shared modal helper ----
+            function genericModal(title, html, buttons) {
+                const ov = document.getElementById('modal-overlay'), ac = document.getElementById('modal-actions'), bo = document.getElementById('modal-body');
+                document.getElementById('modal-title').innerHTML = title; bo.innerHTML = html; ac.innerHTML = '';
+                const close = () => { ov.classList.remove('open'); bo.innerHTML = ''; ac.innerHTML = '<button class="btn btn-secondary" id="modal-cancel">Cancel</button><button class="btn btn-primary" id="modal-ok">Save</button>'; };
+                buttons.forEach(b => { const e = document.createElement('button'); e.className = 'btn ' + (b.primary ? 'btn-primary' : 'btn-secondary'); e.innerHTML = b.label; e.addEventListener('click', () => b.fn(close)); ac.appendChild(e); });
+                ov.classList.add('open');
+                return close;
+            }
+
+            // ==================== PHOTOS (temporary — never saved, not part of Places) ====================
+            const photos = [];
+            let photoSel = -1, _phSeq = 0, phUrl = null, photoView = 'list';
+            const photoGroup = L.featureGroup();
+            function setPhotoShow(on) { FLAGS.photoShow = !!on; if (on) { if (!map.hasLayer(photoGroup)) photoGroup.addTo(map); } else map.removeLayer(photoGroup); }
+            setPhotoShow(FLAGS.photoShow);
+            const IMG_RX = /\.(jpe?g|png|webp|heic|heif|avif)$/i;
+
+            function exifGps(buf) {
+                try {
+                    const u = new Uint8Array(buf); let p = -1;
+                    for (let i = 0; i < u.length - 8; i++) if (u[i] === 69 && u[i + 1] === 120 && u[i + 2] === 105 && u[i + 3] === 102 && u[i + 4] === 0 && u[i + 5] === 0) { p = i + 6; break; }
+                    if (p < 0) return null;
+                    const dv = new DataView(buf), bo = dv.getUint16(p), le = bo === 0x4949;
+                    if (!le && bo !== 0x4d4d) return null;
+                    const g16 = o => dv.getUint16(p + o, le), g32 = o => dv.getUint32(p + o, le);
+                    const ifd = o => { const n = g16(o), m = {}; for (let i = 0; i < n && i < 200; i++) { const e = o + 2 + i * 12; m[g16(e)] = { c: g32(e + 4), v: e + 8 }; } return m; };
+                    const at = (t, sz) => sz * t.c > 4 ? g32(t.v) : t.v;
+                    const rat = (t, i) => { const o = at(t, 8) + i * 8, d = g32(o + 4); return d ? g32(o) / d : 0; };
+                    const asc = t => { const o = at(t, 1); let s = ''; for (let i = 0; i < t.c && i < 64; i++) { const c = dv.getUint8(p + o + i); if (!c) break; s += String.fromCharCode(c); } return s; };
+                    const i0 = ifd(g32(4)), out = {};
+                    if (i0[0x8769]) { const ex = ifd(g32(i0[0x8769].v)); if (ex[0x9003]) out.date = asc(ex[0x9003]); }
+                    if (!i0[0x8825]) return out;
+                    const gp = ifd(g32(i0[0x8825].v));
+                    if (gp[2] && gp[4]) {
+                        const dms = t => rat(t, 0) + rat(t, 1) / 60 + rat(t, 2) / 3600;
+                        let lat = dms(gp[2]), lng = dms(gp[4]);
+                        if (gp[1] && asc(gp[1])[0] === 'S') lat = -lat;
+                        if (gp[3] && asc(gp[3])[0] === 'W') lng = -lng;
+                        if (isFinite(lat) && isFinite(lng) && (lat || lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+                            out.lat = lat; out.lng = lng;
+                            if (gp[6]) { out.alt = rat(gp[6], 0); if (gp[5] && dv.getUint8(p + gp[5].v) === 1) out.alt = -out.alt; }
+                        }
+                    }
+                    return out;
+                } catch (e) { return null; }
+            }
+            async function makeThumb(f) {
+                try {
+                    const bm = await createImageBitmap(f, { resizeWidth: 260, resizeQuality: 'medium' });
+                    const s = Math.min(bm.width, bm.height), c = document.createElement('canvas'); c.width = c.height = 200;
+                    c.getContext('2d').drawImage(bm, (bm.width - s) / 2, (bm.height - s) / 2, s, s, 0, 0, 200, 200);
+                    if (bm.close) bm.close();
+                    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.8));
+                    return blob ? URL.createObjectURL(blob) : null;
+                } catch (e) { return null; }
+            }
+            function photoIcon(p) {
+                const s = +FLAGS.photoSize || 56, b = +FLAGS.photoBorder || 0;
+                const bg = p.thumb ? `background-image:url('${p.thumb}');background-size:cover;background-position:center;` : '';
+                return L.divIcon({ className: '', iconSize: [s, s], iconAnchor: [s / 2, s / 2],
+                    html: `<div class="ph-ic" style="width:${s}px;height:${s}px;border:${b}px solid ${safeColor(FLAGS.photoBorderColor, '#ffffff')};border-radius:${FLAGS.photoShape === 'circle' ? '50%' : '6px'};${bg}">${p.thumb ? '' : '<i class="fas fa-image" style="color:#fff;font-size:' + Math.round(s / 2.5) + 'px"></i>'}</div>` });
+            }
+            function refreshPhotoMarkers() { photos.forEach(p => p.marker.setIcon(photoIcon(p))); }
+            function addPhoto(p) {
+                photos.push(p);
+                p.marker = L.marker([p.lat, p.lng], { icon: photoIcon(p), zIndexOffset: 300 });
+                p.marker.on('click', () => openPhoto(p.id));
+                p.marker.bindTooltip(p.name, { direction: 'top', offset: [0, -(+FLAGS.photoSize || 56) / 2] });
+                photoGroup.addLayer(p.marker);
+            }
+            async function importPhotos(files) {
+                files = files.filter(f => IMG_RX.test(f.name));
+                if (!files.length) { showToast('No images found', 'fa-image'); return; }
+                const seen = new Set(photos.map(p => p.key)), noGps = [], fresh = [];
+                let dup = 0;
+                progressStart('Reading photos', files.length);
+                for (let i = 0; i < files.length; i++) {
+                    const f = files[i], key = f.name + '|' + f.size + '|' + f.lastModified;
+                    progressStep(i, f.name);
+                    if (i % 6 === 0) await new Promise(r => setTimeout(r, 0));
+                    if (seen.has(key)) { dup++; continue; }
+                    seen.add(key);
+                    let ex = null;
+                    try { ex = exifGps(await f.slice(0, /\.hei[cf]$/i.test(f.name) ? f.size : 262144).arrayBuffer()); } catch (e) {}
+                    if (!ex || ex.lat == null) { noGps.push(f.webkitRelativePath || f.name); continue; }
+                    fresh.push({ id: 'ph' + (++_phSeq), key, name: f.name, path: f.webkitRelativePath || f.name, file: f, lat: ex.lat, lng: ex.lng, alt: ex.alt, date: ex.date, size: f.size, thumb: await makeThumb(f) });
+                }
+                progressDone();
+                fresh.forEach(addPhoto);
+                updateRailVisibility();
+                if (activeSection === 'photos') renderPhotosSection();
+                photoReport(files.length - dup, fresh.length, noGps, dup);
+                if (fresh.length) {
+                    const b = L.latLngBounds(photos.map(p => [p.lat, p.lng]));
+                    map.flyToBounds(b, Object.assign({ maxZoom: 17, duration: 1.2 }, availableMapPadding()));
+                    const rb = document.getElementById('rail-photos'); if (activeSection !== 'photos' && rb) rb.click();
+                }
+            }
+            function photoReport(total, added, noGps, dup) {
+                const li = noGps.slice(0, 60).map(n => '<div style="padding:2px 0;font-family:\'IBM Plex Mono\',monospace;font-size:.7rem;">' + escapeHtml(n) + '</div>').join('');
+                genericModal('<i class="fas fa-images"></i> Photo import',
+                    `<div style="font-size:.85rem;line-height:1.7;margin-bottom:10px;"><b>${total}</b> image${total === 1 ? '' : 's'} checked<br><i class="fas fa-location-dot" style="color:var(--accent)"></i> <b>${added}</b> with GPS data — shown on the map<br><i class="fas fa-ban" style="color:var(--text-3)"></i> <b>${noGps.length}</b> without GPS data${dup ? '<br>' + dup + ' duplicate(s) skipped' : ''}</div>` +
+                    (noGps.length ? `<label>Without GPS${noGps.length > 60 ? ' (first 60)' : ''}</label><div style="max-height:180px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px 10px;background:var(--surface-soft);margin-bottom:10px;">${li}</div>` : '') +
+                    '<div class="editor-hint">Photos are kept in memory only: they disappear when the page is reloaded and are never saved.</div>',
+                    [{ label: 'OK', primary: true, fn: c => c() }]);
+            }
+            function pickPhotoFiles(folder) {
+                const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true; inp.style.display = 'none';
+                if (folder) inp.webkitdirectory = true; else inp.accept = 'image/*,.heic,.heif';
+                inp.addEventListener('change', () => { const fs = Array.from(inp.files || []); inp.remove(); importPhotos(fs); });
+                document.body.appendChild(inp); inp.click();
+            }
+            function openPhotoImportDialog() {
+                cancelActiveDraw();
+                genericModal('<i class="fas fa-images"></i> Import photos',
+                    '<div style="font-size:.8rem;color:var(--text-2);margin-bottom:12px;">Photos with GPS data are placed on the map. Nothing is saved — they are gone when you reload.</div>',
+                    [{ label: '<i class="fas fa-image"></i> Image files…', primary: true, fn: c => { c(); pickPhotoFiles(false); } },
+                     { label: '<i class="fas fa-folder-open"></i> Folder…', fn: c => { c(); pickPhotoFiles(true); } },
+                     { label: 'Cancel', fn: c => c() }]);
+                const b = document.getElementById('modal-body');
+                b.insertAdjacentHTML('beforeend', '<div class="editor-hint">A folder is searched including its sub-folders. Repeat to add more folders, or drag several files and folders onto the map at once.</div>');
+            }
+            document.getElementById('tool-photos').addEventListener('click', openPhotoImportDialog);
+
+            function readDirEntries(d) { return new Promise((res, rej) => { const r = d.createReader(), all = []; const go = () => r.readEntries(es => { if (!es.length) res(all); else { all.push(...es); go(); } }, rej); go(); }); }
+            async function walkEntry(en, out) {
+                if (!en) return;
+                if (en.isFile) await new Promise(r => en.file(f => { out.push(f); r(); }, r));
+                else if (en.isDirectory) for (const c of await readDirEntries(en)) await walkEntry(c, out);
+            }
+            async function importDroppedFilesOrPhotos(dt) {
+                const entries = Array.from(dt.items || []).map(i => (i.kind === 'file' && i.webkitGetAsEntry) ? i.webkitGetAsEntry() : null);   // must be read before any await
+                const plain = Array.from(dt.files || []);
+                const hasDir = entries.some(e => e && e.isDirectory);
+                if (!hasDir && !plain.some(f => IMG_RX.test(f.name))) return importDroppedFiles(plain);
+                let all = plain;
+                if (hasDir) { all = []; for (const e of entries) await walkEntry(e, all); }
+                const others = all.filter(f => /\.(kml|geojson|json|gpx|hgt)$/i.test(f.name));
+                if (others.length) await importDroppedFiles(others);
+                await importPhotos(all.filter(f => IMG_RX.test(f.name)));
+            }
+
+            function clearPhotos() {
+                photoGroup.clearLayers();
+                photos.forEach(p => { if (p.thumb) URL.revokeObjectURL(p.thumb); });
+                photos.length = 0; closePhoto(); updateRailVisibility();
+                if (activeSection === 'photos') renderPhotosSection();
+            }
+            function renderPhotosSection() {
+                const b = subrailBody; b.innerHTML = ''; b.onscroll = null; b.oncontextmenu = null;
+                if (!photos.length) {
+                    b.innerHTML = '<div class="fx-empty"><div style="font-weight:600;color:var(--text);margin-bottom:6px;">No photos loaded</div><div>Photos are temporary — they are not saved.</div><div class="empty-actions"><button class="btn btn-primary" id="ph-add0"><i class="fas fa-images"></i> Import photos</button></div></div>';
+                    b.querySelector('#ph-add0').addEventListener('click', openPhotoImportDialog); return;
+                }
+                const w = document.createElement('div');
+                const isSet = photoView === 'settings';
+                const tabs = `<div class="seg ph-viewseg" style="margin-bottom:10px;"><button class="seg-btn ${!isSet ? 'on' : ''}" data-view="list"><i class="fas fa-list"></i> Photos</button><button class="seg-btn ${isSet ? 'on' : ''}" data-view="settings"><i class="fas fa-gear"></i> Settings</button></div>`;
+                const settingsHTML = `
+                    <div class="static-heading">Display on map</div>
+                    <div class="toggle-row ${FLAGS.photoShow ? 'active' : ''}" id="ph-show"><div class="toggle-switch"></div><div class="toggle-label"><div class="toggle-label-main">Show photos on map</div></div></div>
+                    <div class="editor-field"><label>Size</label><div class="editor-value-row"><input type="range" id="ph-size" min="24" max="160" step="2" value="${FLAGS.photoSize}"><span class="val" id="ph-size-v">${FLAGS.photoSize}px</span></div></div>
+                    <div class="editor-field"><label>Shape</label><div class="seg"><button class="seg-btn ${FLAGS.photoShape !== 'circle' ? 'on' : ''}" data-shape="square"><i class="fas fa-square"></i> Square</button><button class="seg-btn ${FLAGS.photoShape === 'circle' ? 'on' : ''}" data-shape="circle"><i class="fas fa-circle"></i> Circle</button></div></div>
+                    <div class="editor-field-row"><div class="editor-field"><label>Border (px)</label><input type="number" id="ph-bw" min="0" max="12" value="${FLAGS.photoBorder}"></div><div class="editor-field"><label>Border colour</label><input type="color" id="ph-bc" value="${safeColor(FLAGS.photoBorderColor, '#ffffff')}"></div></div>`;
+                const listHTML = `
+                    <div style="display:flex;gap:8px;margin:0 0 8px;"><button class="btn btn-secondary" id="ph-add" style="flex:1"><i class="fas fa-plus"></i> Add more…</button><button class="btn btn-danger" id="ph-clear" style="flex:1"><i class="fas fa-trash"></i> Clear all</button></div>
+                    <div class="static-heading">${photos.length} photo${photos.length === 1 ? '' : 's'} with GPS</div><div id="ph-list"></div>`;
+                w.innerHTML = tabs + (isSet ? settingsHTML : listHTML);
+                b.appendChild(w);
+                w.querySelectorAll('[data-view]').forEach(x => x.addEventListener('click', () => { photoView = x.dataset.view; renderPhotosSection(); }));
+                if (isSet) {
+                    const upd = () => { saveFlags(); refreshPhotoMarkers(); };
+                    w.querySelector('#ph-show').addEventListener('click', () => { setPhotoShow(!FLAGS.photoShow); saveFlags(); renderPhotosSection(); });
+                    w.querySelector('#ph-size').addEventListener('input', (e) => { FLAGS.photoSize = +e.target.value; w.querySelector('#ph-size-v').textContent = FLAGS.photoSize + 'px'; upd(); });
+                    w.querySelectorAll('[data-shape]').forEach(x => x.addEventListener('click', () => { FLAGS.photoShape = x.dataset.shape; upd(); renderPhotosSection(); }));
+                    w.querySelector('#ph-bw').addEventListener('input', (e) => { FLAGS.photoBorder = Math.max(0, Math.min(12, +e.target.value || 0)); upd(); });
+                    w.querySelector('#ph-bc').addEventListener('input', (e) => { FLAGS.photoBorderColor = e.target.value; upd(); });
+                    return;
+                }
+                w.querySelector('#ph-add').addEventListener('click', openPhotoImportDialog);
+                w.querySelector('#ph-clear').addEventListener('click', () => { if (confirm('Remove all ' + photos.length + ' photos from the map?')) clearPhotos(); });
+                const list = w.querySelector('#ph-list'), CAP = 400;
+                photos.slice(0, CAP).forEach(p => {
+                    const r = document.createElement('div'); r.className = 'fx-row ph-row' + (photos[photoSel] === p ? ' sel' : ''); r.tabIndex = 0;
+                    const im = document.createElement('img'); im.className = 'ph-thumb'; im.alt = ''; if (p.thumb) im.src = p.thumb;
+                    const lb = document.createElement('div'); lb.className = 'fx-label'; lb.textContent = p.name; lb.title = p.path;
+                    r.appendChild(im); r.appendChild(lb);
+                    r.addEventListener('click', () => { openPhoto(p.id); map.panTo([p.lat, p.lng]); });
+                    r.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); r.click(); } });
+                    list.appendChild(r);
+                });
+                if (photos.length > CAP) list.insertAdjacentHTML('beforeend', '<div class="fx-empty">Showing the first ' + CAP + ' — all ' + photos.length + ' are on the map.</div>');
+            }
+
+            // ---- preview panel ----
+            function openPhoto(id) {
+                const i = photos.findIndex(p => p.id === id); if (i < 0) return;
+                photoSel = i; const p = photos[i];
+                if (phUrl) URL.revokeObjectURL(phUrl);
+                phUrl = URL.createObjectURL(p.file);
+                phErr.hidden = true; phImg.hidden = false; phImg.classList.remove('zoom'); phImg.src = phUrl;
+                phTitle.textContent = p.name; phSub.textContent = (i + 1) + ' of ' + photos.length;
+                const row = (k, v) => '<tr><td>' + k + '</td><td>' + v + '</td></tr>';
+                phMeta.innerHTML = '<table class="props-table">' + row('Latitude', p.lat.toFixed(6)) + row('Longitude', p.lng.toFixed(6)) + (p.alt != null ? row('Altitude', Math.round(p.alt) + ' m') : '') +
+                    (p.date ? row('Taken', escapeHtml(p.date)) : '') + row('Size', (p.size / 1048576).toFixed(2) + ' MB') + row('Path', escapeHtml(p.path)) + '</table>';
+                phPanel.classList.add('open');
+                map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 15), { duration: 0.8 });
+            }
+            function closePhoto() { phPanel.classList.remove('open', 'full'); photoSel = -1; if (phUrl) { URL.revokeObjectURL(phUrl); phUrl = null; } phImg.removeAttribute('src'); }
+            function stepPhoto(d) { if (photoSel < 0 || !photos.length) return; openPhoto(photos[(photoSel + d + photos.length) % photos.length].id); }
+            phImg.addEventListener('error', () => { if (phImg.getAttribute('src')) { phImg.hidden = true; phErr.hidden = false; } });
+            phImg.addEventListener('click', () => phImg.classList.toggle('zoom'));
+            document.getElementById('photo-close').addEventListener('click', closePhoto);
+            document.getElementById('photo-prev').addEventListener('click', () => stepPhoto(-1));
+            document.getElementById('photo-next').addEventListener('click', () => stepPhoto(1));
+            document.getElementById('photo-full').addEventListener('click', () => phPanel.classList.toggle('full'));
+            document.addEventListener('keydown', (e) => {
+                if (!phPanel.classList.contains('open') || (e.target.closest && e.target.closest('input, textarea, select'))) return;
+                if (e.key === 'Escape') closePhoto(); else if (e.key === 'ArrowLeft') stepPhoto(-1); else if (e.key === 'ArrowRight') stepPhoto(1);
+            });
+            (function () {
+                const h = document.getElementById('photo-resizer'), area = document.querySelector('.map-area');
+                if (FLAGS.photoW) phPanel.style.setProperty('--photo-w', FLAGS.photoW + 'px');
+                let drag = false;
+                h.addEventListener('pointerdown', (e) => { drag = true; phPanel.classList.remove('full'); try { h.setPointerCapture(e.pointerId); } catch (x) {} e.preventDefault(); });
+                h.addEventListener('pointermove', (e) => { if (!drag) return; const r = area.getBoundingClientRect(); const w = Math.max(280, Math.min(r.width, r.right - e.clientX)); phPanel.style.setProperty('--photo-w', Math.round(w) + 'px'); FLAGS.photoW = Math.round(w); });
+                h.addEventListener('pointerup', () => { if (drag) { drag = false; saveFlags(); } });
+                h.addEventListener('dblclick', () => phPanel.classList.toggle('full'));
+                h.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); const w = Math.max(280, phPanel.offsetWidth + (e.key === 'ArrowLeft' ? 24 : -24)); phPanel.style.setProperty('--photo-w', w + 'px'); FLAGS.photoW = w; saveFlags(); } });
+            })();
+
+            // ==================== STRESS TEST (temporary) ====================
+            function stressRemove() {
+                const f = treeNodes.find(n => n.meta && n.meta.stress);
+                if (!f) return Promise.resolve(false);
+                return withBusy('Removing test data…', async () => { await deleteNodeWithChildren(f); renderTree(); return true; });
+            }
+            function frameTest(n, dz) {
+                return new Promise(res => {
+                    const c0 = map.getCenter(), z0 = map.getZoom(), sz = map.getSize(), z = Math.max(map.getMinZoom(), z0 + dz), ds = [];
+                    const p0 = map.project(c0, z);
+                    let i = 0, last = performance.now();
+                    const step = (t) => {
+                        ds.push(t - last); last = t;
+                        if (i >= n) {
+                            map.setView(c0, z0, { animate: false });
+                            const a = ds.slice(2).sort((x, y) => x - y), avg = a.reduce((x, y) => x + y, 0) / (a.length || 1);
+                            return res({ frames: a.length, avgMs: +avg.toFixed(1), p95Ms: +((a[Math.floor(a.length * 0.95)] || 0)).toFixed(1), maxMs: +((a[a.length - 1] || 0)).toFixed(1), fps: +(1000 / (avg || 1)).toFixed(1) });
+                        }
+                        const ang = i / n * Math.PI * 2;
+                        map.setView(map.unproject(p0.add([Math.sin(ang) * sz.x * 0.5, (1 - Math.cos(ang)) * sz.y * 0.25]), z), z, { animate: false });
+                        i++; requestAnimationFrame(step);
+                    };
+                    requestAnimationFrame(step);
+                });
+            }
+            async function stressRun(c) {
+                await stressRemove();
+                const out = { requested: c }, b = map.getBounds(), rnd = (a, z) => a + Math.random() * (z - a);
+                const S = b.getSouth(), N = b.getNorth(), W = b.getWest(), E = b.getEast(), dLat = N - S, dLng = E - W, cols = COLOR_PRESETS;
+                busyShow('Generating test data…'); await nextPaint();
+                let t = performance.now();
+                const folder = createNode({ type: 'folder', name: '⚠ Stress test (not saved)', meta: { color: '#dc2626', stress: true, desc: 'Temporary — never saved' } });
+                for (let i = 0; i < c.pm; i++) folder.children.push(createNode({ type: 'placemark', name: 'Stress ' + (i + 1), meta: { lat: rnd(S, N), lng: rnd(W, E), icon: DEFAULT_ICON, color: cols[i % cols.length], desc: '' } }));
+                for (let i = 0; i < c.pa; i++) {
+                    let la = rnd(S, N), ln = rnd(W, E); const pts = [];
+                    for (let k = 0; k < c.ve; k++) { la = Math.max(S, Math.min(N, la + rnd(-1, 1) * dLat / 120)); ln = Math.max(W, Math.min(E, ln + rnd(-1, 1) * dLng / 120)); pts.push([la, ln]); }
+                    folder.children.push(createNode({ type: 'path', name: 'Stress path ' + (i + 1), meta: { points: pts, color: cols[i % cols.length], lineThickness: 2, desc: '', distance: pathDistance(pts.map(p => L.latLng(p[0], p[1]))) } }));
+                }
+                for (let i = 0; i < c.po; i++) {
+                    const la = rnd(S, N), ln = rnd(W, E), r = dLat * rnd(0.01, 0.04), pts = [];
+                    for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; pts.push([la + Math.sin(a) * r * rnd(0.6, 1), ln + Math.cos(a) * r * rnd(0.6, 1)]); }
+                    folder.children.push(createNode({ type: 'polygon', name: 'Stress polygon ' + (i + 1), meta: { points: pts, color: cols[(i + 3) % cols.length], lineThickness: 2, desc: '', area: 0 } }));
+                }
+                out.generateMs = Math.round(performance.now() - t); t = performance.now();
+                treeNodes.push(folder); buildLayersFor([folder]);
+                out.buildMapLayersMs = Math.round(performance.now() - t); t = performance.now();
+                updateMinimapDots(); updateMapLabels(); renderTree();
+                out.renderPanelMs = Math.round(performance.now() - t);
+                busyHide(); await nextPaint(); await new Promise(r => setTimeout(r, 500));
+                showToast('Running pan / zoom test…', 'fa-flask');
+                out.panTest = await frameTest(90, 0);
+                out.zoomOutPanTest = await frameTest(60, -1);
+                out.diagnostics = perfReport();
+                const txt = JSON.stringify(out, null, 2);
+                genericModal('<i class="fas fa-flask"></i> Stress test results',
+                    `<div style="font-size:.85rem;line-height:1.7;margin-bottom:8px;">Pan: <b>${out.panTest.fps} fps</b> (worst frame ${out.panTest.maxMs} ms)<br>Zoomed out: <b>${out.zoomOutPanTest.fps} fps</b> (worst ${out.zoomOutPanTest.maxMs} ms)<br>Build on map: ${out.buildMapLayersMs} ms · list render: ${out.renderPanelMs} ms</div><pre style="max-height:220px;overflow:auto;font-size:.66rem;background:var(--surface-soft);border:1px solid var(--border);border-radius:8px;padding:8px;">${escapeHtml(txt)}</pre><div class="editor-hint">The test data is in the folder "Stress test" and is never saved. Remove it when finished.</div>`,
+                    [{ label: '<i class="fas fa-copy"></i> Copy results', primary: true, fn: () => copyToClipboard(txt, 'Stress results') },
+                     { label: 'Remove test data', fn: async (cl) => { cl(); await stressRemove(); } },
+                     { label: 'Close', fn: cl => cl() }]);
+            }
+            function openStressTest() {
+                const num = (id, label, v) => `<div class="editor-field"><label>${label}</label><input type="number" id="${id}" value="${v}" min="0" step="100"></div>`;
+                genericModal('<i class="fas fa-flask"></i> Stress test',
+                    '<div style="font-size:.8rem;color:var(--text-2);margin-bottom:10px;">Generates random objects inside the current map view, then pans and zooms while measuring frame times. Nothing is saved.</div>' +
+                    '<div class="editor-field-row">' + num('st-pm', 'Placemarks', 5000) + num('st-pa', 'Paths', 300) + '</div><div class="editor-field-row">' + num('st-ve', 'Vertices per path', 60) + num('st-po', 'Polygons (8 vertices)', 100) + '</div>',
+                    [{ label: '<i class="fas fa-play"></i> Run', primary: true, fn: (cl) => {
+                        const g = (id) => Math.max(0, Math.min(200000, parseInt(document.getElementById(id).value, 10) || 0));
+                        const cfg = { pm: g('st-pm'), pa: g('st-pa'), ve: Math.max(2, g('st-ve')), po: g('st-po') };
+                        cl(); stressRun(cfg).catch(err => { busyHide(); showToast('Stress test failed', 'fa-times', { error: true, detail: err }); });
+                    } }, { label: 'Remove test data', fn: async (cl) => { cl(); await stressRemove(); } }, { label: 'Cancel', fn: cl => cl() }]);
+            }
+            document.getElementById('sb-stress').addEventListener('click', openStressTest);
+
             // ==================== INIT ====================
             (async function init() {
                 await loadSettings();
@@ -10065,14 +11097,14 @@
                 renderTree();
                 initMinimap();
                 updateTerrainVisibility();
-                await loadPersistedTiles();
-                const restored = await loadPersistedTree();
+                await loadPersistedTiles(); PERF.tilesAt = Math.round(performance.now());
+                const restored = await loadPersistedTree(); PERF.treeAt = Math.round(performance.now());
                 resetHistory(true);
                 if (restored && hasAnyPlaces()) setTimeout(fitToPlacesExtent, 200);
                 updateMapToolsVisibility();
                 syncProfilePanelLeft();
                 updateMapLabels();
-                setTimeout(() => showToast('Andrew\'s Earth ready', 'fa-tower-broadcast'), 700);
+                setTimeout(() => { if (window.__bootResolve) window.__bootResolve(); }, (restored && hasAnyPlaces()) ? 400 : 60); setTimeout(() => showToast('Andrew\'s Earth ready', 'fa-tower-broadcast'), 700);
             })();
         })();
     </script>
