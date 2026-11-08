@@ -331,7 +331,7 @@ function behaveHunt(sc,dt,rdt){
         pred.timer+=rdt;pred.targetSpeed=0;pred.shakePh+=rdt*26;
         pred.headShake=Math.sin(pred.shakePh);pred.jawT=.35;pred.headT=.25;
         const held=sc.hunted;
-        if(held){held.flail=Math.sin(pred.shakePh*.8)*35;
+        if(held){const damp=1-.55*Math.min(1,pred.timer/1.5);held.flail=Math.sin(pred.shakePh*.8)*34*damp;
           if(Math.floor(pred.timer*10)!==Math.floor((pred.timer-rdt)*10))bloodBurst(sc,pred,.18,held);}
         if(pred.timer>1.5){
           pred.headShake=0;
@@ -346,7 +346,7 @@ function behaveHunt(sc,dt,rdt){
         if(held&&GORE[goreLevel].trail&&pred.timer-pred.lastTrail>.18){pred.lastTrail=pred.timer;
           addDecal({kind:'splat',sc,x:held.x+rand(-.5,.5),y:held.y+rand(-.5,.5),size:rand(.2,.5)*GORE[goreLevel].trail,h:0,life:150});}
         if(pred.timer>2.6){
-          if(held){held.dead=true;held.state='carcass';held.speed=0;held.targetSpeed=0;held.flail=0;held.bloodAmt=1;held.heading=(pred.heading+90)%360;
+          if(held){held.dead=true;held.state='carcass';held.speed=0;held.targetSpeed=0;held.flail=0;held.bloodAmt=1;held.heading=(pred.heading+90)%360;held.curl=rand(-.1,.1);
             if(GORE[goreLevel].pool)addDecal({kind:'pool',sc,x:held.x,y:held.y,size:held.sp.length*displayScale*GORE[goreLevel].pool*.5,h:0,life:260});}
           pred.state='feed';pred.timer=0;pred.targetSpeed=0;
         }
@@ -356,7 +356,7 @@ function behaveHunt(sc,dt,rdt){
         const held=sc.hunted,prev=pred.bobPh;pred.bobPh+=rdt*7;
         const s=Math.sin(pred.bobPh);pred.headT=.45+.4*s;pred.jawT=s>.2?.5:.05;
         if(Math.floor(pred.bobPh/PI)!==Math.floor(prev/PI)&&s>=0===false){ // each head-lift tears off a mouthful
-          if(held&&held.dead){held.rem=Math.max(.15,held.rem-.075);tearBite(sc,pred,held);}
+          if(held&&held.dead){held.rem=Math.max(.1,held.rem-.08);tearBite(sc,pred,held);}
         }
         if(pred.timer>11){
           if(held){held.gone=true;
@@ -401,6 +401,7 @@ function behaveHunt(sc,dt,rdt){
 }
 function doBite(sc,pred,tgt){
   tgt.state='seized';tgt.targetSpeed=0;tgt.speed*=.2;tgt.bloodAmt=.5;
+  tgt.attach=0;tgt.fromX=tgt.x;tgt.fromY=tgt.y;tgt.fromH=tgt.heading;tgt.curl=0;
   sc.hunted=tgt;pred.state='shake';pred.timer=0;pred.targetSpeed=0;pred.speed*=.3;pred.shakePh=0;
   bloodBurst(sc,pred,1,tgt);
   sfx('crunch',pred,1);sfx('roar',pred,.7);tremor(3.2);
@@ -413,11 +414,17 @@ function nextAfterKill(sc,pred){
   pred.state='leave';leaveGoal(pred);
 }
 /* seized prey hangs across the predator's jaws */
-function attachSeized(sc){
+function attachSeized(sc,dt){
   const pred=sc.pred,held=sc.hunted;
   if(!held||held.dead||held.gone||!['shake','drag'].includes(pred.state))return;
   const f=dirOf(pred.heading),off=pred.L*.5+held.L*.06;
-  held.x=pred.x+f.x*off;held.y=pred.y+f.y*off;held.heading=(pred.heading+90+held.flail+360)%360;
+  held.attach=Math.min(1,(held.attach===undefined?1:held.attach)+(dt||0)/.28);
+  const e=held.attach*held.attach*(3-2*held.attach);                       // smooth-step: the prey is yanked into the jaws, not teleported
+  const jx=pred.x+f.x*off,jy=pred.y+f.y*off,jh=(pred.heading+90+held.flail+360)%360;
+  if(e<1&&held.fromX!==undefined){
+    held.x=held.fromX+(jx-held.fromX)*e;held.y=held.fromY+(jy-held.fromY)*e;
+    held.heading=(held.fromH+angDiff(held.fromH,jh)*e+360)%360;
+  }else{held.x=jx;held.y=jy;held.heading=jh;}
   held.speed=0;
 }
 const simClock0=0;let simClock=0;
@@ -435,7 +442,7 @@ function stepScene(sc,dt,rdt){
     if(a.state==='seized'){a.gait=0;continue;}
     integrate(a,dt);
   }
-  if(sc.type==='hunt')attachSeized(sc);
+  if(sc.type==='hunt')attachSeized(sc,rdt);
 }
 function stepSim(dt){
   const n=Math.max(1,Math.ceil(dt/.05)),h=dt/n;
@@ -1573,7 +1580,7 @@ function drawBody(c,a,Hpx,Wpx,shadow,mpp){
     const ds=(t-hip)*L;o+=.5*kap*ds*ds/mpp;
     if(hs&&t<.3){const u=(.3-t)/.3;o+=hs*u*u;}
     if(curl)o+=curl*Math.sin(t*PI);
-    if(a.flail)o+=a.flail*.012*Hpx*Math.sin(t*PI*1.5);
+    if(a.flail)o+=a.flail*.0035*Hpx*Math.sin(t*PI*1.5);
     return o;};
   const ye=t=>(a.headExt&&t<.28)?-a.headExt*Hpx*.06*Math.pow((.28-t)/.28,1.5):0;
   const yAt=t=>-Hpx/2+t*Hpx+ye(t);
@@ -1608,25 +1615,27 @@ function drawActor(a,sc,v){
   if(a.vis)a.seen=true;
   if(!a.vis||Hpx<2.5)return;
   const alpha=sc.alpha*a.fade;if(alpha<.01)return;
-  const sxs=a.dead?.6+.4*a.rem:1,sys=a.dead?.7+.3*a.rem:1;
+  const sxs=1,sys=1;
+  const cutY=a.dead&&a.rem<1?Hpx/2-(1-a.rem)*Hpx*.62:null;   // local y beyond which the carcass has been eaten (tail first)
+  const clipTo=(c)=>{if(cutY===null)return;c.beginPath();c.rect(-Wpx*1.5,-Hpx,Wpx*3,Hpx+cutY);c.clip();};
   /* soft ground shadow (sun from the north-west). Drawn opaque to a scratch canvas, then
      composited once at low alpha so the strip seams never double up. */
   {const R=Math.ceil(Hpx*.75+10);
    if(R<1000){if(shadowCv.width!==R*2){shadowCv.width=R*2;shadowCv.height=R*2;}
      const t=shadowCv.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,R*2,R*2);t.translate(R,R);t.rotate(a.hRad);t.scale(sxs,sys);
-     drawBody(t,a,Hpx,Wpx,true,mpp);
+     t.save();clipTo(t);drawBody(t,a,Hpx,Wpx,true,mpp);t.restore();
      ctx.globalAlpha=.3*alpha;ctx.drawImage(shadowCv,p.x+Hpx*.03-R,p.y+Hpx*.045-R);}}
   ctx.globalAlpha=alpha;
   const blood=a.bloodAmt>0&&goreLevel>0;
   if(blood&&Hpx<1100){
     const R=Math.ceil(Hpx*.75+10);if(tint.width!==R*2){tint.width=R*2;tint.height=R*2;}
     const t=tint.getContext('2d');t.setTransform(1,0,0,1,0,0);t.clearRect(0,0,R*2,R*2);t.translate(R,R);t.scale(sxs,sys);
-    drawBody(t,a,Hpx,Wpx,false,mpp);
+    t.save();clipTo(t);drawBody(t,a,Hpx,Wpx,false,mpp);t.restore();
     t.setTransform(1,0,0,1,0,0);t.globalCompositeOperation='source-atop';t.fillStyle=`rgba(130,4,8,${.55*a.bloodAmt})`;t.fillRect(0,0,R*2,R*2);
     t.globalCompositeOperation='source-over';
     ctx.save();ctx.translate(p.x,p.y);ctx.rotate(a.hRad);ctx.drawImage(tint,-R,-R);ctx.restore();
   }else{
-    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(a.hRad);ctx.scale(sxs,sys);drawBody(ctx,a,Hpx,Wpx,false,mpp);ctx.restore();
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(a.hRad);ctx.scale(sxs,sys);clipTo(ctx);drawBody(ctx,a,Hpx,Wpx,false,mpp);ctx.restore();
   }
   ctx.save();ctx.translate(p.x,p.y);ctx.rotate(a.hRad);drawJaw(ctx,a,Hpx,Wpx);ctx.restore();
   ctx.globalAlpha=1;

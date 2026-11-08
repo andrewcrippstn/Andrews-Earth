@@ -29,3 +29,6 @@ Search `index.html` for `EGG-HOOK` to confirm the three hook sections are intact
 - Auto trigger: zoom >= trigger zoom (default 17) and hold the map still ~3.5 s -> a scene starts. Hunt = 1 predator + 2 prey; prey walk across, predator enters from another edge, eats both, then leaves.
 - Dinosaurs spawn and walk inside the *visible* part of the map (panels excluded). The red edge flash frames the visible map.
 - `?egg=0` in the URL disables the egg.
+
+## Predator attack notes
+- Prey is never scaled non-uniformly (that looked "squished"). A caught animal is eased into the jaws over ~0.28 s, swings as a whole body while shaken, and a carcass keeps its true shape: feeding clips it away from the tail end (`cutY` in `drawActor`) instead of shrinking it.
