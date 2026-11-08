@@ -51,12 +51,12 @@
 <!-- AE-IMAGES (optional): the favicon and brand image are NOT embedded here. They live in ./assets/ae-images.js (heavy base64 data, do not read or
      edit it). If that file is missing the app runs normally with no favicon and the plain brand-mark tile. Keep this loader. -->
 <script data-ae-images>(function(){var s=document.createElement('script');s.src='assets/ae-images.js';
-window.__aeImagesReady=new Promise(function(res){s.addEventListener('load',function(){res();});s.addEventListener('error',function(){res();});setTimeout(res,4000);});
-s.onload=function(){var I=window.AE_IMAGES;if(!I)return;
+var done;window.__aeImagesReady=new Promise(function(res){done=res;setTimeout(res,8000);});
+s.onload=function(){try{var I=window.AE_IMAGES;if(!I)return;
 (I.icons||[]).forEach(function(i){var l=document.createElement('link');l.rel=i.rel;if(i.type)l.type=i.type;if(i.sizes)l.sizes=i.sizes;l.href=i.href;document.head.appendChild(l);});
 function brand(){var el=document.querySelector('.brand-mark');if(el&&I.brandMark&&!el.querySelector('img')){var im=document.createElement('img');im.src=I.brandMark;im.alt='';im.width=30;im.height=30;el.appendChild(im);}}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',brand);else brand();};
-s.onerror=function(){console.info('assets/ae-images.js not found: running without the embedded icon images.');};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',brand);else brand();}catch(e){}finally{done();}};
+s.onerror=function(){console.info('assets/ae-images.js not found: running without the embedded icon images.');done();};
 document.head.appendChild(s);})();</script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -921,8 +921,10 @@ document.head.appendChild(s);})();</script>
  (async function(){
   /* the icon comes from assets/ae-images.js, which loads asynchronously: wait for it (or its failure) before reading the icon */
   try{await window.__aeImagesReady;}catch(e){}
-  var l=document.querySelector('link[rel="apple-touch-icon"]');
-  if(l){img.src=l.href;try{await img.decode();}catch(e){}}
+  var I=window.AE_IMAGES,src=null;
+  if(I&&I.icons){for(var n=0;n<I.icons.length;n++){if(I.icons[n].rel==='apple-touch-icon'){src=I.icons[n].href;break;}}}
+  if(!src){var l=document.querySelector('link[rel="apple-touch-icon"]');if(l)src=l.href;}
+  if(src){img.src=src;try{await img.decode();}catch(e){}}
   if(skip||!img.animate){img.classList.add('pulse');ready.then(hide);return;}
   var W=innerWidth,H=innerHeight,full=Math.max(W,H)*1.6/180;
   var A=function(kf,o){return img.animate(kf,Object.assign({fill:'forwards'},o)).finished;};
