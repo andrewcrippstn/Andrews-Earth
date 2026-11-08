@@ -51,6 +51,7 @@
 <!-- AE-IMAGES (optional): the favicon and brand image are NOT embedded here. They live in ./assets/ae-images.js (heavy base64 data, do not read or
      edit it). If that file is missing the app runs normally with no favicon and the plain brand-mark tile. Keep this loader. -->
 <script data-ae-images>(function(){var s=document.createElement('script');s.src='assets/ae-images.js';
+window.__aeImagesReady=new Promise(function(res){s.addEventListener('load',function(){res();});s.addEventListener('error',function(){res();});setTimeout(res,4000);});
 s.onload=function(){var I=window.AE_IMAGES;if(!I)return;
 (I.icons||[]).forEach(function(i){var l=document.createElement('link');l.rel=i.rel;if(i.type)l.type=i.type;if(i.sizes)l.sizes=i.sizes;l.href=i.href;document.head.appendChild(l);});
 function brand(){var el=document.querySelector('.brand-mark');if(el&&I.brandMark&&!el.querySelector('img')){var im=document.createElement('img');im.src=I.brandMark;im.alt='';im.width=30;im.height=30;el.appendChild(im);}}
@@ -913,13 +914,16 @@ document.head.appendChild(s);})();</script>
 <script>
 (function(){
  var boot=document.getElementById('boot'),img=document.getElementById('boot-img');
- var l=document.querySelector('link[rel="apple-touch-icon"]'); if(l) img.src=l.href;
  var q=new URLSearchParams(location.search);
  var skip=q.has('nointro')||q.has('skipintro')||q.get('intro')==='0'||q.get('intro')==='off'||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
  var ready=new Promise(function(r){window.__bootResolve=r;setTimeout(r,20000);});
  function hide(){boot.classList.add('out');setTimeout(function(){boot.remove();},650);}
- if(skip||!img.animate){img.classList.add('pulse');ready.then(hide);return;}
  (async function(){
+  /* the icon comes from assets/ae-images.js, which loads asynchronously: wait for it (or its failure) before reading the icon */
+  try{await window.__aeImagesReady;}catch(e){}
+  var l=document.querySelector('link[rel="apple-touch-icon"]');
+  if(l){img.src=l.href;try{await img.decode();}catch(e){}}
+  if(skip||!img.animate){img.classList.add('pulse');ready.then(hide);return;}
   var W=innerWidth,H=innerHeight,full=Math.max(W,H)*1.6/180;
   var A=function(kf,o){return img.animate(kf,Object.assign({fill:'forwards'},o)).finished;};
   await A([{transform:'scale(.25)',opacity:0},{transform:'scale(.45)',opacity:1,offset:.15},{transform:'scale('+full+')',opacity:1}],{duration:1500,easing:'cubic-bezier(.5,0,.2,1)'});
