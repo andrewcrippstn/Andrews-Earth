@@ -18,10 +18,10 @@ without it. That is fine — the app runs without the egg. **But you must keep t
 can cover part of `#map`).
 The egg panel reuses Andrew's Earth CSS (`.editor-panel`, `.editor-tabs`, `.editor-tab`, `.toggle-row`, `.toggle-switch`, `.style-subtab`, `.editor-field`, `.editor-value-row`, `.btn*`, CSS variables like `--accent`, `--surface`, `--border`).
 If you rename or restyle those, check that the panel still looks right. If you add a new panel that overlays the map, add its id to `overlayPanelIds`.
-Run `python tools/check_egg_hooks.py index.html` to confirm the hooks are intact.
+Search `index.html` for `EGG-HOOK` to confirm the three hook sections are intact.
 
 ## Files
-- `dino-sprites.js` — HEAVY base64 images (never read/edit).
+- `dino-sprites.js` — HEAVY base64 images (never read/edit; never needs to be sent to an AI).
 - `dino-egg.js` — engine (`window.DinoEgg`). Header comment documents the host adapter API.
 - `dino-ae-ui.js` — glue: injects the panel, hotkey **Alt+Shift+D**, host adapter, visible-region logic, follow camera, settings.
 

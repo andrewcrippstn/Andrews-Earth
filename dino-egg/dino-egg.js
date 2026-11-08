@@ -151,7 +151,7 @@ loadSkeletons();
    2. SIMULATION
    x = metres east of scene origin, y = metres north, heading 0° = north, clockwise
    ===================================================================== */
-let displayScale=1.5, timeScale=3, paused=false;
+let displayScale=3, timeScale=3, paused=false;
 let ACTOR_ID=0;
 class Actor{
   constructor(sp,x,y,heading,role){
