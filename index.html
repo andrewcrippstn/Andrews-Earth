@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   ============================================================
-  BUILD: 2026-11-08 20:43:39 (local)
+  BUILD: 2026-11-24 11:12:03 (local)
   ------------------------------------------------------------
   MAINTENANCE RULE — READ BEFORE EDITING THIS FILE:
   Whenever the code in this file is modified in any way,
@@ -31,6 +31,10 @@
   loader so dinosaurs avoid it. If you must change anything the egg
   depends on, tell the owner that dino-egg/dino-ae-ui.js needs a
   matching change. Check by searching this file for "EGG-HOOK" (3 sections).
+  ------------------------------------------------------------
+  CHANGELOG — every code change needs an entry. Search this file for
+  "CHANGELOG:START": bump APP_VERSION and add an entry at the TOP of
+  CHANGELOG (never edit past entries). Rules: skills/changelog-keeper/SKILL.md
   ------------------------------------------------------------
   HEAVY DATA lives in separate OPTIONAL files, so you never need to
   send it to an AI: ./assets/ae-images.js (favicon + brand image,
@@ -256,6 +260,55 @@ document.head.appendChild(s);})();</script>
     .layer-row.active .check-circle { border-color: var(--accent); background: var(--accent-fill); color: white; }
     .layer-row .check-circle i { font-size: 0.55rem; opacity: 0; }
     .layer-row.active .check-circle i { opacity: 1; }
+    /* ---- overlay layers (Layers tab: Base | Overlay) ---- */
+    .ov-card { margin: 8px 0 2px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); display: flex; flex-direction: column; gap: 9px; }
+    .ov-line { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; color: var(--text-2); }
+    .ov-line b { font-weight: 600; color: var(--text); min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+    .ov-line input[type=range], .ov-col input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
+    .ov-colours { display: flex; flex-direction: column; gap: 6px; }
+    .ov-col { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+    .ov-col input[type=color] { width: 26px; height: 26px; padding: 0; border: 1px solid var(--border-hi); border-radius: 6px; background: none; cursor: pointer; flex-shrink: 0; }
+    .ov-tol { font-size: 0.66rem; color: var(--text-3); min-width: 30px; text-align: right; font-variant-numeric: tabular-nums; }
+    .ov-ibtn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--text-3); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.72rem; }
+    .ov-ibtn:hover { background: var(--surface-2); color: var(--text); }
+    .ov-ibtn.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
+    .ov-note { font-size: 0.68rem; color: var(--text-3); line-height: 1.4; }
+    .ov-note.warn { color: var(--danger); }
+    .ov-actions { display: flex; gap: 6px; }
+    .ov-actions .btn { flex: 1; padding: 6px 8px; font-size: 0.72rem; }
+    #map.ov-picking, #map.ov-picking .leaflet-interactive, #map.ov-picking .leaflet-grab { cursor: crosshair !important; }
+    .ov-chip { position: fixed; z-index: 9500; pointer-events: none; display: none; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border-hi); box-shadow: 0 4px 14px rgba(0,0,0,0.25); font: 500 0.68rem 'IBM Plex Mono', monospace; color: var(--text); }
+    .ov-chip.show { display: flex; }
+    .ov-chip i { display: block; width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.35); }
+    /* ---- changelog page (#changelog) + unread dot ---- */
+    .has-dot { position: relative; }
+    .has-dot::after { content: ''; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 0 2px var(--surface); pointer-events: none; }
+    .settings-nav-btn.has-dot::after, .static-item.has-dot::after { top: 50%; right: 12px; transform: translateY(-50%); }
+    .cl-view { position: fixed; inset: 0; z-index: 5950; display: none; flex-direction: column; background: var(--surface); color: var(--text); }
+    .cl-view.open { display: flex; }
+    body.cl-open .toast { z-index: 6200; }
+    .cl-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .cl-head h2 { margin: 0; font-size: 1rem; font-weight: 600; }
+    .cl-ver { font: 500 0.72rem 'IBM Plex Mono', monospace; color: var(--text-3); }
+    .cl-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .cl-chip { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border-hi); background: var(--surface); color: var(--text-2); font: inherit; font-size: 0.72rem; cursor: pointer; }
+    .cl-chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
+    .cl-search { flex: 1; min-width: 140px; max-width: 260px; padding: 6px 10px; border: 1px solid var(--border-hi); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.78rem; }
+    .cl-tools .btn { padding: 5px 10px; font-size: 0.72rem; }
+    .cl-list { flex: 1; overflow: auto; width: 100%; max-width: 760px; margin: 0 auto; padding: 12px 16px 40px; box-sizing: border-box; }
+    .cl-entry { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; background: var(--surface); }
+    .cl-entry > summary { cursor: pointer; padding: 10px 12px; display: flex; gap: 10px; align-items: baseline; font-weight: 600; font-size: 0.85rem; list-style: none; }
+    .cl-entry > summary::-webkit-details-marker { display: none; }
+    .cl-entry > summary small { color: var(--text-3); font: 400 0.7rem 'IBM Plex Mono', monospace; }
+    .cl-items { padding: 0 12px 10px; display: flex; flex-direction: column; gap: 8px; }
+    .cl-item { display: grid; grid-template-columns: 66px 1fr; gap: 2px 8px; align-items: start; font-size: 0.8rem; line-height: 1.4; }
+    .cl-cause { grid-column: 2; font-size: 0.7rem; color: var(--text-3); }
+    .cl-tag { font: 600 0.58rem 'IBM Plex Mono', monospace; text-transform: uppercase; padding: 3px 6px; border-radius: 5px; text-align: center; }
+    .cl-tag.added { background: rgba(77,124,15,0.15); color: var(--accent); }
+    .cl-tag.changed { background: rgba(37,99,235,0.14); color: #2563eb; }
+    .cl-tag.fixed { background: rgba(217,119,6,0.16); color: #b45309; }
+    .cl-tag.removed { background: rgba(220,38,38,0.14); color: #dc2626; }
+    .cl-empty { color: var(--text-3); font-size: 0.8rem; padding: 24px 0; text-align: center; }
 
     .toggle-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 6px; cursor: pointer; transition: all 0.15s ease; user-select: none; }
     .toggle-row:hover { border-color: var(--border-hi); }
@@ -383,6 +436,118 @@ document.head.appendChild(s);})();</script>
     .icon-choice.selected { background: var(--accent-soft); }
     .icon-choice.selected i { font-weight: 900; }
     .icon-cat-title { grid-column: 1 / -1; font-family: inherit; font-weight: 600; font-size: 0.55rem; text-transform: none; letter-spacing: 0.01em; color: var(--text-3); font-weight: 500; padding: 6px 2px 2px; }
+    /* storage warning + storage group */
+    .rail-btn { position: relative; }
+    .rail-btn.has-alert::after { content: ''; position: absolute; top: 6px; right: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--danger); border: 2px solid var(--surface); }
+    .settings-alert { display: flex; align-items: center; gap: 10px; padding: 10px 18px; background: var(--danger-soft); border-bottom: 1px solid var(--danger-border); color: var(--danger); font-size: 0.78rem; line-height: 1.4; flex-shrink: 0; }
+    .settings-alert[hidden] { display: none; }
+    .settings-alert span { flex: 1; min-width: 0; font-weight: 500; }
+    .settings-alert button { flex-shrink: 0; font: inherit; font-size: 0.74rem; font-weight: 600; color: var(--danger); background: transparent; border: 1px solid var(--danger-border); border-radius: 7px; padding: 5px 10px; cursor: pointer; }
+    .settings-alert button:hover { background: var(--surface); }
+    .settings-nav-btn.alert::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); margin-left: auto; flex-shrink: 0; }
+    .st-card { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; background: var(--surface); }
+    .st-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .st-head b { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .st-head .btn { padding: 4px 10px; font-size: 0.72rem; }
+    .st-big { font-size: 1.3rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .st-big span { font-size: 0.82rem; font-weight: 500; color: var(--text-2); }
+    .st-meter { height: 10px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+    .st-meter i { display: block; height: 100%; background: var(--accent-fill); border-radius: 6px; transition: width 0.3s; }
+    .st-meter i.warn { background: #d97706; }
+    .st-meter i.crit { background: var(--danger); }
+    .st-note { font-size: 0.72rem; color: var(--text-3); line-height: 1.5; margin-top: 8px; }
+    .st-rows { font-size: 0.78rem; color: var(--text-2); }
+    .st-row { padding: 6px 0; }
+    .st-row + .st-row { border-top: 1px solid var(--border); }
+    .st-row.sub { padding-left: 16px; }
+    .st-row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .st-row-top span { color: var(--text); min-width: 0; }
+    .st-row-top small { display: block; color: var(--text-3); font-size: 0.68rem; }
+    .st-row-top b { font-weight: 600; color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .st-bar { height: 5px; border-radius: 3px; background: var(--surface-2); margin-top: 5px; overflow: hidden; }
+    .st-bar i { display: block; height: 100%; background: var(--accent-fill); opacity: 0.75; }
+    .st-links { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+    .st-links button { font: inherit; font-size: 0.78rem; color: var(--accent); background: none; border: 0; padding: 2px 0; cursor: pointer; text-decoration: underline; text-align: left; }
+    #icn-ctx { display: none; position: fixed; z-index: 7000; min-width: 200px; max-width: 290px; max-height: 60vh; overflow: auto; background: var(--surface); border: 1px solid var(--border-hi); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.22); padding: 4px; }
+    #icn-ctx button { display: flex; width: 100%; gap: 8px; align-items: center; justify-content: space-between; background: none; border: 0; border-radius: 6px; padding: 8px 10px; font: inherit; font-size: 0.78rem; color: var(--text); cursor: pointer; text-align: left; }
+    #icn-ctx button:hover, #icn-ctx button:focus { background: var(--accent-soft); outline: none; }
+    #icn-ctx button small { color: var(--text-3); font-size: 0.68rem; flex: none; }
+    .icn-ctx-h { padding: 6px 10px 4px; font-size: 0.68rem; font-weight: 600; color: var(--text-3); }
+    .icn-ctx-n { padding: 8px 10px; font-size: 0.76rem; color: var(--text-3); }
+    .icn-ctx-src { padding: 2px 10px 8px; font-size: 0.7rem; color: var(--text-2); line-height: 1.4; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+    .icn-ctx-src a { color: var(--accent); }
+    /* settings → Saved images */
+    .sv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-top: 10px; }
+    .sv-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 4px; background: var(--surface); min-width: 0; }
+    .sv-thumb { height: 74px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--text); background: repeating-conic-gradient(var(--surface-2) 0 25%, var(--surface) 0 50%) 0 0 / 14px 14px; }
+    .sv-card b { font-size: 0.76rem; font-weight: 600; color: var(--text); }
+    .sv-card small { font-size: 0.68rem; color: var(--text-3); }
+    .sv-acts { display: flex; gap: 10px; margin-top: 2px; flex-wrap: wrap; }
+    .sv-acts a, .sv-acts button { font: inherit; font-size: 0.7rem; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+    .sv-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.76rem; color: var(--text-2); }
+    .sv-bar .btn { margin-left: auto; }
+    /* marker icons from icon services / uploads */
+    .ic-mask { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; background-color: currentColor; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; -webkit-mask-size: contain; mask-size: contain; }
+    .ic-img { display: inline-block; width: 1.1em; height: 1.1em; object-fit: contain; vertical-align: -0.2em; }
+    .icon-src-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+    .icon-src-row .btn { flex: 1; min-width: 130px; justify-content: center; }
+    .icon-current { width: 44px; height: 44px; border-radius: 9px; border: 1.5px solid var(--accent-border); background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    /* icon picker, drawn in the properties panel */
+    .icp-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .icp-title { font-weight: 600; font-size: 0.88rem; color: var(--text); }
+    .icp-field { width: 100%; padding: 8px 10px; border: 1px solid var(--border-hi); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.8rem; margin-bottom: 8px; }
+    .icp-field:focus { outline: none; border-color: var(--accent); }
+    .icp-row { display: flex; gap: 8px; }
+    .icp-row .icp-field { flex: 1; min-width: 0; }
+    .icp-sub { font-size: 0.6rem; font-weight: 600; color: var(--text-3); margin: 12px 0 6px; }
+    .icp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; }
+    .icp-ic { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 22px; background: var(--surface-soft); border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; padding: 0; color: var(--text-2); }
+    .icp-ic:hover { background: var(--surface-2); border-color: var(--accent); }
+    .icp-lib { display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left; padding: 9px 12px; margin-bottom: 6px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+    .icp-lib:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .icp-lib b { font-size: 0.8rem; font-weight: 600; }
+    .icp-lib small { color: var(--text-3); font-size: 0.68rem; }
+    .icp-msg { padding: 16px 4px; color: var(--text-3); font-size: 0.78rem; line-height: 1.45; }
+    .icp-note { margin-top: 14px; font-size: 0.68rem; color: var(--text-3); line-height: 1.5; }
+    .icp-note a { color: var(--accent); }
+    .icp-more { display: block; margin: 12px auto 0; }
+    .icp-drop { border: 2px dashed var(--border-hi); border-radius: 12px; padding: 22px 14px; text-align: center; color: var(--text-2); font-size: 0.8rem; line-height: 1.5; background: var(--surface-soft); }
+    .icp-drop.over { border-color: var(--accent); background: var(--accent-soft); }
+    .icp-drop .btn { margin: 4px 3px 0; }
+    .icp-preview { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+    .icp-preview-box { width: 72px; height: 72px; flex-shrink: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 44px; background: repeating-conic-gradient(var(--surface-2) 0 25%, var(--surface) 0 50%) 0 0 / 14px 14px; border: 1px solid var(--border); }
+    .icp-check { display: flex; gap: 8px; align-items: flex-start; font-size: 0.74rem; color: var(--text-2); line-height: 1.4; cursor: pointer; }
+    .icp-check small { display: block; color: var(--text-3); font-size: 0.66rem; }
+    /* ---- settings overlay ---- */
+    #settings-overlay { z-index: 5900; }
+    .settings-dlg { background: var(--surface); border: 1px solid var(--border-hi); border-radius: 16px; width: 860px; max-width: 94vw; height: 640px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(31, 38, 26, 0.22); }
+    .settings-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .settings-head h3 { font-size: 1rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 10px; margin: 0; }
+    .settings-head h3 i { color: var(--accent); }
+    .settings-x { width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--text-3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+    .settings-x:hover { background: var(--surface-2); color: var(--text); }
+    .settings-main { flex: 1; min-height: 0; display: flex; }
+    .settings-nav { width: 200px; flex-shrink: 0; padding: 12px; border-right: 1px solid var(--border); background: var(--surface-soft); display: flex; flex-direction: column; gap: 3px; overflow-y: auto; }
+    .settings-nav-btn { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--text-2); font: inherit; font-size: 0.82rem; font-weight: 500; cursor: pointer; text-align: left; }
+    .settings-nav-btn i { width: 16px; text-align: center; font-size: 0.8rem; color: var(--text-3); }
+    .settings-nav-btn:hover { background: var(--surface-2); color: var(--text); }
+    .settings-nav-btn.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
+    .settings-nav-btn.on i { color: var(--accent); }
+    .settings-nav-btn.danger { margin-top: auto; }
+    .settings-nav-btn.danger i, .settings-nav-btn.danger.on { color: var(--danger); }
+    .settings-nav-btn.danger.on { background: var(--danger-soft); border-color: var(--danger-border); }
+    .settings-pane { flex: 1; min-width: 0; overflow-y: auto; padding: 20px 24px 28px; }
+    .settings-pane h4 { font-size: 1.05rem; font-weight: 600; color: var(--text); margin: 0 0 4px; }
+    .settings-pane-sub { font-size: 0.78rem; color: var(--text-3); margin: 0 0 12px; line-height: 1.45; }
+    #settings-box .static-item { margin-bottom: 6px; }
+    @media (max-width: 700px) {
+        .settings-dlg { width: 100vw; max-width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; border: 0; }
+        .settings-main { flex-direction: column; }
+        .settings-nav { width: auto; flex-direction: row; border-right: 0; border-bottom: 1px solid var(--border); overflow-x: auto; overflow-y: hidden; padding: 8px; }
+        .settings-nav-btn { white-space: nowrap; flex-shrink: 0; }
+        .settings-nav-btn.danger { margin-top: 0; }
+        .settings-pane { padding: 16px; }
+    }
 
     .swatch-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; margin-bottom: 14px; }
     .swatch { aspect-ratio: 1; border-radius: 4px; cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s ease; }
@@ -772,14 +937,14 @@ document.head.appendChild(s);})();</script>
 
     /* ---- onboarding ---- */
     .onboard { text-align: left; margin: 18px 2px 0; display: flex; flex-direction: column; gap: 8px; }
-    .ob-step { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+    .ob-step { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
     .ob-step.done { opacity: 0.6; }
     .ob-num { width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft-hi); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; }
     .ob-step.done .ob-num { background: var(--accent-fill); color: #fff; }
-    .ob-text { flex: 1; min-width: 0; }
+    .ob-text { flex: 1 1 calc(100% - 34px); min-width: 0; overflow-wrap: anywhere; }
     .ob-title { font-weight: 600; font-size: 0.8rem; color: var(--text); }
     .ob-desc { font-size: 0.72rem; color: var(--text-2); line-height: 1.35; }
-    .ob-step .btn { padding: 5px 10px; font-size: 0.72rem; flex-shrink: 0; }
+    .ob-step .btn { padding: 5px 10px; font-size: 0.72rem; flex-shrink: 0; margin-left: 32px; }
     .ob-tip { font-size: 0.72rem; color: var(--text-3); text-align: center; padding: 6px 4px 0; }
 
     /* ---- segmented control ---- */
@@ -986,7 +1151,7 @@ document.head.appendChild(s);})();</script>
             <button class="rail-btn" data-subrail="terrain" aria-label="Terrain (HGT)" data-tooltip="Terrain (HGT)"><i class="fas fa-mountain"></i></button>
             <button class="rail-btn" data-subrail="layers" aria-label="Layers" data-tooltip="Layers"><i class="fas fa-layer-group"></i></button>
             <div class="rail-spacer"></div>
-            <button class="rail-btn" data-subrail="settings" aria-label="Settings" data-tooltip="Settings"><i class="fas fa-gear"></i></button>
+            <button class="rail-btn" id="rail-settings" data-overlay="settings" aria-label="Settings" aria-haspopup="dialog" aria-expanded="false" data-tooltip="Settings"><i class="fas fa-gear"></i></button>
         </div>
 
         <div class="subrail open" id="subrail">
@@ -1128,13 +1293,27 @@ document.head.appendChild(s);})();</script>
         <button class="sb-seg" id="sb-perf" title="Temporary: map complexity and frame rate. Click to copy diagnostics."><i class="fas fa-gauge-high"></i> <span id="sb-perf-text">…</span></button>
         <span class="sb-seg sb-progress" id="sb-progress" hidden><span id="sb-progress-label"></span><span class="sb-progress-track"><span class="sb-progress-fill" id="sb-progress-fill"></span></span></span>
         <div class="terrain-status" id="terrain-status"><i class="fas fa-circle" style="font-size: 0.5rem; color: var(--text-3);"></i> No terrain loaded</div>
-        <!-- BUILD-FOOTER --><span class="sb-seg sb-build" id="sb-build" title="Build date and time (local)">Build 2026-11-08 20:43:39</span>
+        <!-- BUILD-FOOTER --><span class="sb-seg sb-build" id="sb-build" title="Build date and time (local)">Build 2026-11-24 11:12:03</span>
     </div>
 
     <input type="file" id="file-input" accept=".hgt,.HGT" multiple style="display:none">
     <input type="file" id="kml-input" accept=".kml,.geojson,.json,.gpx" multiple style="display:none">
     <input type="file" id="geojson-input" accept=".geojson,.json,application/geo+json,application/json" multiple style="display:none">
 
+    <div class="cl-view" id="cl-view" role="dialog" aria-modal="true" aria-labelledby="cl-title" aria-hidden="true">
+        <div class="cl-head">
+            <button class="btn btn-secondary" id="cl-back" type="button"><i class="fas fa-arrow-left"></i> Back</button>
+            <h2 id="cl-title">Changelog</h2>
+            <span class="cl-ver" id="cl-ver"></span>
+        </div>
+        <div class="cl-tools">
+            <span id="cl-chips" style="display:flex;gap:6px;flex-wrap:wrap;"></span>
+            <input class="cl-search" id="cl-search" type="search" placeholder="Search changes" aria-label="Search changes">
+            <button class="btn btn-secondary" id="cl-copy" type="button"><i class="fas fa-copy"></i> Copy as Markdown</button>
+            <button class="btn btn-secondary" id="cl-dl" type="button"><i class="fas fa-download"></i> Download CHANGELOG.md</button>
+        </div>
+        <div class="cl-list" id="cl-list"></div>
+    </div>
     <div class="drop-overlay" id="drop-overlay" aria-hidden="true">
         <div class="drop-card"><i class="fas fa-file-import"></i><div>Drop to import</div><small>KML, GeoJSON or HGT terrain files</small></div>
     </div>
@@ -1151,6 +1330,28 @@ document.head.appendChild(s);})();</script>
     </div>
 
     <div class="context-menu" id="context-menu"></div>
+
+    <div class="modal-overlay" id="settings-overlay">
+        <div class="settings-dlg" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <div class="settings-head">
+                <h3 id="settings-title"><i class="fas fa-gear"></i> Settings</h3>
+                <button class="settings-x" id="settings-close" type="button" aria-label="Close settings"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="settings-alert" id="settings-alert" role="alert" hidden>
+                <i class="fas fa-triangle-exclamation"></i>
+                <span></span>
+                <button type="button" id="settings-alert-go">Manage storage</button>
+            </div>
+            <div class="settings-main">
+                <nav class="settings-nav" id="settings-nav" aria-label="Settings groups"></nav>
+                <div class="settings-pane" id="settings-pane">
+                    <h4 id="settings-pane-title"></h4>
+                    <p class="settings-pane-sub" id="settings-pane-sub"></p>
+                    <div id="settings-box"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal" id="modal-box" role="dialog" aria-modal="true">
@@ -1219,8 +1420,8 @@ document.head.appendChild(s);})();</script>
                 mapLabelMinZoom: 0,
                 mapLabelMaxZoom: 22,
                 // Large-data options (Settings → Large datasets)
-                perfCanvas: false,          // draw paths/polygons on one canvas (needs a reload)
-                perfSimplify: false,        // simplify long paths when zoomed out
+                perfCanvas: true,           // draw paths/polygons on one canvas (needs a reload)
+                perfSimplify: true,         // simplify long paths when zoomed out
                 perfSimplifyPx: 3,
                 perfVertexBudget: 15000,    // vertices in view at which simplification reaches full strength
                 perfVertexCull: true,       // vertex editor: only draw handles that are on screen
@@ -1243,6 +1444,12 @@ document.head.appendChild(s);})();</script>
                 const saved = localStorage.getItem('telco-flags');
                 if (saved) Object.assign(FLAGS, JSON.parse(saved));
             } catch (e) {}
+            // One-time switch to the new defaults (canvas rendering + path simplification on) for browsers that already saved the old ones.
+            // After this it is just a normal setting: turn it off in Settings → Performance and it stays off.
+            if (!FLAGS.defaultsV2) {
+                FLAGS.perfCanvas = true; FLAGS.perfSimplify = true; FLAGS.defaultsV2 = true;
+                try { localStorage.setItem('telco-flags', JSON.stringify(FLAGS)); } catch (e) {}
+            }
             function saveFlags() {
                 try { localStorage.setItem('telco-flags', JSON.stringify(FLAGS)); } catch (e) {}
             }
@@ -1347,8 +1554,15 @@ document.head.appendChild(s);})();</script>
                 if (/^[a-zA-Z]{3,20}$/.test(c)) return c;
                 return fallback;
             }
+            // A marker icon is a Font Awesome class ("fa-tower-cell"), a recolourable shape ("mask:data:image/svg+xml,...", from the icon
+            // services) or a picture ("img:data:image/png;base64,...", uploaded). Only these exact shapes are accepted from saved/imported data.
+            const ICON_DATA_RE = /^(mask|img):data:image\/(svg\+xml|png|jpe?g|gif|webp)[;,][A-Za-z0-9%+\/=;,._~:@!$&*()\-]*$/;
+            function iconKind(v) { v = String(v || ''); return v.indexOf('mask:') === 0 ? 'mask' : v.indexOf('img:') === 0 ? 'img' : 'fa'; }
             function safeIconClass(s, fallback) {
-                return (typeof s === 'string' && /^fa-[a-z0-9-]+(\s+fa-[a-z0-9-]+)*$/.test(s)) ? s : fallback;
+                if (typeof s !== 'string') return fallback;
+                if (/^fa-[a-z0-9-]+(\s+fa-[a-z0-9-]+)*$/.test(s)) return s;
+                if (s.length < 600000 && ICON_DATA_RE.test(s)) return s;
+                return fallback;
             }
             function sanitizeMeta(m) {
                 for (const k of Object.keys(m)) {
@@ -1415,10 +1629,13 @@ document.head.appendChild(s);})();</script>
             }
 
             // ==================== APP SETTINGS ====================
-            const SETTINGS = { snapToMarkers: false, snapPixels: 20, subrailWidth: 320, provider: 'satellite', theme: 'system', profileHeight: 320 };
+            const SETTINGS = { snapToMarkers: true, snapPixels: 20, subrailWidth: 320, provider: 'satellite', theme: 'system', profileHeight: 320 };
             function loadSettings() {
                 return dbGet('settings', 'app').then(rec => {
                     if (rec && rec.value) Object.assign(SETTINGS, rec.value);
+                    // One-time switch to the new default (snap to markers on) for browsers that already saved the old one.
+                    if (!SETTINGS.defaultsV2) { SETTINGS.snapToMarkers = true; SETTINGS.defaultsV2 = true; saveSettings(); }
+                    delete SETTINGS.recentIcons;       // old "recently used" list: replaced by the Saved images list (derived from the markers)
                 }).catch(() => {});
             }
             function saveSettings() { return dbPut('settings', { key: 'app', value: SETTINGS }).catch(() => {}); }
@@ -1477,13 +1694,29 @@ document.head.appendChild(s);})();</script>
                 '#1f2937', '#6b7280', '#dc2626', '#166534'
             ];
 
+            // The glyph for any icon kind. Sized in em, so it follows the font-size of whatever holds it (marker, tree row, preview).
+            // "mask" icons are painted with the marker colour; "img" icons keep their own colours.
+            function iconGlyphHTML(icon, color, extraStyle) {
+                icon = icon || DEFAULT_ICON;
+                const k = iconKind(icon);
+                extraStyle = extraStyle ? extraStyle.replace(/;?\s*$/, ';') : '';
+                if (k === 'fa') {
+                    const st = (color ? 'color:' + color + ';' : '') + extraStyle;
+                    return '<i class="fas ' + icon + '"' + (st ? ' style="' + st + '"' : '') + '></i>';
+                }
+                const uri = icon.slice(icon.indexOf(':') + 1);
+                if (k === 'img') return '<img class="ic-img" alt="" draggable="false" src="' + uri + '"' + (extraStyle ? ' style="' + extraStyle + '"' : '') + '>';
+                return '<span class="ic-mask" style="' + (color ? 'background-color:' + color + ';' : '') + extraStyle +
+                    "-webkit-mask-image:url('" + uri + "');mask-image:url('" + uri + "')\"></span>";
+            }
+
             function makeLeafletIcon(faClass, color, ringRadiusPx, ringThicknessPx) {
                 const r = Math.max(0, Number(ringRadiusPx) || 0);
                 const t = Math.max(0, Number(ringThicknessPx) || 0);
                 if (r === 0 || t === 0) {
                     return L.divIcon({
                         className: '',
-                        html: `<div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:${color};font-size:22px;text-shadow:0 2px 4px rgba(0,0,0,0.25);"><i class="fas ${faClass}"></i></div>`,
+                        html: `<div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:${color};font-size:22px;text-shadow:0 2px 4px rgba(0,0,0,0.25);">${iconGlyphHTML(faClass)}</div>`,
                         iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -12]
                     });
                 }
@@ -1500,7 +1733,7 @@ document.head.appendChild(s);})();</script>
                         box-sizing:border-box;
                         box-shadow:0 2px 6px rgba(0,0,0,0.2);
                         text-shadow:0 1px 2px rgba(255,255,255,0.6);
-                    "><i class="fas ${faClass}"></i></div>`,
+                    ">${iconGlyphHTML(faClass)}</div>`,
                     iconSize: [outer, outer], iconAnchor: [r, r], popupAnchor: [0, -r]
                 });
             }
@@ -1586,6 +1819,9 @@ document.head.appendChild(s);})();</script>
             map.createPane('snapPane');
             map.getPane('snapPane').style.zIndex = 450;
             map.getPane('snapPane').style.pointerEvents = 'none';
+            map.createPane('overlayTilePane');   // Layers > Overlay: above the basemap (200), below heatmaps (350), paths and markers
+            map.getPane('overlayTilePane').style.zIndex = 250;
+            map.getPane('overlayTilePane').style.pointerEvents = 'none';
 
             const terrainOverlayGroup = L.featureGroup().addTo(map);
             // ---- marker clustering (loaded on demand, only when switched on in Settings) ----
@@ -2114,6 +2350,423 @@ document.head.appendChild(s);})();</script>
                 showToast('Map: ' + PROVIDERS[key].name, 'fa-map');
             }
 
+            // ==================== OVERLAY TILES (Layers tab: Base | Overlay) ====================
+            // A second tile layer drawn OVER the basemap. Opacity is a plain layer opacity (0-100 %). "Transparent colours" are
+            // knocked out pixel by pixel on a canvas. Design notes (read before changing):
+            //  * It has its own map pane (overlayTilePane, z-index 250) so it stays above the basemap however the basemap is
+            //    switched, and below heatmaps, paths and markers.
+            //  * Tiles come through the shared tile cache (tileCache), so editing a colour or tolerance never downloads again.
+            //  * Every tile keeps its untouched source bitmap (tile._src). Colour edits repaint from it, and the dropper reads it,
+            //    so you can still pick a colour that is currently knocked out.
+            //  * If a service does not allow pixel reads (CORS) the layer is shown as a plain image (opacity only) and says so.
+            //  * State lives in SETTINGS.overlay = { key, opacity (0-100), colours: [{ hex, tol }] } and is saved with the settings.
+            /* OVERLAY-PURE:START (no DOM / Leaflet in here: tested on its own) */
+            function ovHexToRgb(hex) {
+                const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ''));
+                if (!m) return null;
+                const n = parseInt(m[1], 16);
+                return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+            }
+            function ovRgbToHex(r, g, b) {
+                return '#' + [r, g, b].map(v => ('0' + Math.max(0, Math.min(255, v | 0)).toString(16)).slice(-2)).join('');
+            }
+            function ovCompileRules(list) {         // [{hex, tol}] -> [[r, g, b, tol]]
+                const out = [];
+                (list || []).forEach(c => {
+                    const rgb = c && ovHexToRgb(c.hex);
+                    if (rgb) out.push([rgb[0], rgb[1], rgb[2], Math.max(0, Math.min(100, +c.tol || 0))]);
+                });
+                return out;
+            }
+            // px: RGBA bytes, edited in place. A pixel within `tol` of a target colour (largest channel difference) goes transparent.
+            // The outer 40 % of the tolerance fades back to opaque, which avoids a hard fringe round anti-aliased edges.
+            function ovKnockout(px, rules) {
+                const n = rules.length;
+                if (!n) return;
+                for (let i = 0; i < px.length; i += 4) {
+                    const a = px[i + 3];
+                    if (a === 0) continue;
+                    const r = px[i], g = px[i + 1], b = px[i + 2];
+                    let keep = 1;
+                    for (let k = 0; k < n; k++) {
+                        const t = rules[k], tol = t[3];
+                        const d = Math.max(Math.abs(r - t[0]), Math.abs(g - t[1]), Math.abs(b - t[2]));
+                        if (d > tol) continue;
+                        const hard = tol * 0.6;
+                        const f = d <= hard ? 0 : (d - hard) / (tol - hard);
+                        if (f < keep) keep = f;
+                        if (keep === 0) break;
+                    }
+                    if (keep < 1) px[i + 3] = a * keep;
+                }
+            }
+            /* OVERLAY-PURE:END */
+
+            function ovCfg() {                      // always returns a clean SETTINGS.overlay
+                let o = SETTINGS.overlay;
+                if (!o || typeof o !== 'object') o = SETTINGS.overlay = {};
+                if (!(o.key && PROVIDERS[o.key] && PROVIDERS[o.key].url)) o.key = null;
+                const op = Number(o.opacity);
+                o.opacity = Math.max(0, Math.min(100, Number.isFinite(op) && o.opacity !== null && o.opacity !== '' ? op : 60));
+                if (!Array.isArray(o.colours)) o.colours = [];
+                // tidy IN PLACE: rows in the Layers tab hold these very objects, so replacing them would make slider edits vanish
+                for (let i = o.colours.length - 1; i >= 0; i--) { const c = o.colours[i]; if (!c || !ovHexToRgb(c.hex)) o.colours.splice(i, 1); }
+                if (o.colours.length > 12) o.colours.length = 12;
+                o.colours.forEach(c => { c.hex = String(c.hex).toLowerCase(); c.tol = Math.max(0, Math.min(100, +c.tol || 0)); });
+                return o;
+            }
+            let _ovSaveTimer = null;
+            function ovSaveSoon() { clearTimeout(_ovSaveTimer); _ovSaveTimer = setTimeout(saveSettings, 350); }
+
+            function ovFetchBitmap(url) {           // through the shared tile cache; one download serves both layers
+                const hit = tileCache.get(url);
+                const blobP = (hit && hit.blob) ? Promise.resolve(hit.blob)
+                    : fetch(url, { mode: 'cors' }).then(r => {
+                        if (!r.ok) { const e = new Error('HTTP ' + r.status); e.http = r.status; throw e; }
+                        return r.blob();
+                    }).then(blob => { touchCache(url, { blob, url: URL.createObjectURL(blob), ts: Date.now() }); return blob; });
+                return blobP.then(blob => createImageBitmap(blob));
+            }
+            const _ovProbe = document.createElement('canvas'); _ovProbe.width = _ovProbe.height = 1;
+            const _ovProbeCtx = _ovProbe.getContext('2d', { willReadFrequently: true });
+
+            const KnockoutTileLayer = L.TileLayer.extend({
+                initialize: function (url, options) {
+                    L.TileLayer.prototype.initialize.call(this, url, options);
+                    this._rules = [];
+                    this._noPixels = false;
+                    this.on('tileunload', function (e) {
+                        const t = e.tile; t._dead = true;
+                        if (t._src) { try { t._src.close(); } catch (_) {} t._src = null; }
+                    });
+                },
+                createTile: function (coords, done) {
+                    const self = this, tile = document.createElement('canvas'), url = this.getTileUrl(coords);
+                    ovFetchBitmap(url).then(function (bm) {
+                        if (tile._dead) { try { bm.close(); } catch (_) {} return; }
+                        tile._src = bm; self._paint(tile); done(null, tile);
+                    }, function (err) {
+                        if (err && err.http) { done(err, tile); return; }       // a genuine 404 etc: nothing to show
+                        // the service does not allow reading pixels (CORS): show it as a plain image, opacity only
+                        const img = new Image();
+                        img.onload = function () {
+                            if (tile._dead) return;
+                            tile.width = img.naturalWidth || 256; tile.height = img.naturalHeight || 256;
+                            tile.getContext('2d').drawImage(img, 0, 0);
+                            self._blockPixels();
+                            done(null, tile);
+                        };
+                        img.onerror = function (e) { done(e, tile); };
+                        img.src = url;
+                    });
+                    return tile;
+                },
+                _paint: function (tile) {
+                    const bm = tile._src;
+                    if (!bm) return;
+                    const w = bm.width, h = bm.height;
+                    if (tile.width !== w) tile.width = w;
+                    if (tile.height !== h) tile.height = h;
+                    const ctx = tile.getContext('2d', { willReadFrequently: true });
+                    ctx.clearRect(0, 0, w, h);
+                    ctx.drawImage(bm, 0, 0);
+                    if (!this._rules.length || this._noPixels) return;
+                    const img = ctx.getImageData(0, 0, w, h);
+                    ovKnockout(img.data, this._rules);
+                    ctx.putImageData(img, 0, 0);
+                },
+                setRules: function (list) {
+                    this._rules = ovCompileRules(list);
+                    for (const k in this._tiles) { const el = this._tiles[k].el; if (el && el._src) this._paint(el); }
+                },
+                _blockPixels: function () { if (!this._noPixels) { this._noPixels = true; this.fire('pixelsblocked'); } },
+                // colour of the ORIGINAL (not knocked-out) overlay pixel under a map position, as [r, g, b], or null
+                pickAt: function (latlng) {
+                    const map = this._map, z = this._tileZoom;
+                    if (!map || z == null) return null;
+                    const ts = this.getTileSize(), p = map.project(latlng, z);
+                    const tx = Math.floor(p.x / ts.x), ty = Math.floor(p.y / ts.y);
+                    const t = this._tiles[tx + ':' + ty + ':' + z];
+                    const bm = t && t.el && t.el._src;
+                    if (!bm) return null;
+                    const px = Math.max(0, Math.min(bm.width - 1, Math.floor((p.x - tx * ts.x) * bm.width / ts.x)));
+                    const py = Math.max(0, Math.min(bm.height - 1, Math.floor((p.y - ty * ts.y) * bm.height / ts.y)));
+                    _ovProbeCtx.clearRect(0, 0, 1, 1);
+                    _ovProbeCtx.drawImage(bm, px, py, 1, 1, 0, 0, 1, 1);
+                    const d = _ovProbeCtx.getImageData(0, 0, 1, 1).data;
+                    return d[3] === 0 ? null : [d[0], d[1], d[2]];
+                }
+            });
+
+            let overlayLayer = null;
+            function makeOverlayLayer(key) {
+                const p = PROVIDERS[key];
+                if (!p || !p.url) return null;
+                const cfg = ovCfg();
+                if (p.wms) {   // WMS (e.g. maritime charts): drawn with opacity only, its images do not allow pixel reads
+                    return L.tileLayer.wms(p.url, Object.assign({ attribution: p.attribution, maxZoom: p.maxZoom, uppercase: true, pane: 'overlayTilePane', opacity: cfg.opacity / 100 }, p.wms));
+                }
+                const opts = { attribution: p.attribution, maxZoom: p.maxZoom, pane: 'overlayTilePane', opacity: cfg.opacity / 100 };
+                if (p.maxNativeZoom) opts.maxNativeZoom = p.maxNativeZoom;
+                if (p.subdomains) opts.subdomains = p.subdomains;
+                const l = new KnockoutTileLayer(p.url, opts);
+                l.setRules(cfg.colours);
+                l.on('pixelsblocked', () => {
+                    showToast(p.name + ' does not allow colour changes — opacity only', 'fa-triangle-exclamation');
+                    if (activeSection === 'layers') renderStaticSection('layers');
+                });
+                return l;
+            }
+            function setOverlay(key, quiet) {
+                const cfg = ovCfg();
+                if (overlayLayer) { map.removeLayer(overlayLayer); overlayLayer = null; }
+                cfg.key = (key && PROVIDERS[key] && PROVIDERS[key].url) ? key : null;
+                if (cfg.key) {
+                    overlayLayer = makeOverlayLayer(cfg.key);
+                    if (overlayLayer) { overlayLayer.addTo(map); attachTileErrorWatch(overlayLayer, PROVIDERS[cfg.key]); } else cfg.key = null;
+                }
+                if (!cfg.key) ovStopPick(true);
+                if (!quiet) { saveSettings(); showToast(cfg.key ? 'Overlay: ' + PROVIDERS[cfg.key].name : 'Overlay off', 'fa-layer-group'); }
+            }
+            function ovCanKnockout() { return !!(overlayLayer && overlayLayer.setRules && !overlayLayer._noPixels); }
+            let _ovRulesRaf = 0;
+            function ovApplyColours() {             // coalesce slider drags into one repaint per frame
+                ovSaveSoon();
+                if (_ovRulesRaf) return;
+                _ovRulesRaf = requestAnimationFrame(() => { _ovRulesRaf = 0; if (overlayLayer && overlayLayer.setRules) overlayLayer.setRules(ovCfg().colours); });
+            }
+            function ovSetOpacity(pct) {
+                ovCfg().opacity = pct;
+                if (overlayLayer) overlayLayer.setOpacity(pct / 100);
+                ovSaveSoon();
+            }
+
+            // ---- dropper: click the overlay on the map to take a colour from it ----
+            let ovPickIdx = null;                   // null = off, -1 = add a colour (stays on), n = replace colour n (one shot)
+            let _ovDown = null, _ovMoveRaf = 0, _ovLastMove = null;
+            const ovChip = document.createElement('div');
+            ovChip.className = 'ov-chip'; ovChip.setAttribute('aria-hidden', 'true');
+            ovChip.innerHTML = '<i></i><span></span>';
+            document.body.appendChild(ovChip);
+            const ovChipSwatch = ovChip.querySelector('i'), ovChipText = ovChip.querySelector('span');
+            function ovHex(c) { return ovRgbToHex(c[0], c[1], c[2]); }
+            function ovOnDown(e) { _ovDown = { x: e.clientX, y: e.clientY }; }
+            function ovOnClick(e) {
+                if (ovPickIdx === null) return;
+                e.stopPropagation(); e.stopImmediatePropagation(); e.preventDefault();      // never let a pick place a marker or draw
+                if (_ovDown && Math.hypot(e.clientX - _ovDown.x, e.clientY - _ovDown.y) > 5) return;   // that was a drag, not a pick
+                const c = ovCanKnockout() ? overlayLayer.pickAt(map.mouseEventToLatLng(e)) : null;
+                if (!c) { showToast('No overlay colour there', 'fa-eye-dropper'); return; }
+                const cfg = ovCfg(), hex = ovHex(c);
+                if (ovPickIdx >= 0 && cfg.colours[ovPickIdx]) {
+                    cfg.colours[ovPickIdx].hex = hex;
+                    ovStopPick(true);
+                } else if (cfg.colours.some(x => x.hex === hex)) {
+                    showToast(hex.toUpperCase() + ' is already in the list', 'fa-eye-dropper'); return;
+                } else if (cfg.colours.length >= 12) {
+                    showToast('Up to 12 colours', 'fa-eye-dropper'); return;
+                } else {
+                    cfg.colours.push({ hex, tol: 20 });
+                }
+                ovApplyColours();
+                if (activeSection === 'layers') renderStaticSection('layers');
+            }
+            function ovOnMove(e) {
+                _ovLastMove = e;
+                if (_ovMoveRaf) return;
+                _ovMoveRaf = requestAnimationFrame(() => {
+                    _ovMoveRaf = 0;
+                    const ev = _ovLastMove;
+                    if (ovPickIdx === null || !ev) return;
+                    const c = ovCanKnockout() ? overlayLayer.pickAt(map.mouseEventToLatLng(ev)) : null;
+                    ovChip.style.left = (ev.clientX + 16) + 'px'; ovChip.style.top = (ev.clientY + 16) + 'px';
+                    ovChipSwatch.style.background = c ? ovHex(c) : 'transparent';
+                    ovChipText.textContent = c ? ovHex(c).toUpperCase() : 'no overlay here';
+                    ovChip.classList.add('show');
+                });
+            }
+            function ovOnLeave() { ovChip.classList.remove('show'); }
+            function ovOnKey(e) { if (e.key === 'Escape' && ovPickIdx !== null) { e.preventDefault(); ovStopPick(); } }
+            function ovStartPick(idx) {
+                if (!ovCanKnockout()) { showToast(overlayLayer ? 'This overlay does not allow colour picking' : 'Choose an overlay first', 'fa-eye-dropper'); return; }
+                if (ovPickIdx === idx) { ovStopPick(); return; }
+                const wasOff = ovPickIdx === null;
+                ovPickIdx = idx;
+                if (wasOff) {
+                    const el = map.getContainer();
+                    el.classList.add('ov-picking');
+                    el.addEventListener('mousedown', ovOnDown, true);
+                    el.addEventListener('click', ovOnClick, true);
+                    el.addEventListener('mousemove', ovOnMove);
+                    el.addEventListener('mouseleave', ovOnLeave);
+                    document.addEventListener('keydown', ovOnKey);
+                    showToast(idx < 0 ? 'Click the overlay to pick colours — Esc to stop' : 'Click the overlay to pick a colour — Esc to cancel', 'fa-eye-dropper');
+                }
+                if (activeSection === 'layers') renderStaticSection('layers');
+            }
+            function ovStopPick(silent) {
+                if (ovPickIdx === null) return;
+                ovPickIdx = null;
+                const el = map.getContainer();
+                el.classList.remove('ov-picking');
+                el.removeEventListener('mousedown', ovOnDown, true);
+                el.removeEventListener('click', ovOnClick, true);
+                el.removeEventListener('mousemove', ovOnMove);
+                el.removeEventListener('mouseleave', ovOnLeave);
+                document.removeEventListener('keydown', ovOnKey);
+                ovChip.classList.remove('show');
+                if (!silent && activeSection === 'layers') renderStaticSection('layers');
+            }
+
+            // ---- Layers tab: Base | Overlay toggle, the same provider list for both, and the overlay controls ----
+            let layersMode = 'base';                // which list the Layers tab is showing: 'base' | 'overlay'
+            function ovColourRow(cfg, c, i) {
+                const row = document.createElement('div');
+                row.className = 'ov-col';
+                const sw = document.createElement('input');
+                sw.type = 'color'; sw.value = c.hex; sw.setAttribute('aria-label', 'Transparent colour ' + (i + 1));
+                sw.addEventListener('input', () => { c.hex = sw.value.toLowerCase(); ovApplyColours(); });
+                const drop = document.createElement('button');
+                drop.type = 'button'; drop.className = 'ov-ibtn' + (ovPickIdx === i ? ' on' : '');
+                drop.title = 'Pick this colour from the map'; drop.setAttribute('aria-label', 'Pick colour ' + (i + 1) + ' from the map');
+                drop.innerHTML = '<i class="fas fa-eye-dropper"></i>';
+                drop.addEventListener('click', () => ovStartPick(i));
+                const tol = document.createElement('input');
+                tol.type = 'range'; tol.min = '0'; tol.max = '100'; tol.value = String(c.tol);
+                tol.title = 'How close a colour must be (tolerance)'; tol.setAttribute('aria-label', 'Tolerance for colour ' + (i + 1));
+                const tl = document.createElement('span');
+                tl.className = 'ov-tol'; tl.textContent = '±' + c.tol;
+                tol.addEventListener('input', () => { c.tol = +tol.value; tl.textContent = '±' + c.tol; ovApplyColours(); });
+                const del = document.createElement('button');
+                del.type = 'button'; del.className = 'ov-ibtn'; del.title = 'Remove this colour'; del.setAttribute('aria-label', 'Remove colour ' + (i + 1));
+                del.innerHTML = '<i class="fas fa-xmark"></i>';
+                del.addEventListener('click', () => {
+                    cfg.colours.splice(i, 1);
+                    if (ovPickIdx === i) ovStopPick(true); else if (ovPickIdx !== null && ovPickIdx > i) ovPickIdx--;
+                    ovApplyColours();
+                    renderStaticSection('layers');
+                });
+                row.append(sw, drop, tol, tl, del);
+                return row;
+            }
+            function ovBuildControls(cfg) {
+                const card = document.createElement('div');
+                card.className = 'ov-card';
+                const note = (txt, warn) => { const n = document.createElement('div'); n.className = 'ov-note' + (warn ? ' warn' : ''); n.textContent = txt; return n; };
+                if (!cfg.key) {
+                    card.appendChild(note('Choose a layer below to draw it on top of the base map. You can then fade it and make chosen colours see-through.'));
+                    return card;
+                }
+                const p = PROVIDERS[cfg.key];
+                const line = document.createElement('label');
+                line.className = 'ov-line';
+                const lab = document.createElement('span'); lab.textContent = 'Opacity';
+                const rng = document.createElement('input');
+                rng.type = 'range'; rng.min = '0'; rng.max = '100'; rng.step = '1'; rng.value = String(cfg.opacity);
+                rng.setAttribute('aria-label', 'Overlay opacity');
+                const val = document.createElement('b'); val.textContent = cfg.opacity + '%';
+                rng.addEventListener('input', () => { const v = +rng.value; val.textContent = v + '%'; ovSetOpacity(v); });
+                line.append(lab, rng, val);
+                card.appendChild(line);
+
+                const head = document.createElement('div');
+                head.className = 'ov-line';
+                const h = document.createElement('span'); h.style.fontWeight = '600'; h.style.color = 'var(--text)';
+                h.textContent = 'Transparent colours' + (cfg.colours.length ? ' · ' + cfg.colours.length : '');
+                head.appendChild(h);
+                card.appendChild(head);
+
+                if (p.wms) { card.appendChild(note('This service is drawn with opacity only; its images cannot be recoloured.')); return card; }
+                if (overlayLayer && overlayLayer._noPixels) { card.appendChild(note('This service does not allow colour changes, so only opacity applies.', true)); return card; }
+
+                if (cfg.colours.length) {
+                    const list = document.createElement('div');
+                    list.className = 'ov-colours';
+                    cfg.colours.forEach((c, i) => list.appendChild(ovColourRow(cfg, c, i)));
+                    card.appendChild(list);
+                }
+                const act = document.createElement('div');
+                act.className = 'ov-actions';
+                const pick = document.createElement('button');
+                pick.type = 'button'; pick.className = 'btn btn-secondary';
+                pick.innerHTML = '<i class="fas fa-eye-dropper"></i> ';
+                pick.appendChild(document.createTextNode(ovPickIdx === -1 ? 'Stop picking' : 'Pick from map'));
+                if (ovPickIdx === -1) pick.style.borderColor = 'var(--accent)';
+                pick.addEventListener('click', () => ovStartPick(-1));
+                const add = document.createElement('button');
+                add.type = 'button'; add.className = 'btn btn-secondary';
+                add.innerHTML = '<i class="fas fa-plus"></i> ';
+                add.appendChild(document.createTextNode('Add colour'));
+                add.addEventListener('click', () => {
+                    if (cfg.colours.length >= 12) { showToast('Up to 12 colours', 'fa-eye-dropper'); return; }
+                    const hex = ['#ffffff', '#000000', '#808080', '#ff0000'].find(x => !cfg.colours.some(c => c.hex === x)) || '#ffffff';
+                    cfg.colours.push({ hex, tol: 20 });
+                    ovApplyColours();
+                    renderStaticSection('layers');
+                });
+                act.append(pick, add);
+                card.appendChild(act);
+                card.appendChild(note(cfg.colours.length
+                    ? 'Pixels close to these colours become see-through. Raise ± to catch more shades.'
+                    : 'Use Pick from map, then click the overlay (the colour under the pointer is shown). Pick as many as you like.'));
+                return card;
+            }
+            function renderLayersSection() {
+                const cfg = ovCfg(), isOv = layersMode === 'overlay';
+                const keepTop = subrailBody.scrollTop;
+                subrailBody.innerHTML = '';
+                const tabs = document.createElement('div');
+                tabs.className = 'panel-tabs'; tabs.style.margin = '4px 0 0';
+                [['base', 'Base'], ['overlay', 'Overlay']].forEach(([mode, label]) => {
+                    const b = document.createElement('button');
+                    b.type = 'button'; b.className = 'panel-tab' + (layersMode === mode ? ' active' : '');
+                    b.setAttribute('aria-pressed', layersMode === mode ? 'true' : 'false');
+                    b.appendChild(document.createTextNode(label));
+                    if (mode === 'overlay' && cfg.key) { const c = document.createElement('span'); c.className = 'tab-count'; c.textContent = 'on'; b.appendChild(document.createTextNode(' ')); b.appendChild(c); }
+                    b.addEventListener('click', () => { if (layersMode === mode) return; layersMode = mode; ovStopPick(true); renderStaticSection('layers'); });
+                    tabs.appendChild(b);
+                });
+                subrailBody.appendChild(tabs);
+                if (isOv) subrailBody.appendChild(ovBuildControls(cfg));
+
+                const mkRow = (item, active, onClick) => {
+                    const row = document.createElement('div');
+                    row.className = 'layer-row' + (active ? ' active' : '');
+                    row.setAttribute('role', 'button'); row.tabIndex = 0;
+                    row.innerHTML = '<div class="check-circle"><i class="fas fa-check"></i></div>' +
+                        '<div class="tree-item-icon" style="width:22px;height:22px;border-radius:6px;"><i class="fas ' + item.icon + '" style="font-size:0.65rem;"></i></div>' +
+                        '<div style="flex:1;font-weight:500;"></div>';
+                    row.lastElementChild.textContent = item.name;
+                    row.addEventListener('click', onClick);
+                    row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } });
+                    return row;
+                };
+                const headStyle = 'font-family: "IBM Plex Mono", monospace; font-size: 0.6rem; text-transform: none; letter-spacing: 0.14em; color: var(--text-3); font-weight: 500; padding: 14px 4px 8px;';
+                if (isOv) {
+                    const gap = document.createElement('div'); gap.style.height = '6px'; subrailBody.appendChild(gap);
+                    subrailBody.appendChild(mkRow({ name: 'No overlay', icon: 'fa-ban' }, !cfg.key, () => { setOverlay(null); renderStaticSection('layers'); }));
+                }
+                const groups = {}, groupOrder = [];
+                Object.keys(PROVIDERS).forEach(key => {
+                    const p = PROVIDERS[key];
+                    if (isOv && !p.url) return;      // "No base layer" is not an overlay
+                    if (!groups[p.group]) { groups[p.group] = []; groupOrder.push(p.group); }
+                    groups[p.group].push(Object.assign({ key }, p));
+                });
+                groupOrder.forEach(groupName => {
+                    const heading = document.createElement('div');
+                    heading.style.cssText = headStyle;
+                    heading.textContent = groupName;
+                    subrailBody.appendChild(heading);
+                    groups[groupName].forEach(item => {
+                        subrailBody.appendChild(isOv
+                            ? mkRow(item, cfg.key === item.key, () => { setOverlay(cfg.key === item.key ? null : item.key); renderStaticSection('layers'); })
+                            : mkRow(item, currentProviderKey === item.key, () => { switchProvider(item.key); renderStaticSection('layers'); }));
+                    });
+                });
+                subrailBody.scrollTop = keepTop;
+            }
+
             // ==================== INDEXEDDB ====================
             const DB_NAME = 'telco-earth';
             const DB_VERSION = 1;
@@ -2315,6 +2968,7 @@ document.head.appendChild(s);})();</script>
                 try {
                     _trackUndo();
                     await dbPut('places', { id: 'root', tree: treeNodes.filter(n => !(n.meta && n.meta.stress)).map(toPlain), archive: archivedNodes.map(toPlain) });
+                    try { scheduleStorageCheck(); } catch (e) {}
                 } catch (e) { console.warn('persistTree failed', e); }
             }
             async function loadPersistedTree() {
@@ -2686,6 +3340,7 @@ document.head.appendChild(s);})();</script>
             }
 
             function renderTree0() {
+                if (ovPickIdx !== null && activeSection !== 'layers') ovStopPick(true);
                 if (_renderSuspend) { _renderPending = true; return; } updateRailVisibility();
                 updateSubrailChrome();
                 if (activeSection === 'places') renderPlacesSection();
@@ -3436,7 +4091,7 @@ document.head.appendChild(s);})();</script>
                     iconFa = TYPE_ICONS[node.type] || 'fa-circle';
                     iconColor = node.meta && node.meta.color ? node.meta.color : '';
                 }
-                icon.innerHTML = `<i class="fas ${iconFa}"${iconColor ? ` style="color:${iconColor}"` : ''}></i>`;
+                icon.innerHTML = iconGlyphHTML(iconFa, iconColor);
                 row.appendChild(icon);
 
                 const label = document.createElement('div');
@@ -3869,7 +4524,7 @@ document.head.appendChild(s);})();</script>
                     if (node.type === 'placemark') { iconFa = node.meta.icon || DEFAULT_ICON; iconColor = node.meta.color || '#4d7c0f'; }
                     else if (node.type === 'los') { iconFa = 'fa-satellite-dish'; iconColor = node.meta.color || '#ea580c'; }
                     else { iconFa = TYPE_ICONS[node.type] || 'fa-circle'; iconColor = node.meta && node.meta.color ? node.meta.color : ''; }
-                    icon.innerHTML = `<i class="fas ${iconFa}"${iconColor ? ` style="color:${iconColor}"` : ''}></i>`;
+                    icon.innerHTML = iconGlyphHTML(iconFa, iconColor);
                     row.appendChild(icon);
                     const label = document.createElement('div');
                     label.className = 'fx-label';
@@ -4598,106 +5253,271 @@ document.head.appendChild(s);})();</script>
                 } else if (section === 'photos') { renderPhotosSection(); } else if (section === 'links') {
                     renderLinksSection();
                 } else if (section === 'layers') {
-                    const groups = {};
-                    const groupOrder = [];
-                    Object.keys(PROVIDERS).forEach(key => {
-                        const p = PROVIDERS[key];
-                        if (!groups[p.group]) { groups[p.group] = []; groupOrder.push(p.group); }
-                        groups[p.group].push({ key, ...p });
-                    });
-                    subrailBody.innerHTML = '';
-                    groupOrder.forEach(groupName => {
-                        const heading = document.createElement('div');
-                        heading.style.cssText = 'font-family: "IBM Plex Mono", monospace; font-size: 0.6rem; text-transform: none; letter-spacing: 0.14em; color: var(--text-3); font-weight: 500; padding: 14px 4px 8px;';
-                        heading.textContent = groupName;
-                        subrailBody.appendChild(heading);
-                        groups[groupName].forEach(item => {
-                            const row = document.createElement('div');
-                            row.className = 'layer-row' + (currentProviderKey === item.key ? ' active' : '');
-                            row.innerHTML = `
-                                <div class="check-circle"><i class="fas fa-check"></i></div>
-                                <div class="tree-item-icon" style="width:22px;height:22px;border-radius:6px;"><i class="fas ${item.icon}" style="font-size:0.65rem;"></i></div>
-                                <div style="flex:1;font-weight:500;">${item.name}</div>
-                            `;
-                            row.addEventListener('click', () => { switchProvider(item.key); renderStaticSection('layers'); });
-                            subrailBody.appendChild(row);
-                        });
-                    });
+                    renderLayersSection();
                 } else if (section === 'settings') {
-                    const snapToggle = document.createElement('div');
-                    snapToggle.className = 'toggle-row' + (SETTINGS.snapToMarkers ? ' active' : '');
-                    snapToggle.innerHTML = `
-                        <div class="toggle-switch"></div>
-                        <div class="toggle-label">
-                            <div class="toggle-label-main">Snap to markers</div>
-                            <div class="toggle-label-sub">When drawing or editing, snap to the nearest marker icon (${SETTINGS.snapPixels} px)</div>
+                    openSettingsOverlay();
+                }
+            }
+
+            // ==================== SETTINGS OVERLAY ====================
+            // Settings used to render into the left side panel. They now open as an overlay, grouped by topic.
+            // To add a setting: put it in the matching group inside buildSettingsGroup(), or add a new entry to SETTINGS_GROUPS.
+            const SETTINGS_GROUPS = [
+                { key: 'appearance',  label: 'Appearance',   icon: 'fa-palette',             sub: 'Choose how the app looks.' },
+                { key: 'editing',     label: 'Editing',      icon: 'fa-pen-to-square',       sub: 'Snapping and vertex handles while you draw or edit.' },
+                { key: 'display',     label: 'Map display',  icon: 'fa-map-pin',             sub: 'How placemarks and labels are drawn when there are a lot of them.' },
+                { key: 'performance', label: 'Performance',  icon: 'fa-gauge-high',          sub: 'Options for very large datasets.' },
+                { key: 'saved',       label: 'Saved images', icon: 'fa-images',              sub: 'Icons and pictures you gave to markers. They are kept inside the markers themselves, in this browser, so this list only ever shows the ones a marker still uses.' },
+                { key: 'storage',     label: 'Storage',      icon: 'fa-database',            sub: 'How much of this browser\'s storage the app uses, and the map tile cache.' },
+                { key: 'data',        label: 'Data & export', icon: 'fa-file-export',        sub: 'Export your places and sites.' },
+                { key: 'about',       label: 'About',        icon: 'fa-circle-info',         sub: 'Version and what has changed.' },
+                { key: 'danger',      label: 'Clear data',   icon: 'fa-triangle-exclamation', sub: 'These actions delete data from this browser. Most of them cannot be undone.', danger: true }
+            ];
+            const settingsOverlay = document.getElementById('settings-overlay');
+            const settingsNav = document.getElementById('settings-nav');
+            const settingsPane = document.getElementById('settings-pane');
+            const settingsBox = document.getElementById('settings-box');
+            const railSettingsBtn = document.getElementById('rail-settings');
+            let settingsGroup = 'appearance';
+
+            // ---- storage: quota check (banner at 90 %), what is using it, persistence, tile cache ----
+            const STORAGE_WARN_PCT = 90;
+            var _stTimer = null, _stTok = 0, _stToastShown = false;     // var: persistTree may call scheduleStorageCheck() very early
+            let storageState = { ok: false, usage: 0, quota: 0, pct: 0, persisted: null };
+            const stFmt = (b) => {
+                b = +b || 0;
+                if (b >= 1073741824) return (b / 1073741824).toFixed(2) + ' GB';
+                if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
+                if (b >= 1024) return Math.round(b / 1024) + ' KB';
+                return Math.round(b) + ' B';
+            };
+            async function refreshStorageState() {
+                try {
+                    if (navigator.storage && navigator.storage.estimate) {
+                        const est = await navigator.storage.estimate();
+                        if (est && est.quota) storageState = Object.assign(storageState, { ok: true, usage: est.usage || 0, quota: est.quota, pct: (est.usage || 0) / est.quota * 100 });
+                    }
+                    if (navigator.storage && navigator.storage.persisted) storageState.persisted = await navigator.storage.persisted();
+                } catch (e) { /* estimate unavailable: no banner */ }
+                updateStorageAlertUI();
+                return storageState;
+            }
+            function scheduleStorageCheck() { clearTimeout(_stTimer); _stTimer = setTimeout(refreshStorageState, 4000); }
+            function updateStorageAlertUI() {
+                const warn = storageState.ok && storageState.pct >= STORAGE_WARN_PCT;
+                railSettingsBtn.classList.toggle('has-alert', warn);
+                const nav = settingsNav.querySelector('[data-group="storage"]');
+                if (nav) nav.classList.toggle('alert', warn);
+                const bar = document.getElementById('settings-alert');
+                if (bar) {
+                    bar.hidden = !warn;
+                    if (warn) {
+                        bar.querySelector('span').textContent = 'Browser storage is ' + Math.min(100, Math.floor(storageState.pct)) + '% full (' + stFmt(storageState.usage) + ' of ' + stFmt(storageState.quota) + '). Once it is full, new terrain tiles and places may fail to save.';
+                        document.getElementById('settings-alert-go').style.display = settingsGroup === 'storage' ? 'none' : '';
+                    }
+                }
+                if (warn && !_stToastShown) { _stToastShown = true; showToast('Browser storage is ' + Math.floor(storageState.pct) + '% full – see Settings → Storage', 'fa-triangle-exclamation'); }
+            }
+
+            function buildStorageGroup(box) {
+                const tok = ++_stTok;
+                const live = () => tok === _stTok && box.isConnected && settingsGroup === 'storage';
+                const wrap = document.createElement('div');
+                wrap.innerHTML = `
+                    <div class="st-card">
+                        <div class="st-head"><b>Browser storage</b><button class="btn btn-secondary" id="st-refresh" type="button">Refresh</button></div>
+                        <div class="st-big" id="st-big">Measuring…</div>
+                        <div class="st-meter" aria-hidden="true"><i id="st-fill" style="width:0%"></i></div>
+                        <div class="st-note" id="st-quota-note"></div>
+                    </div>
+                    <div class="st-card">
+                        <div class="st-head"><b>What is using it</b></div>
+                        <div id="st-rows" class="st-rows">Measuring…</div>
+                    </div>
+                    <div class="st-card">
+                        <div class="st-head"><b>Persistent storage</b></div>
+                        <div id="st-persist" class="st-note">Checking…</div>
+                    </div>
+                    <div class="st-card">
+                        <div class="st-head"><b>Map tile cache</b><button class="btn btn-secondary" id="st-clear-tiles" type="button">Clear tile cache</button></div>
+                        <div id="st-tiles" class="st-rows"></div>
+                        <div class="st-note">Kept in memory only, so it empties when you close or reload the page. It makes panning back over places you have already seen instant and does not count towards browser storage.</div>
+                    </div>
+                    <div class="st-card">
+                        <div class="st-head"><b>Free up space</b></div>
+                        <div class="st-links">
+                            <button type="button" data-go="saved">Review saved images</button>
+                            <button type="button" data-go="danger">Clear HGT data, places or the tile cache…</button>
                         </div>
-                    `;
-                    snapToggle.addEventListener('click', async () => {
-                        SETTINGS.snapToMarkers = !SETTINGS.snapToMarkers;
-                        await saveSettings();
-                        renderStaticSection('settings');
-                        showToast(SETTINGS.snapToMarkers ? 'Snap on' : 'Snap off', 'fa-magnet');
-                        refreshSnapZoneMode();
-                        rebuildSnapZoneLayer();
-                    });
-                    const snapDistRow = document.createElement('div');
-                    snapDistRow.className = 'static-item';
-                    snapDistRow.style.cursor = 'default';
-                    snapDistRow.innerHTML = `
-                        <div class="static-item-icon"><i class="fas fa-magnet"></i></div>
+                    </div>`;
+                box.appendChild(wrap);
+                const $ = (id) => wrap.querySelector('#' + id);
+                const row = (label, detail, bytes, total, sub) => `<div class="st-row${sub ? ' sub' : ''}"><div class="st-row-top"><span>${label}<small>${detail || ''}</small></span><b>${stFmt(bytes)}</b></div>${total ? `<div class="st-bar"><i style="width:${Math.min(100, Math.max(bytes > 0 ? 1 : 0, bytes / total * 100)).toFixed(1)}%"></i></div>` : ''}</div>`;
+
+                const fillUsage = () => {
+                    const s = storageState;
+                    if (!s.ok) { $('st-big').textContent = 'Your browser does not report storage usage.'; $('st-quota-note').textContent = ''; return; }
+                    const pct = Math.min(100, s.pct);
+                    $('st-big').innerHTML = stFmt(s.usage) + ' <span>of ' + stFmt(s.quota) + ' · ' + (pct < 10 ? pct.toFixed(1) : Math.round(pct)) + '%</span>';
+                    const fill = $('st-fill'); fill.style.width = pct.toFixed(1) + '%';
+                    fill.className = pct >= STORAGE_WARN_PCT ? 'crit' : pct >= 75 ? 'warn' : '';
+                    $('st-quota-note').textContent = 'The limit is set by your browser for this site and depends on free disk space, so it can change. The warning banner appears at ' + STORAGE_WARN_PCT + '%.';
+                };
+                const fillTiles = () => {
+                    let bytes = 0, oldest = 0;
+                    tileCache.forEach(e => { bytes += (e.blob && e.blob.size) || 0; if (e.ts && (!oldest || e.ts < oldest)) oldest = e.ts; });
+                    const reqs = cacheHits + cacheMisses, rate = reqs ? Math.round(cacheHits / reqs * 100) : 0;
+                    const age = oldest ? Math.max(1, Math.round((Date.now() - oldest) / 60000)) : 0;
+                    $('st-tiles').innerHTML =
+                        row('Tiles cached', 'limit ' + TILE_CACHE_MAX.toLocaleString(), 0, 0).replace(/<b>[^<]*<\/b>/, '<b>' + tileCache.size.toLocaleString() + '</b>') +
+                        row('Memory used', 'approximate', bytes, 0) +
+                        row('Served from cache', cacheHits.toLocaleString() + ' hits · ' + cacheMisses.toLocaleString() + ' misses', 0, 0).replace(/<b>[^<]*<\/b>/, '<b>' + (reqs ? rate + '%' : '—') + '</b>') +
+                        (oldest ? row('Oldest tile', 'least recently used goes first', 0, 0).replace(/<b>[^<]*<\/b>/, '<b>' + (age >= 120 ? Math.round(age / 60) + ' h' : age + ' min') + '</b>') : '');
+                };
+                const fillPersist = () => {
+                    const el = $('st-persist'); el.textContent = '';
+                    if (!(navigator.storage && navigator.storage.persist)) { el.textContent = 'Your browser does not offer persistent storage.'; return; }
+                    const p = document.createElement('div');
+                    p.textContent = storageState.persisted
+                        ? 'Granted – the browser will not clear this site’s data on its own, even when the device is low on disk space.'
+                        : 'Not granted – the browser may delete this site’s data (terrain tiles and places) without asking if the device runs low on disk space.';
+                    el.appendChild(p);
+                    if (!storageState.persisted) {
+                        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-secondary'; b.style.marginTop = '8px'; b.textContent = 'Request persistent storage';
+                        b.addEventListener('click', async () => {
+                            let ok = false;
+                            try { ok = await navigator.storage.persist(); } catch (e) {}
+                            showToast(ok ? 'Persistent storage granted' : 'The browser did not grant persistent storage', ok ? 'fa-check' : 'fa-info-circle');
+                            await refreshStorageState();
+                            if (live()) fillPersist();
+                        });
+                        el.appendChild(b);
+                    }
+                };
+                const fillBreakdown = async () => {
+                    let terrainBytes = 0;
+                    terrainStore.forEach(t => { terrainBytes += (t.data && t.data.byteLength) || 0; });
+                    let placesBytes = 0;
+                    try { const rec = await dbGet('places', 'root'); placesBytes = rec ? JSON.stringify(rec).length : 0; } catch (e) {}
+                    if (!live()) return;
+                    const icons = collectCustomIcons();
+                    const iconBytes = icons.reduce((a, e) => a + e.icon.length * e.count, 0);
+                    const used = storageState.ok ? storageState.usage : terrainBytes + placesBytes;
+                    const other = Math.max(0, used - terrainBytes - placesBytes);
+                    const total = Math.max(used, terrainBytes + placesBytes, 1);
+                    $('st-rows').innerHTML =
+                        row('Terrain (HGT) tiles', terrainStore.size.toLocaleString() + ' tile' + (terrainStore.size === 1 ? '' : 's'), terrainBytes, total) +
+                        row('Places and archive', 'markers, links, paths, folders', placesBytes, total) +
+                        (iconBytes ? row('of which saved images', icons.length + ' image' + (icons.length === 1 ? '' : 's') + ' on ' + icons.reduce((a, e) => a + e.count, 0) + ' marker(s)', Math.min(iconBytes, placesBytes || iconBytes), total, true) : '') +
+                        (storageState.ok ? row('Everything else', 'settings, browser caches, other site data', other, total) : '');
+                };
+
+                fillUsage(); fillTiles(); fillPersist();
+                refreshStorageState().then(() => { if (!live()) return; fillUsage(); fillPersist(); fillBreakdown(); });
+                $('st-refresh').addEventListener('click', async () => { $('st-big').textContent = 'Measuring…'; await refreshStorageState(); if (!live()) return; fillUsage(); fillTiles(); fillPersist(); fillBreakdown(); });
+                $('st-clear-tiles').addEventListener('click', () => {
+                    tileCache.forEach(e => e.url && URL.revokeObjectURL(e.url));
+                    tileCache.clear(); cacheHits = 0; cacheMisses = 0;
+                    fillTiles();
+                    showToast('Map tile cache cleared', 'fa-database');
+                });
+                wrap.querySelectorAll('.st-links button').forEach(b => b.addEventListener('click', () => { settingsGroup = b.dataset.go; renderSettingsGroup(false); }));
+            }
+
+            function buildSettingsGroup(group, box) {
+                const snapToggle = document.createElement('div');
+                snapToggle.className = 'toggle-row' + (SETTINGS.snapToMarkers ? ' active' : '');
+                snapToggle.innerHTML = `
+                    <div class="toggle-switch"></div>
+                    <div class="toggle-label">
+                        <div class="toggle-label-main">Snap to markers</div>
+                        <div class="toggle-label-sub">When drawing or editing, snap to the nearest marker icon (${SETTINGS.snapPixels} px)</div>
+                    </div>
+                `;
+                snapToggle.addEventListener('click', async () => {
+                    SETTINGS.snapToMarkers = !SETTINGS.snapToMarkers;
+                    await saveSettings();
+                    rerenderSettings();
+                    showToast(SETTINGS.snapToMarkers ? 'Snap on' : 'Snap off', 'fa-magnet');
+                    refreshSnapZoneMode();
+                    rebuildSnapZoneLayer();
+                });
+                const snapDistRow = document.createElement('div');
+                snapDistRow.className = 'static-item';
+                snapDistRow.style.cursor = 'default';
+                snapDistRow.innerHTML = `
+                    <div class="static-item-icon"><i class="fas fa-magnet"></i></div>
+                    <div class="static-item-body">
+                        <div class="static-item-label">Snap radius (px)</div>
+                        <div class="static-item-desc">How close (in screen pixels) the cursor must be to a marker</div>
+                        <div style="display:flex;gap:6px;margin-top:8px;">
+                            <input type="number" id="snap-dist" value="${SETTINGS.snapPixels}" min="1" max="200" style="flex:1;padding:6px 10px;border:1px solid var(--border-hi);border-radius:6px;background:var(--surface);font-family:'IBM Plex Mono',monospace;font-size:0.78rem;">
+                            <button class="btn btn-secondary" id="snap-dist-save" style="padding:6px 12px;font-size:0.75rem;">Save</button>
+                        </div>
+                    </div>
+                `;
+                const settingsHeading = (text) => {
+                    const h = document.createElement('div');
+                    h.className = 'static-heading';
+                    h.textContent = text;
+                    return h;
+                };
+                const settingsItem = (it) => {
+                    const el = document.createElement('div');
+                    el.className = 'static-item';
+                    el.setAttribute('role', 'button');
+                    el.tabIndex = 0;
+                    el.innerHTML = `
+                        <div class="static-item-icon"><i class="fas ${it.icon}"></i></div>
                         <div class="static-item-body">
-                            <div class="static-item-label">Snap radius (px)</div>
-                            <div class="static-item-desc">How close (in screen pixels) the cursor must be to a marker</div>
-                            <div style="display:flex;gap:6px;margin-top:8px;">
-                                <input type="number" id="snap-dist" value="${SETTINGS.snapPixels}" min="1" max="200" style="flex:1;padding:6px 10px;border:1px solid var(--border-hi);border-radius:6px;background:var(--surface);font-family:'IBM Plex Mono',monospace;font-size:0.78rem;">
-                                <button class="btn btn-secondary" id="snap-dist-save" style="padding:6px 12px;font-size:0.75rem;">Save</button>
-                            </div>
+                            <div class="static-item-label">${it.label}</div>
+                            <div class="static-item-desc">${it.desc}</div>
                         </div>
                     `;
-                    const settingsHeading = (text) => {
-                        const h = document.createElement('div');
-                        h.className = 'static-heading';
-                        h.textContent = text;
-                        return h;
-                    };
-                    const settingsItem = (it) => {
-                        const el = document.createElement('div');
-                        el.className = 'static-item';
-                        el.setAttribute('role', 'button');
-                        el.tabIndex = 0;
-                        el.innerHTML = `
-                            <div class="static-item-icon"><i class="fas ${it.icon}"></i></div>
-                            <div class="static-item-body">
-                                <div class="static-item-label">${it.label}</div>
-                                <div class="static-item-desc">${it.desc}</div>
-                            </div>
-                        `;
-                        el.addEventListener('click', () => it.action());
-                        el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); it.action(); } });
-                        return el;
-                    };
-                    const settingsGroups = [
-                        { title: 'Export', items: [
-                            ...IO_FORMATS.map(f => ({ icon: f.icon, label: 'Export all as ' + f.label, desc: f.key === 'gpx' ? 'Geometry, names and descriptions only' : 'Full round-trip: folders, styles and metadata', action: () => exportAs(f.key, null) })),
-                            { icon: 'fa-file-csv', label: 'Export site list as CSV', desc: 'Placemarks and links with elevation and link status', action: () => exportSitesCSV() }
-                        ]},
-                        { title: 'Storage', items: [
-                            { icon: 'fa-database', label: 'Storage info', desc: 'IndexedDB usage estimate', action: async () => {
-                                if (navigator.storage && navigator.storage.estimate) {
-                                    const est = await navigator.storage.estimate();
-                                    showToast(`Used ${(est.usage / 1048576).toFixed(1)} MB of ${(est.quota / 1048576).toFixed(0)} MB`, 'fa-database');
-                                } else showToast('Storage estimate unavailable', 'fa-info-circle');
-                            }},
-                            { icon: 'fa-database', label: 'Tile cache', desc: 'Show in-memory tile cache stats', action: () => {
-                                showToast(`Cache: ${tileCache.size} tiles · ${cacheHits} hits / ${cacheMisses} misses`, 'fa-database');
-                            }}
-                        ]}
-                    ];
-                    subrailBody.innerHTML = '';
-                    subrailBody.appendChild(settingsHeading('Editing'));
-                    subrailBody.appendChild(snapToggle);
-                    subrailBody.appendChild(snapDistRow);
+                    el.addEventListener('click', () => it.action());
+                    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); it.action(); } });
+                    return el;
+                };
+                const settingsGroups = [
+                    { title: 'Export', items: [
+                        ...IO_FORMATS.map(f => ({ icon: f.icon, label: 'Export all as ' + f.label, desc: f.key === 'gpx' ? 'Geometry, names and descriptions only' : 'Full round-trip: folders, styles and metadata', action: () => exportAs(f.key, null) })),
+                        { icon: 'fa-file-csv', label: 'Export site list as CSV', desc: 'Placemarks and links with elevation and link status', action: () => exportSitesCSV() }
+                    ]}
+                ];
+                const perfToggleRow = (label, sub, key, onChange) => {
+                    const r = document.createElement('div');
+                    r.className = 'toggle-row' + (FLAGS[key] ? ' active' : '');
+                    r.innerHTML = `<div class="toggle-switch"></div><div class="toggle-label"><div class="toggle-label-main">${label}</div><div class="toggle-label-sub">${sub}</div></div>`;
+                    r.addEventListener('click', async () => {
+                        FLAGS[key] = !FLAGS[key];
+                        saveFlags();
+                        try { await onChange(FLAGS[key]); } catch (err) { FLAGS[key] = !FLAGS[key]; saveFlags(); showToast(err && err.message ? err.message : 'Could not change this setting', 'fa-triangle-exclamation'); }
+                        rerenderSettings();
+                    });
+                    return r;
+                };
+                const perfNumberRow = (label, desc, key, min, max, onSave) => {
+                    const r = document.createElement('div');
+                    r.className = 'static-item';
+                    r.style.cursor = 'default';
+                    r.innerHTML = `<div class="static-item-icon"><i class="fas fa-sliders"></i></div><div class="static-item-body"><div class="static-item-label">${label}</div><div class="static-item-desc">${desc}</div><div style="display:flex;gap:6px;margin-top:8px;"><input type="number" value="${FLAGS[key]}" min="${min}" max="${max}" style="flex:1;padding:6px 10px;border:1px solid var(--border-hi);border-radius:6px;background:var(--surface);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:0.78rem;"><button class="btn btn-secondary" style="padding:6px 12px;font-size:0.75rem;">Save</button></div></div>`;
+                    r.querySelector('button').addEventListener('click', async () => {
+                        const v = parseFloat(r.querySelector('input').value);
+                        if (!isFinite(v) || v < min || v > max) { showToast(`Enter a value from ${min} to ${max}`, 'fa-exclamation-circle'); return; }
+                        FLAGS[key] = v; saveFlags();
+                        try { await onSave(); } catch (err) { showToast(err && err.message ? err.message : 'Could not apply', 'fa-triangle-exclamation'); }
+                        rerenderSettings();
+                    });
+                    return r;
+                };
+                const rebuildAll = () => withBusy('Redrawing map…', async () => { if (editorState) closeEditorPanel(); rebuildLayers(); });
+                if (group === 'appearance') {
+                    box.appendChild(settingsHeading('Theme'));
+                    box.appendChild(buildThemePicker());
+                } else if (group === 'editing') {
+                    box.appendChild(settingsHeading('Snapping'));
+                    box.appendChild(snapToggle);
+                    box.appendChild(snapDistRow);
                     snapDistRow.querySelector('#snap-dist-save').addEventListener('click', async () => {
                         const v = parseFloat(snapDistRow.querySelector('#snap-dist').value);
                         if (isFinite(v) && v > 0) {
@@ -4705,70 +5525,96 @@ document.head.appendChild(s);})();</script>
                             await saveSettings();
                             showToast(`Snap radius: ${v} px`, 'fa-magnet');
                             rebuildSnapZoneLayer();
-                            renderStaticSection('settings');
+                            rerenderSettings();
                         }
                     });
-                    // ---- Large datasets ----
-                    const perfToggleRow = (label, sub, key, onChange) => {
-                        const r = document.createElement('div');
-                        r.className = 'toggle-row' + (FLAGS[key] ? ' active' : '');
-                        r.innerHTML = `<div class="toggle-switch"></div><div class="toggle-label"><div class="toggle-label-main">${label}</div><div class="toggle-label-sub">${sub}</div></div>`;
-                        r.addEventListener('click', async () => {
-                            FLAGS[key] = !FLAGS[key];
-                            saveFlags();
-                            try { await onChange(FLAGS[key]); } catch (err) { FLAGS[key] = !FLAGS[key]; saveFlags(); showToast(err && err.message ? err.message : 'Could not change this setting', 'fa-triangle-exclamation'); }
-                            renderStaticSection('settings');
-                        });
-                        return r;
-                    };
-                    const perfNumberRow = (label, desc, key, min, max, onSave) => {
-                        const r = document.createElement('div');
-                        r.className = 'static-item';
-                        r.style.cursor = 'default';
-                        r.innerHTML = `<div class="static-item-icon"><i class="fas fa-sliders"></i></div><div class="static-item-body"><div class="static-item-label">${label}</div><div class="static-item-desc">${desc}</div><div style="display:flex;gap:6px;margin-top:8px;"><input type="number" value="${FLAGS[key]}" min="${min}" max="${max}" style="flex:1;padding:6px 10px;border:1px solid var(--border-hi);border-radius:6px;background:var(--surface);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:0.78rem;"><button class="btn btn-secondary" style="padding:6px 12px;font-size:0.75rem;">Save</button></div></div>`;
-                        r.querySelector('button').addEventListener('click', async () => {
-                            const v = parseFloat(r.querySelector('input').value);
-                            if (!isFinite(v) || v < min || v > max) { showToast(`Enter a value from ${min} to ${max}`, 'fa-exclamation-circle'); return; }
-                            FLAGS[key] = v; saveFlags();
-                            try { await onSave(); } catch (err) { showToast(err && err.message ? err.message : 'Could not apply', 'fa-triangle-exclamation'); }
-                            renderStaticSection('settings');
-                        });
-                        return r;
-                    };
-                    const rebuildAll = () => withBusy('Redrawing map…', async () => { if (editorState) closeEditorPanel(); rebuildLayers(); });
-                    subrailBody.appendChild(settingsHeading('Large datasets'));
-                    subrailBody.appendChild(perfToggleRow('Canvas rendering', 'Draw paths and polygons on one canvas instead of one SVG element each — much faster with thousands of segments. Reloads the page.', 'perfCanvas', async () => {
+                    box.appendChild(settingsHeading('Vertex handles'));
+                    box.appendChild(perfToggleRow('Vertex handles: only those in view', 'When editing a long path, draw handles only for vertices on screen. Applies to paths at or above the vertex count below.', 'perfVertexCull', async () => { if (editorState && editorState.activeTab === 'vertices') openEditorPanel(editorState.node, 'vertices'); }));
+                    if (FLAGS.perfVertexCull) {
+                        box.appendChild(perfNumberRow('Apply to paths with at least (vertices)', 'Shorter paths always show every handle', 'perfVertexCullMin', 10, 100000, async () => {}));
+                        box.appendChild(perfNumberRow('Max handles in view', 'If more would show, none are drawn until you zoom in', 'perfVertexMax', 20, 5000, async () => {}));
+                    }
+                } else if (group === 'display') {
+                    box.appendChild(perfToggleRow('Only draw markers in view', 'Keeps off-screen placemark markers out of the page and brings them back as you pan. Big speed-up with thousands of placemarks.', 'perfMarkerCull', async (on) => { drawnItems.setCull(on); }));
+                    box.appendChild(perfNumberRow('Max labels shown', 'Map labels are only built for placemarks in view; if more would show, the ones nearest the centre win (default 600)', 'mapLabelMax', 20, 5000, async () => { updateMapLabels(); }));
+                    box.appendChild(perfToggleRow('Declutter placemarks (Google Earth style)', 'When more icons are in view than the cap below, overlapping icons are hidden (look-alike icons first) and come back as you zoom in. No clusters.', 'perfDeclutter', async (on) => { drawnItems.declutter(on); }));
+                    if (FLAGS.perfDeclutter) box.appendChild(perfNumberRow('Max icons drawn at once', 'Safe render cap for placemark icons (default 1200). Lower is faster.', 'perfDeclutterCap', 100, 10000, async () => { drawnItems.declutter(); }));
+                    box.appendChild(perfToggleRow('Cluster placemarks', 'Group nearby placemark markers into numbered clusters and keep off-screen markers out of the page. Loads a small library from the internet the first time it is turned on.', 'perfCluster', async (on) => { FLAGS.perfClusterUser = !!on; saveFlags(); await drawnItems.setCluster(on); drawnItems.declutter(); }));
+                    if (FLAGS.perfCluster) {
+                        box.appendChild(perfNumberRow('Cluster radius (px)', 'Markers closer than this on screen are grouped (default 60)', 'perfClusterRadius', 10, 200, async () => { await drawnItems.reconfigureCluster(); }));
+                        box.appendChild(perfNumberRow('Stop clustering at zoom', 'At this zoom and closer every placemark is shown individually (default 16)', 'perfClusterOffZoom', 3, 19, async () => { await drawnItems.reconfigureCluster(); }));
+                    }
+                } else if (group === 'performance') {
+                    box.appendChild(perfToggleRow('Canvas rendering', 'Draw paths and polygons on one canvas instead of one SVG element each — much faster with thousands of segments. Reloads the page.', 'perfCanvas', async () => {
                         await persistTreeNow();
                         showToast('Canvas rendering ' + (FLAGS.perfCanvas ? 'on' : 'off') + ' — reloading…', 'fa-rotate');
                         setTimeout(() => location.reload(), 700);
                     }));
-                    subrailBody.appendChild(perfToggleRow('Simplify paths when zoomed out', 'Skip vertices that fall closer together than the tolerance below, so long paths draw quickly. Shape and data are unchanged.', 'perfSimplify', async () => { applySimplify(); rebuildAll(); scheduleStats(); }));
-                    if (FLAGS.perfSimplify) subrailBody.appendChild(perfNumberRow('Simplify tolerance (px)', 'Strongest simplification, used only when the view is busy; with fewer vertices in view paths are drawn almost exactly (default 3)', 'perfSimplifyPx', 1, 20, async () => { applySimplify(); rebuildAll(); scheduleStats(); }));
-                    if (FLAGS.perfSimplify) subrailBody.appendChild(perfNumberRow('Vertex budget', 'Vertices in view at which simplification reaches full strength. Below a quarter of this nothing visible is simplified (default 15000)', 'perfVertexBudget', 1000, 500000, async () => { scheduleStats(); }));
-                    subrailBody.appendChild(perfToggleRow('Vertex handles: only those in view', 'When editing a long path, draw handles only for vertices on screen. Applies to paths at or above the vertex count below.', 'perfVertexCull', async () => { if (editorState && editorState.activeTab === 'vertices') openEditorPanel(editorState.node, 'vertices'); }));
-                    if (FLAGS.perfVertexCull) {
-                        subrailBody.appendChild(perfNumberRow('Apply to paths with at least (vertices)', 'Shorter paths always show every handle', 'perfVertexCullMin', 10, 100000, async () => {}));
-                        subrailBody.appendChild(perfNumberRow('Max handles in view', 'If more would show, none are drawn until you zoom in', 'perfVertexMax', 20, 5000, async () => {}));
+                    box.appendChild(perfToggleRow('Simplify paths when zoomed out', 'Skip vertices that fall closer together than the tolerance below, so long paths draw quickly. Shape and data are unchanged.', 'perfSimplify', async () => { applySimplify(); rebuildAll(); scheduleStats(); }));
+                    if (FLAGS.perfSimplify) box.appendChild(perfNumberRow('Simplify tolerance (px)', 'Strongest simplification, used only when the view is busy; with fewer vertices in view paths are drawn almost exactly (default 3)', 'perfSimplifyPx', 1, 20, async () => { applySimplify(); rebuildAll(); scheduleStats(); }));
+                    if (FLAGS.perfSimplify) box.appendChild(perfNumberRow('Vertex budget', 'Vertices in view at which simplification reaches full strength. Below a quarter of this nothing visible is simplified (default 15000)', 'perfVertexBudget', 1000, 500000, async () => { scheduleStats(); }));
+                } else if (group === 'storage') {
+                    buildStorageGroup(box);
+                } else if (group === 'saved') {
+                    const list = collectCustomIcons();
+                    const total = list.reduce((a, e) => a + e.count, 0);
+                    const bytes = list.reduce((a, e) => a + e.icon.length * e.count, 0);
+                    const bar = document.createElement('div'); bar.className = 'sv-bar';
+                    const info = document.createElement('span');
+                    info.textContent = list.length ? list.length + ' saved image' + (list.length === 1 ? '' : 's') + ' · used by ' + total + ' marker' + (total === 1 ? '' : 's') + ' · about ' + Math.max(1, Math.round(bytes / 1024)) + ' KB' : 'No marker uses an uploaded image or an icon-service icon yet. Pick one with “More icons…” in a marker’s Style tab.';
+                    bar.appendChild(info);
+                    if (list.length) {
+                        const all = document.createElement('button'); all.className = 'btn btn-secondary'; all.textContent = 'Remove all';
+                        all.addEventListener('click', async () => {
+                            if (!confirm('Set all ' + total + ' marker(s) that use these images back to the default pin?')) return;
+                            await resetMarkersUsingIcons(list);
+                            showToast('Saved images removed', 'fa-trash-alt');
+                            rerenderSettings();
+                        });
+                        bar.appendChild(all);
                     }
-                    subrailBody.appendChild(perfToggleRow('Only draw markers in view', 'Keeps off-screen placemark markers out of the page and brings them back as you pan. Big speed-up with thousands of placemarks.', 'perfMarkerCull', async (on) => { drawnItems.setCull(on); }));
-                    subrailBody.appendChild(perfNumberRow('Max labels shown', 'Map labels are only built for placemarks in view; if more would show, the ones nearest the centre win (default 600)', 'mapLabelMax', 20, 5000, async () => { updateMapLabels(); }));
-                    subrailBody.appendChild(perfToggleRow('Declutter placemarks (Google Earth style)', 'When more icons are in view than the cap below, overlapping icons are hidden (look-alike icons first) and come back as you zoom in. No clusters.', 'perfDeclutter', async (on) => { drawnItems.declutter(on); }));
-                    if (FLAGS.perfDeclutter) subrailBody.appendChild(perfNumberRow('Max icons drawn at once', 'Safe render cap for placemark icons (default 1200). Lower is faster.', 'perfDeclutterCap', 100, 10000, async () => { drawnItems.declutter(); }));
-                    subrailBody.appendChild(perfToggleRow('Cluster placemarks', 'Group nearby placemark markers into numbered clusters and keep off-screen markers out of the page. Loads a small library from the internet the first time it is turned on.', 'perfCluster', async (on) => { FLAGS.perfClusterUser = !!on; saveFlags(); await drawnItems.setCluster(on); drawnItems.declutter(); }));
-                    if (FLAGS.perfCluster) {
-                        subrailBody.appendChild(perfNumberRow('Cluster radius (px)', 'Markers closer than this on screen are grouped (default 60)', 'perfClusterRadius', 10, 200, async () => { await drawnItems.reconfigureCluster(); }));
-                        subrailBody.appendChild(perfNumberRow('Stop clustering at zoom', 'At this zoom and closer every placemark is shown individually (default 16)', 'perfClusterOffZoom', 3, 19, async () => { await drawnItems.reconfigureCluster(); }));
-                    }
-                    subrailBody.appendChild(settingsHeading('Appearance'));
-                    subrailBody.appendChild(buildThemePicker());
-                    settingsGroups.forEach(g => {
-                        subrailBody.appendChild(settingsHeading(g.title));
-                        g.items.forEach(it => subrailBody.appendChild(settingsItem(it)));
+                    box.appendChild(bar);
+                    const grid = document.createElement('div'); grid.className = 'sv-grid';
+                    list.forEach(e => {
+                        const kind = iconKind(e.icon), card = document.createElement('div'); card.className = 'sv-card';
+                        const th = document.createElement('div'); th.className = 'sv-thumb'; th.innerHTML = iconGlyphHTML(e.icon, kind === 'mask' ? 'var(--text)' : '');
+                        const nm = document.createElement('b'); nm.textContent = kind === 'img' ? 'Uploaded image' : 'Icon (takes the marker colour)';
+                        const sm = document.createElement('small'); sm.textContent = 'Used by ' + e.count + ' marker' + (e.count === 1 ? '' : 's') + ' · ' + Math.max(1, Math.round(e.icon.length / 1024)) + ' KB';
+                        const acts = document.createElement('div'); acts.className = 'sv-acts';
+                        const dl = document.createElement('a');
+                        dl.href = e.icon.slice(e.icon.indexOf(':') + 1);
+                        dl.download = 'marker-icon.' + (/image\/png/.test(e.icon) ? 'png' : /jpe?g/.test(e.icon) ? 'jpg' : /gif/.test(e.icon) ? 'gif' : /webp/.test(e.icon) ? 'webp' : 'svg');
+                        dl.textContent = 'Download';
+                        const rs = document.createElement('button'); rs.type = 'button'; rs.textContent = 'Reset markers';
+                        rs.title = 'Set the markers that use this image back to the default pin';
+                        rs.addEventListener('click', async () => {
+                            if (!confirm('Set ' + e.count + ' marker(s) back to the default pin?')) return;
+                            await resetMarkersUsingIcons([e]);
+                            showToast('Markers reset', 'fa-rotate-left');
+                            rerenderSettings();
+                        });
+                        acts.appendChild(dl); acts.appendChild(rs);
+                        card.appendChild(th); card.appendChild(nm); card.appendChild(sm); card.appendChild(acts);
+                        grid.appendChild(card);
                     });
-                    const dangerHeading = document.createElement('div');
-                    dangerHeading.style.cssText = 'font-family: "IBM Plex Mono", monospace; font-size: 0.6rem; text-transform: none; letter-spacing: 0.14em; color: var(--danger); font-weight: 600; padding: 22px 4px 8px; display: flex; align-items: center; gap: 6px;';
-                    dangerHeading.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Clear data';
-                    subrailBody.appendChild(dangerHeading);
+                    box.appendChild(grid);
+                } else if (group === 'data') {
+                    settingsGroups.forEach(g => {
+                        box.appendChild(settingsHeading(g.title));
+                        g.items.forEach(it => box.appendChild(settingsItem(g.title === 'Export'
+                            ? Object.assign({}, it, { action: () => { closeSettingsOverlay(); it.action(); } })   // export opens its own dialog
+                            : it)));
+                    });
+                } else if (group === 'about') {
+                    const row = document.createElement('div');
+                    row.className = 'static-item cl-row' + (clUnread() ? ' has-dot' : '');
+                    row.setAttribute('role', 'button'); row.tabIndex = 0;
+                    row.innerHTML = '<div class="static-item-icon"><i class="fas fa-clock-rotate-left"></i></div><div class="static-item-body"><div class="static-item-label">Changelog</div><div class="static-item-desc"></div></div>';
+                    row.querySelector('.static-item-desc').textContent = 'v' + APP_VERSION + ' · What’s new';
+                    row.addEventListener('click', clOpen);
+                    row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); clOpen(); } });
+                    box.appendChild(row);
+                } else if (group === 'danger') {
                     const dangerItems = [
                         { icon: 'fa-eye-slash', label: 'Clear view', desc: 'Hide all places and heatmaps', action: async () => {
                             if (!confirm('Hide all places and heatmaps from the map?')) return;
@@ -4829,10 +5675,64 @@ document.head.appendChild(s);})();</script>
                             </div>
                         `;
                         el.addEventListener('click', () => it.action());
-                        subrailBody.appendChild(el);
+                        box.appendChild(el);
                     });
                 }
             }
+
+            function renderSettingsGroup(keepScroll) {
+                const g = SETTINGS_GROUPS.find(x => x.key === settingsGroup) || SETTINGS_GROUPS[0];
+                const top = keepScroll ? settingsPane.scrollTop : 0;
+                settingsNav.querySelectorAll('.settings-nav-btn').forEach(b => {
+                    const on = b.dataset.group === g.key;
+                    b.classList.toggle('on', on);
+                    if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+                });
+                document.getElementById('settings-pane-title').textContent = g.label;
+                document.getElementById('settings-pane-sub').textContent = g.sub;
+                settingsBox.innerHTML = '';
+                buildSettingsGroup(g.key, settingsBox);
+                settingsPane.scrollTop = top;
+                updateStorageAlertUI();
+            }
+            function rerenderSettings() {
+                if (settingsOverlay && settingsOverlay.classList.contains('open')) renderSettingsGroup(true);
+            }
+            function openSettingsOverlay(group) {
+                if (group && SETTINGS_GROUPS.some(g => g.key === group)) settingsGroup = group;
+                renderSettingsGroup(false);
+                settingsOverlay.classList.add('open');
+                railSettingsBtn.classList.add('active');
+                railSettingsBtn.setAttribute('aria-expanded', 'true');
+                refreshStorageState();
+                const cur = settingsNav.querySelector('.settings-nav-btn.on');
+                if (cur) cur.focus();
+            }
+            function closeSettingsOverlay() {
+                if (!settingsOverlay.classList.contains('open')) return;
+                settingsOverlay.classList.remove('open');
+                railSettingsBtn.classList.remove('active');
+                railSettingsBtn.setAttribute('aria-expanded', 'false');
+                try { railSettingsBtn.focus(); } catch (e) {}
+            }
+            SETTINGS_GROUPS.forEach(g => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'settings-nav-btn' + (g.danger ? ' danger' : '');
+                b.dataset.group = g.key;
+                b.innerHTML = '<i class="fas ' + g.icon + '"></i><span>' + g.label.replace(/&/g, '&amp;') + '</span>';
+                b.addEventListener('click', () => { settingsGroup = g.key; renderSettingsGroup(false); });
+                settingsNav.appendChild(b);
+            });
+            railSettingsBtn.addEventListener('click', () => { if (settingsOverlay.classList.contains('open')) closeSettingsOverlay(); else openSettingsOverlay(); });
+            document.getElementById('settings-close').addEventListener('click', closeSettingsOverlay);
+            settingsOverlay.addEventListener('mousedown', (e) => { if (e.target === settingsOverlay) closeSettingsOverlay(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && settingsOverlay.classList.contains('open')) { e.preventDefault(); closeSettingsOverlay(); }
+            });
+            document.getElementById('settings-alert-go').addEventListener('click', () => { settingsGroup = 'storage'; renderSettingsGroup(false); });
+            setTimeout(refreshStorageState, 2500);                 // warn at start-up if the browser's storage is nearly full…
+            setInterval(refreshStorageState, 120000);              // …and keep an eye on it (also re-checked after saves)
 
             // ==================== MOVE ====================
             function moveLayerBy(node, dLat, dLng) {
@@ -4858,7 +5758,7 @@ document.head.appendChild(s);})();</script>
 
             const railTooltipEl = document.getElementById('rail-tooltip');
             let railTooltipTimer = null;
-            document.querySelectorAll('.rail-btn[data-subrail]').forEach(btn => {
+            document.querySelectorAll('.rail-btn[data-subrail], .rail-btn[data-overlay]').forEach(btn => {
                 btn.addEventListener('mouseenter', () => {
                     if (railTooltipTimer) clearTimeout(railTooltipTimer);
                     railTooltipTimer = setTimeout(() => {
@@ -5141,6 +6041,7 @@ document.head.appendChild(s);})();</script>
                     btn.className = 'editor-tab' + (editorState.activeTab === t.key ? ' active' : '');
                     btn.innerHTML = `<i class="fas ${t.icon}"></i> ${t.label}`;
                     btn.addEventListener('click', () => {
+                        editorState._iconPicker = null;       // clicking a tab leaves the icon picker
                         editorState.activeTab = t.key;
                         renderEditorTabs();
                         renderEditorBody();
@@ -5189,7 +6090,13 @@ document.head.appendChild(s);})();</script>
             }
             function renderEditorBody() {
                 if (!editorState) return;
-                if (editorState.isBulkSelection) { renderBulkSelectionStyleTab(); return; }
+                if (editorState.isBulkSelection) {
+                    editorTabsEl.style.display = editorState._iconPicker ? 'none' : '';
+                    if (editorState._iconPicker) renderIconPicker(); else renderBulkSelectionStyleTab();
+                    return;
+                }
+                if (editorState.activeTab !== 'style') editorState._iconPicker = null;
+                editorTabsEl.style.display = (editorState._iconPicker && editorState.isPlacemark) ? 'none' : '';   // the icon picker has its own Back button
                 if (editorState.activeTab === 'properties') renderPropertiesTab();
                 else if (editorState.activeTab === 'style') renderStyleTab();
                 else if (editorState.activeTab === 'vertices') renderVerticesTab();
@@ -5240,11 +6147,14 @@ document.head.appendChild(s);})();</script>
                 });
 
                 const content = editorBody.querySelector('#bulk-tab-content');
-                let bulkIcon = null;
-                let bulkRingRadius = ringRadius;
-                let bulkRingThickness = ringThickness;
-                let bulkLineThickness = lineThickness;
-                let bulkColor = color;
+                // coming back from the icon picker: carry on with what was already chosen
+                const keep = editorState._bulkKeep || null;
+                editorState._bulkKeep = null;
+                let bulkIcon = keep ? keep.icon : null;
+                let bulkRingRadius = keep ? keep.ringRadius : ringRadius;
+                let bulkRingThickness = keep ? keep.ringThickness : ringThickness;
+                let bulkLineThickness = keep ? keep.lineThickness : lineThickness;
+                let bulkColor = keep ? keep.color : color;
 
                 function renderMarkerPreview() {
                     const iconFa = bulkIcon || (first.meta && first.meta.icon) || DEFAULT_ICON;
@@ -5253,7 +6163,7 @@ document.head.appendChild(s);})();</script>
                     const outer = r > 0 && t > 0 ? r * 2 : 60;
                     const iconSize = r > 0 && t > 0 ? Math.min(Math.max(3, Math.round(outer * 0.6)), Math.max(3, outer - 2 * t)) : 28;
                     return `<div style="position:relative;width:${outer}px;height:${outer}px;border-radius:50%;background:${r > 0 && t > 0 ? 'rgba(255,255,255,0.85)' : 'transparent'};border:${r > 0 && t > 0 ? `${t}px solid ${bulkColor}` : 'none'};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-                        <i class="fas ${iconFa}" style="color:${bulkColor};font-size:${iconSize}px;text-shadow:0 1px 2px rgba(0,0,0,0.15);"></i>
+                        ${iconGlyphHTML(iconFa, bulkColor, `font-size:${iconSize}px;text-shadow:0 1px 2px rgba(0,0,0,0.15);`)}
                     </div>`;
                 }
                 function renderPolylinePreview() {
@@ -5269,13 +6179,8 @@ document.head.appendChild(s);})();</script>
 
                 function refreshContent() {
                     if (tab === 'marker') {
+                        const curIcon = bulkIcon || (first.meta && first.meta.icon) || DEFAULT_ICON;
                         content.innerHTML = `
-                            <div class="bulk-preview">
-                                <div class="bulk-preview-inner">
-                                    <div id="bulk-marker-preview">${renderMarkerPreview()}</div>
-                                    <div class="bulk-preview-label">Marker preview</div>
-                                </div>
-                            </div>
                             <div class="editor-section-label">Colour</div>
                             <div class="editor-field">
                                 <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
@@ -5284,8 +6189,13 @@ document.head.appendChild(s);})();</script>
                                 </div>
                                 <div class="swatch-grid" id="bulk-swatch-grid">${swatches}</div>
                             </div>
-                            <div class="editor-section-label">Marker icon</div>
-                            <div class="icon-grid" id="bulk-icon-grid" style="max-height:130px;">
+                            <div class="editor-section-label">Icon</div>
+                            <div class="icon-src-row">
+                                <div class="icon-current" id="bulk-icon-current" title="Current icon">${iconGlyphHTML(curIcon, bulkColor)}</div>
+                                <button class="btn btn-secondary" id="bulk-icon-services" type="button"><i class="fas fa-icons"></i> More icons…</button>
+                            </div>
+                            <div class="editor-hint" id="bulk-icon-hint" style="margin:-2px 0 8px;${bulkIcon ? 'display:none;' : ''}">Pick an icon to give it to every marker. Until you do, each marker keeps its own.</div>
+                            <div class="icon-grid" id="bulk-icon-grid" style="max-height:180px;">
                                 ${Object.keys(ICON_LIBRARY).map(cat => {
                                     let out = `<div class="icon-cat-title">${cat}</div>`;
                                     ICON_LIBRARY[cat].forEach(icon => {
@@ -5295,11 +6205,12 @@ document.head.appendChild(s);})();</script>
                                     return out;
                                 }).join('')}
                             </div>
-                            <div class="editor-section-label">Ring</div>
+                            <div class="editor-section-label">Ring (bounding circle)</div>
                             <div class="editor-field-row">
                                 <div class="editor-field"><label>Radius (px)</label><input type="number" id="bulk-ring-radius" value="${bulkRingRadius}" min="0" step="1"></div>
                                 <div class="editor-field"><label>Thickness (px)</label><input type="number" id="bulk-ring-thickness" value="${bulkRingThickness}" min="0" step="1"></div>
                             </div>
+                            <div class="editor-hint">Set radius to 0 to hide the ring.</div>
                         `;
                         wireMarker();
                     } else if (tab === 'path') {
@@ -5344,6 +6255,10 @@ document.head.appendChild(s);})();</script>
                 function updatePreviews() {
                     const mp = document.getElementById('bulk-marker-preview');
                     if (mp) mp.innerHTML = renderMarkerPreview();
+                    const ic = document.getElementById('bulk-icon-current');
+                    if (ic) ic.innerHTML = iconGlyphHTML(bulkIcon || (first.meta && first.meta.icon) || DEFAULT_ICON, bulkColor);
+                    const ih = document.getElementById('bulk-icon-hint');
+                    if (ih) ih.style.display = bulkIcon ? 'none' : '';
                     const pp = document.getElementById('bulk-polyline-preview');
                     if (pp) pp.innerHTML = renderPolylinePreview();
                 }
@@ -5384,6 +6299,8 @@ document.head.appendChild(s);})();</script>
                             });
                         });
                     }
+                    const moreBtn = document.getElementById('bulk-icon-services');
+                    if (moreBtn) moreBtn.addEventListener('click', () => openIconPicker('services'));
                     const rr = document.getElementById('bulk-ring-radius');
                     const rt = document.getElementById('bulk-ring-thickness');
                     if (rr) rr.addEventListener('input', () => { bulkRingRadius = parseFloat(rr.value) || 0; updatePreviews(); });
@@ -5727,6 +6644,7 @@ document.head.appendChild(s);})();</script>
             // ============ STYLE ============
             function renderStyleTab() {
                 const node = editorState.node;
+                if (editorState._iconPicker && editorState.isPlacemark) { renderIconPicker(); return; }
                 const color = node.meta.color || (editorState.isLOS ? '#ea580c' : '#4d7c0f');
                 const ringRadius = node.meta.ringRadius || 0;
                 const ringThickness = node.meta.ringThickness || 0;
@@ -5759,13 +6677,18 @@ document.head.appendChild(s);})();</script>
                         <div class="swatch-grid" id="ed-swatch-grid">${swatches}</div>
                     </div>
                 `;
+                const curIcon = editorState._newIcon || node.meta.icon || DEFAULT_ICON;
                 const iconSection = isMarkerType && tab === 'marker' ? `
                     <div class="editor-section-label">Icon</div>
+                    <div class="icon-src-row">
+                        <div class="icon-current" id="ed-icon-current" title="Current icon">${iconGlyphHTML(curIcon, color)}</div>
+                        <button class="btn btn-secondary" id="ed-icon-services" type="button"><i class="fas fa-icons"></i> More icons…</button>
+                    </div>
                     <div class="icon-grid" id="ed-icon-grid" style="max-height:180px;">
                         ${Object.keys(ICON_LIBRARY).map(cat => {
                             let out = `<div class="icon-cat-title">${cat}</div>`;
                             ICON_LIBRARY[cat].forEach(icon => {
-                                const sel = icon.fa === (node.meta.icon || DEFAULT_ICON) ? 'selected' : '';
+                                const sel = icon.fa === curIcon ? 'selected' : '';
                                 out += `<div class="icon-choice ${sel}" data-fa="${icon.fa}" title="${icon.label}"><i class="fas ${icon.fa}"></i></div>`;
                             });
                             return out;
@@ -5829,8 +6752,10 @@ document.head.appendChild(s);})();</script>
                     const iconGrid = editorBody.querySelector('#ed-icon-grid');
                     if (iconGrid) iconGrid.querySelectorAll('.icon-choice i').forEach(i => { i.style.color = c; });
                     editorState.node.meta.color = c.toLowerCase();
-                    const row = subrailBody.querySelector(`.fx-row[data-node-id="${editorState.node.id}"] .fx-icon i`);
-                    if (row) row.style.color = c.toLowerCase();
+                    const row = subrailBody.querySelector(`.fx-row[data-node-id="${editorState.node.id}"] .fx-icon i, .fx-row[data-node-id="${editorState.node.id}"] .fx-icon .ic-mask`);
+                    if (row) { row.style.color = c.toLowerCase(); if (row.classList.contains('ic-mask')) row.style.backgroundColor = c.toLowerCase(); }
+                    const curG = editorBody.querySelector('#ed-icon-current > *');
+                    if (curG) { curG.style.color = c; if (curG.classList.contains('ic-mask')) curG.style.backgroundColor = c; }
                     scheduleLiveStyleApply();
                 }
                 colorInp.addEventListener('input', () => setColor(colorInp.value, true));
@@ -5846,10 +6771,14 @@ document.head.appendChild(s);})();</script>
                             iconGrid.querySelectorAll('.icon-choice').forEach(x => x.classList.remove('selected'));
                             el.classList.add('selected');
                             editorState._newIcon = el.dataset.fa;
+                            const cg = editorBody.querySelector('#ed-icon-current');
+                            if (cg) cg.innerHTML = iconGlyphHTML(el.dataset.fa, editorState.node.meta.color || color);
                             scheduleLiveStyleApply();
                         });
                     });
                 }
+                const icSvcBtn = editorBody.querySelector('#ed-icon-services');
+                if (icSvcBtn) icSvcBtn.addEventListener('click', () => openIconPicker('services'));
                 const ringRadiusInp = editorBody.querySelector('#ed-ring-radius');
                 const ringThickInp = editorBody.querySelector('#ed-ring-thickness');
                 if (ringRadiusInp) {
@@ -5883,6 +6812,434 @@ document.head.appendChild(s);})();</script>
                     });
                 }
             }
+
+            // ============ MARKER ICON PICKER (drawn inside the properties panel) ============
+            // "Icon services…" and "Upload image…" in the Style tab redraw this panel as a picker. Choosing an icon, or pressing Back / Esc,
+            // goes straight back to the Style tab. Icon services = Iconify (https://iconify.design): one request per search and one per
+            // page of results. A chosen icon is saved inside the marker as a recolourable shape, so it keeps working offline.
+            const ICN_HOSTS = ['api.iconify.design', 'api.simplesvg.com', 'api.unisvg.com'];
+            const ICN_LIBS = [['bi', 'Bootstrap Icons'], ['tabler', 'Tabler'], ['material-symbols', 'Material Symbols'], ['ph', 'Phosphor'],
+                ['ri', 'Remix Icon'], ['lucide', 'Lucide'], ['feather', 'Feather'], ['heroicons', 'Heroicons'], ['simple-icons', 'Simple Icons (brand logos)'],
+                ['fa6-solid', 'Font Awesome – solid'], ['fa6-regular', 'Font Awesome – regular'], ['fa6-brands', 'Font Awesome – brands']];
+            const ICN_ALLOWED = new Set(ICN_LIBS.map(l => l[0]));
+            const ICN_PAGE = 60;
+            const icnBodies = new Map(), icnTried = new Set(), icnSearchCache = new Map(), icnCollections = new Map();
+            let icnHostIdx = 0, icnLibs = null, icnLibsOk = false, icnReq = 0, icnList = [], icnShown = 0, icnTimer = null;
+
+            async function icnApi(path) {                  // JSON from Iconify; if one host refuses (rate limit, outage) the next mirror is tried
+                let lastErr = new Error('offline');
+                for (let k = 0; k < ICN_HOSTS.length; k++) {
+                    const idx = (icnHostIdx + k) % ICN_HOSTS.length;
+                    try {
+                        const r = await fetch('https://' + ICN_HOSTS[idx] + path);
+                        if (r.ok) { icnHostIdx = idx; return await r.json(); }
+                        lastErr = new Error('HTTP ' + r.status);
+                    } catch (e) { lastErr = e; }
+                }
+                throw lastErr;
+            }
+            async function icnLoadBodies(ids) {              // the drawings for a list of "prefix:name" ids: ONE request per library
+                const byPrefix = {};
+                ids.forEach(id => {
+                    icnTried.add(id);
+                    if (icnBodies.has(id)) return;
+                    const [p, n] = id.split(':'); (byPrefix[p] = byPrefix[p] || []).push(n);
+                });
+                await Promise.all(Object.keys(byPrefix).map(async prefix => {
+                    try {
+                        const data = await icnApi('/' + prefix + '.json?icons=' + byPrefix[prefix].join(','));
+                        const dw = data.width || 16, dh = data.height || 16;
+                        byPrefix[prefix].forEach(n => {
+                            const alias = data.aliases && data.aliases[n];
+                            const ic = (data.icons && data.icons[n]) || (alias && data.icons && data.icons[alias.parent]);
+                            if (ic && typeof ic.body === 'string') icnBodies.set(prefix + ':' + n, { body: ic.body, w: ic.width || dw, h: ic.height || dh, l: ic.left || 0, t: ic.top || 0 });
+                        });
+                    } catch (e) { /* those icons simply do not draw */ }
+                }));
+            }
+            function icnMaskUri(id) {                       // the drawing as a stand-alone image; only its shape matters (it is painted with the marker colour)
+                const d = icnBodies.get(id);
+                if (!d) return '';
+                const svg = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="' + d.l + ' ' + d.t + ' ' + d.w + ' ' + d.h + '" style="color:#000">' + d.body + '</svg>';
+                return 'data:image/svg+xml,' + encodeURIComponent(svg).replace(/'/g, '%27');
+            }
+            async function icnLoadLibs() {
+                if (!icnLibs) { icnLibs = {}; ICN_LIBS.forEach(l => { icnLibs[l[0]] = { name: l[1] }; }); }
+                if (icnLibsOk) return;
+                try {
+                    const data = await icnApi('/collections?prefixes=' + encodeURIComponent(ICN_LIBS.map(l => l[0]).join(',')));
+                    Object.keys(data || {}).forEach(p => { if (ICN_ALLOWED.has(p) && data[p]) icnLibs[p] = Object.assign({}, icnLibs[p], data[p]); });
+                    icnLibsOk = true;
+                } catch (e) { /* built-in names are used */ }
+            }
+            async function icnCollection(prefix) {          // every icon name of a library, with its categories
+                if (icnCollections.has(prefix)) return icnCollections.get(prefix);
+                const data = await icnApi('/collection?prefix=' + encodeURIComponent(prefix));
+                const ok = n => typeof n === 'string' && /^[a-z0-9-]+$/.test(n);
+                const hidden = new Set(data.hidden || []), cats = {}, all = [];
+                Object.keys(data.categories || {}).forEach(c => {
+                    const list = (data.categories[c] || []).filter(n => ok(n) && !hidden.has(n));
+                    if (list.length) { cats[c] = list; all.push(...list); }
+                });
+                const rest = (data.uncategorized || []).filter(n => ok(n) && !hidden.has(n));
+                all.push(...rest);
+                if (rest.length && Object.keys(cats).length) cats['Other'] = rest;
+                const col = { names: [...new Set(all)].sort(), cats };
+                icnCollections.set(prefix, col);
+                return col;
+            }
+            const icnFmt = n => (+n || 0).toLocaleString();
+            const icnLabel = p => (icnLibs && icnLibs[p] && icnLibs[p].name) || (ICN_LIBS.find(l => l[0] === p) || [0, p])[1];
+
+            // Saved images = every uploaded / icon-service icon that at least one marker (or archived marker) still uses.
+            // Nothing is stored separately: the picture lives inside the marker, so an icon vanishes from this list when no marker uses it.
+            function collectCustomIcons() {
+                const map = new Map();
+                (function w(ns) {
+                    (ns || []).forEach(n => {
+                        if (n.type === 'placemark' && n.meta && typeof n.meta.icon === 'string' && iconKind(n.meta.icon) !== 'fa') {
+                            const e = map.get(n.meta.icon) || { icon: n.meta.icon, count: 0, nodes: [] };
+                            e.count++; e.nodes.push(n); map.set(n.meta.icon, e);
+                        }
+                        if (n.children) w(n.children);
+                    });
+                })(treeNodes.concat(archivedNodes || []));
+                return Array.from(map.values()).sort((a, b) => b.count - a.count);
+            }
+            async function resetMarkersUsingIcons(entries) {
+                const nodes = entries.reduce((a, e) => a.concat(e.nodes), []);
+                if (editorState && !editorState.isBulkSelection && nodes.includes(editorState.node)) closeEditorPanel();
+                nodes.forEach(n => {
+                    n.meta.icon = DEFAULT_ICON;
+                    if (n.layer && n.layer.setIcon) n.layer.setIcon(makeIconFromNode(n));
+                });
+                renderTree();
+                await persistTreeNow();
+            }
+            function openIconPicker(tab) {
+                if (!editorState || (!editorState.isPlacemark && !editorState.isBulkSelection)) return;
+                if (editorState.isBulkSelection) {
+                    const b = editorState._bulk;               // folder contents / multi-selection: nothing is applied until Apply, so remember the draft
+                    if (!b) return;
+                    editorState._bulkKeep = { icon: b.icon(), color: b.color(), ringRadius: b.ringRadius(), ringThickness: b.ringThickness(), lineThickness: b.lineThickness() };
+                } else {
+                    clearTimeout(_liveStyleTimer);
+                    saveEditorStyle({ silent: true });        // keep any colour / ring edits that are still waiting, so the Style tab shows them on return
+                }
+                editorState._iconPicker = { tab: tab === 'upload' ? 'upload' : 'services', q: '', lib: '', cat: '', pending: null };
+                renderEditorBody();
+            }
+            function closeIconPicker(newIcon) {
+                if (!editorState) return;
+                editorState._iconPicker = null;
+                if (newIcon) {
+                    if (editorState.isBulkSelection) { if (editorState._bulkKeep) editorState._bulkKeep.icon = newIcon; }
+                    else { editorState._newIcon = newIcon; scheduleLiveStyleApply(); }
+                }
+                renderEditorBody();
+            }
+
+            function renderIconPicker() {
+                const st = editorState._iconPicker;
+                const color = (editorState.isBulkSelection ? (editorState._bulkKeep && editorState._bulkKeep.color) : editorState.node.meta.color) || '#4d7c0f';
+                const recent = collectCustomIcons().slice(0, 24).map(e => e.icon);
+                editorBody.innerHTML = `
+                    <div class="icp-head">
+                        <button class="btn btn-secondary" id="icp-back" type="button"><i class="fas fa-arrow-left"></i> Back</button>
+                        <div class="icp-title">Choose a marker icon</div>
+                    </div>
+                    <div class="seg" id="icp-tabs" style="margin-bottom:10px;">
+                        <button class="seg-btn ${st.tab === 'services' ? 'on' : ''}" data-t="services" type="button"><i class="fas fa-icons"></i> Icon services</button>
+                        <button class="seg-btn ${st.tab === 'upload' ? 'on' : ''}" data-t="upload" type="button"><i class="fas fa-upload"></i> Upload image</button>
+                    </div>
+                    ${recent.length ? `<div class="icp-sub">Saved images (used by your markers)</div><div class="icp-grid" id="icp-recent">${recent.map((v, i) => `<button class="icp-ic" type="button" data-i="${i}" title="Use this saved image">${iconGlyphHTML(v, color)}</button>`).join('')}</div>` : ''}
+                    <div id="icp-body"></div>`;
+                editorBody.querySelector('#icp-back').addEventListener('click', () => closeIconPicker());
+                editorBody.querySelectorAll('#icp-tabs .seg-btn').forEach(b => b.addEventListener('click', () => { st.tab = b.dataset.t; renderIconPicker(); }));
+                editorBody.querySelectorAll('#icp-recent .icp-ic').forEach(b => b.addEventListener('click', () => closeIconPicker(recent[+b.dataset.i])));
+                if (st.tab === 'upload') renderIconUpload(editorBody.querySelector('#icp-body'), color); else renderIconServices(editorBody.querySelector('#icp-body'), color);
+            }
+
+            // ---- right-click (or long-press) a result: jump to its category or to the whole library, and see its source / licence ----
+            const icnCtx = document.createElement('div');
+            icnCtx.id = 'icn-ctx'; icnCtx.setAttribute('role', 'menu');
+            document.body.appendChild(icnCtx);
+            function icnCloseCtx() { icnCtx.style.display = 'none'; icnCtx.textContent = ''; }
+            const icnSafeUrl = u => (typeof u === 'string' && /^https:\/\//i.test(u)) ? u : '';
+            function icnLink(text, url) {
+                const u = icnSafeUrl(url);
+                if (!u) return document.createTextNode(text);
+                const a = document.createElement('a'); a.href = u; a.target = '_blank'; a.rel = 'noopener'; a.textContent = text; return a;
+            }
+            function icnSourceLine(prefix) {                 // "Source: <set> · by <author> · <licence> · via Iconify"
+                const i = (icnLibs && icnLibs[prefix]) || {}, d = document.createElement('div'); d.className = 'icn-ctx-src';
+                d.appendChild(document.createTextNode('Source: ' + icnLabel(prefix)));
+                if (i.author && i.author.name) { d.appendChild(document.createTextNode(' · by ')); d.appendChild(icnLink(i.author.name, i.author.url)); }
+                if (i.license && i.license.title) { d.appendChild(document.createTextNode(' · ')); d.appendChild(icnLink(i.license.title, i.license.url)); }
+                d.appendChild(document.createTextNode(' · via ')); d.appendChild(icnLink('Iconify', 'https://iconify.design'));
+                return d;
+            }
+            async function icnOpenCtx(id, x, y, goTo) {
+                const [prefix, name] = id.split(':');
+                icnCtx.textContent = '';
+                const head = document.createElement('div'); head.className = 'icn-ctx-h'; head.textContent = name + ' – ' + icnLabel(prefix);
+                const note = document.createElement('div'); note.className = 'icn-ctx-n'; note.textContent = 'Loading categories…';
+                icnCtx.appendChild(head); icnCtx.appendChild(icnSourceLine(prefix)); icnCtx.appendChild(note);
+                icnCtx.style.display = 'block';
+                const place = () => {
+                    icnCtx.style.left = Math.max(4, Math.min(x, window.innerWidth - icnCtx.offsetWidth - 4)) + 'px';
+                    icnCtx.style.top = Math.max(4, Math.min(y, window.innerHeight - icnCtx.offsetHeight - 4)) + 'px';
+                };
+                place();
+                let col = null;
+                try { col = await icnCollection(prefix); } catch (e) { note.textContent = 'Could not load categories (offline or rate limited).'; place(); return; }
+                if (icnCtx.style.display !== 'block' || icnCtx.firstChild !== head) return;     // closed or replaced meanwhile
+                note.remove();
+                const cats = Object.keys(col.cats).filter(k => col.cats[k].includes(name)).sort();
+                const add = (label, count, fn) => {
+                    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'menuitem');
+                    const t = document.createElement('span'); t.textContent = label; b.appendChild(t);
+                    if (count) { const sm = document.createElement('small'); sm.textContent = icnFmt(count); b.appendChild(sm); }
+                    b.addEventListener('click', () => { icnCloseCtx(); fn(); });
+                    icnCtx.appendChild(b);
+                };
+                if (cats.length) cats.forEach(c => add('Category: ' + c, col.cats[c].length, () => goTo(prefix, c)));
+                else { const n = document.createElement('div'); n.className = 'icn-ctx-n'; n.textContent = 'This icon has no category in this library.'; icnCtx.appendChild(n); }
+                add('All of ' + icnLabel(prefix), col.names.length, () => goTo(prefix, ''));
+                place();
+                const first = icnCtx.querySelector('button'); if (first) first.focus();
+            }
+            document.addEventListener('pointerdown', (e) => { if (icnCtx.style.display === 'block' && !e.target.closest('#icn-ctx')) icnCloseCtx(); }, true);
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && icnCtx.style.display === 'block') { e.preventDefault(); e.stopPropagation(); icnCloseCtx(); } }, true);
+            editorBody.addEventListener('scroll', icnCloseCtx);
+
+            // ---- tab 1: icon services ----
+            function renderIconServices(body, color) {
+                const st = editorState._iconPicker;
+                body.innerHTML = `
+                    <div class="icp-sub" style="margin-top:4px;">Search</div>
+                    <input class="icp-field" id="icp-q" type="text" placeholder="Search icons (e.g. tower, antenna, home, github)…" spellcheck="false" autocomplete="off" value="${escapeHtml(st.q)}">
+                    <div class="icp-row">
+                        <select class="icp-field" id="icp-lib" aria-label="Library"></select>
+                        <select class="icp-field" id="icp-cat" aria-label="Category" disabled><option value="">Category</option></select>
+                    </div>
+                    <div id="icp-libs"></div>
+                    <div class="icp-msg" id="icp-msg" style="display:none"></div>
+                    <div class="icp-grid" id="icp-grid" style="display:none"></div>
+                    <button class="btn btn-secondary icp-more" id="icp-more" type="button" style="display:none">Show more</button>`;
+                const qEl = body.querySelector('#icp-q'), libEl = body.querySelector('#icp-lib'), catEl = body.querySelector('#icp-cat');
+                const fillLibSelect = () => {
+                    libEl.innerHTML = '<option value="">All libraries</option>' + ICN_LIBS.map(l => {
+                        const i = icnLibs && icnLibs[l[0]];
+                        return `<option value="${l[0]}">${escapeHtml((i && i.name) || l[1])}${i && i.total ? ' (' + icnFmt(i.total) + ')' : ''}</option>`;
+                    }).join('');
+                    libEl.value = st.lib;
+                };
+                fillLibSelect();
+                const view = (v) => {                           // 'libs' | 'grid' | 'msg'
+                    body.querySelector('#icp-libs').style.display = v === 'libs' ? '' : 'none';
+                    body.querySelector('#icp-grid').style.display = v === 'grid' ? '' : 'none';
+                    body.querySelector('#icp-msg').style.display = v === 'msg' ? '' : 'none';
+                    if (v !== 'grid') body.querySelector('#icp-more').style.display = 'none';
+                };
+                const msg = (t) => { body.querySelector('#icp-msg').textContent = t; view('msg'); };
+                const setList = (ids) => { icnList = ids; icnShown = 0; body.querySelector('#icp-grid').textContent = ''; view('grid'); more(); };
+                const more = async () => {
+                    const mine = icnReq, ids = icnList.slice(icnShown, icnShown + ICN_PAGE);
+                    if (!ids.length) { msg('No icons here.'); return; }
+                    icnShown += ids.length;
+                    const btn = body.querySelector('#icp-more'); btn.disabled = true;
+                    await icnLoadBodies(ids);
+                    if (mine !== icnReq || !body.isConnected) return;
+                    const frag = document.createDocumentFragment();
+                    ids.forEach(id => {
+                        const uri = icnMaskUri(id);
+                        if (!uri) return;
+                        const b = document.createElement('button');
+                        b.type = 'button'; b.className = 'icp-ic'; b.dataset.id = id; b.title = id.split(':')[1] + ' – ' + icnLabel(id.split(':')[0]);
+                        b.innerHTML = iconGlyphHTML('mask:' + uri, color);
+                        frag.appendChild(b);
+                    });
+                    body.querySelector('#icp-grid').appendChild(frag);
+                    const left = icnList.length - icnShown;
+                    btn.style.display = left > 0 ? '' : 'none'; btn.disabled = false; btn.textContent = 'Show more (' + icnFmt(left) + ' left)';
+                };
+                const renderLibs = () => {
+                    const box = body.querySelector('#icp-libs'); box.textContent = '';
+                    ICN_LIBS.forEach(l => {
+                        const i = (icnLibs && icnLibs[l[0]]) || {}, c = document.createElement('button');
+                        c.type = 'button'; c.className = 'icp-lib'; c.dataset.lib = l[0];
+                        const meta = [i.total ? icnFmt(i.total) + ' icons' : '', i.license && i.license.title, i.author && i.author.name ? 'by ' + i.author.name : ''].filter(Boolean).join(' · ');
+                        c.innerHTML = '<b>' + escapeHtml(i.name || l[1]) + '</b>' + (meta ? '<small>' + escapeHtml(meta) + '</small>' : '');
+                        box.appendChild(c);
+                    });
+                    view('libs');
+                };
+                const refresh = async () => {
+                    const mine = ++icnReq, q = st.q.trim(), lib = st.lib;
+                    try {
+                        if (q) {
+                            catEl.disabled = true;
+                            msg('Searching…');
+                            const key = lib + '|' + q.toLowerCase();
+                            let ids = icnSearchCache.get(key);
+                            if (!ids) {
+                                const scope = lib ? 'prefix=' + encodeURIComponent(lib) : 'prefixes=' + encodeURIComponent(ICN_LIBS.map(l => l[0]).join(','));
+                                const data = await icnApi('/search?query=' + encodeURIComponent(q) + '&limit=60&' + scope);
+                                ids = (data.icons || []).filter(id => /^[a-z0-9-]+:[a-z0-9-]+$/.test(id) && ICN_ALLOWED.has(id.split(':')[0]));
+                                icnSearchCache.set(key, ids);
+                            }
+                            if (mine !== icnReq || !body.isConnected) return;
+                            if (!ids.length) { msg('No icons found – try another word or library.'); return; }
+                            setList(ids);
+                        } else if (lib) {
+                            msg('Loading ' + icnLabel(lib) + '…');
+                            const col = await icnCollection(lib);
+                            if (mine !== icnReq || !body.isConnected) return;
+                            const keys = Object.keys(col.cats).sort();
+                            if (catEl.dataset.lib !== lib) {
+                                catEl.dataset.lib = lib;
+                                catEl.innerHTML = keys.length
+                                    ? '<option value="">All categories (' + icnFmt(col.names.length) + ')</option>' + keys.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)} (${icnFmt(col.cats[k].length)})</option>`).join('')
+                                    : '<option value="">No categories</option>';
+                            }
+                            catEl.disabled = !keys.length;
+                            catEl.value = st.cat;
+                            const names = (st.cat && col.cats[st.cat]) || col.names;
+                            setList(names.map(n => lib + ':' + n));
+                        } else {
+                            catEl.innerHTML = '<option value="">Category</option>'; catEl.disabled = true; delete catEl.dataset.lib;
+                            renderLibs();
+                        }
+                    } catch (e) {
+                        if (mine === icnReq && body.isConnected) msg('Could not reach the Iconify service (' + (e.message || 'offline') + '). If it says HTTP 429 you are being rate limited – wait a few minutes. You can still use Upload image.');
+                    }
+                };
+                qEl.addEventListener('input', () => { st.q = qEl.value; clearTimeout(icnTimer); icnTimer = setTimeout(refresh, 400); });
+                qEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); clearTimeout(icnTimer); refresh(); } });
+                libEl.addEventListener('change', () => { st.lib = libEl.value; st.cat = ''; delete catEl.dataset.lib; refresh(); });
+                catEl.addEventListener('change', () => { st.cat = catEl.value; refresh(); });
+                body.querySelector('#icp-more').addEventListener('click', more);
+                body.querySelector('#icp-libs').addEventListener('click', (e) => {
+                    const c = e.target.closest('.icp-lib'); if (!c) return;
+                    st.lib = c.dataset.lib; st.cat = ''; st.q = ''; qEl.value = ''; libEl.value = st.lib; delete catEl.dataset.lib; refresh();
+                });
+                st._goTo = (lib, cat) => { st.q = ''; qEl.value = ''; st.lib = lib; st.cat = cat || ''; libEl.value = lib; delete catEl.dataset.lib; refresh(); };
+                body.querySelector('#icp-grid').addEventListener('contextmenu', (e) => {
+                    const b = e.target.closest('button[data-id]'); if (!b) return;
+                    e.preventDefault(); e.stopPropagation();
+                    icnOpenCtx(b.dataset.id, e.clientX, e.clientY, st._goTo);
+                });
+                body.querySelector('#icp-grid').addEventListener('click', async (e) => {
+                    const b = e.target.closest('button[data-id]'); if (!b) return;
+                    const uri = icnMaskUri(b.dataset.id);
+                    if (uri) closeIconPicker('mask:' + uri);
+                });
+                icnLoadLibs().then(() => { if (!body.isConnected) return; fillLibSelect(); if (!st.q.trim() && !st.lib) renderLibs(); });
+                refresh();
+                if (!st.q) setTimeout(() => { try { qEl.focus(); } catch (e) {} }, 0);
+            }
+
+            // ---- tab 2: upload an image ----
+            async function icnReadImageFile(file) {          // -> a data: address that is safe to store (SVG as-is, pictures shrunk to 128 px)
+                const isSvg = /svg/i.test(file.type || '') || /\.svg$/i.test(file.name || '');
+                if (isSvg) {
+                    if (file.size > 100000) throw new Error('That SVG is larger than 100 KB.');
+                    const text = await file.text();
+                    if (!/<svg[\s>]/i.test(text)) throw new Error('That file is not a valid SVG.');
+                    const uri = 'data:image/svg+xml,' + encodeURIComponent(text).replace(/'/g, '%27');
+                    if (uri.length > 500000) throw new Error('That SVG is too large.');
+                    return uri;
+                }
+                if (!/^image\//.test(file.type || '')) throw new Error('That does not look like an image file.');
+                if (file.size > 20e6) throw new Error('That image is larger than 20 MB.');
+                const url = URL.createObjectURL(file);
+                try {
+                    const img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('Could not read that image.')); im.src = url; });
+                    const w0 = img.naturalWidth || img.width, h0 = img.naturalHeight || img.height;
+                    if (!w0 || !h0) throw new Error('Could not read that image.');
+                    const k = Math.min(1, 128 / Math.max(w0, h0));
+                    const cv = document.createElement('canvas');
+                    cv.width = Math.max(1, Math.round(w0 * k)); cv.height = Math.max(1, Math.round(h0 * k));
+                    cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+                    return cv.toDataURL('image/png');
+                } finally { URL.revokeObjectURL(url); }
+            }
+            async function icpUseFile(file) {
+                const st = editorState && editorState._iconPicker;
+                if (!st) return;
+                st.tab = 'upload';
+                try {
+                    const uri = await icnReadImageFile(file);
+                    if (!editorState || editorState._iconPicker !== st) return;
+                    st.pending = { uri, tint: !!(st.pending && st.pending.tint), error: '' };
+                } catch (e) {
+                    if (!editorState || editorState._iconPicker !== st) return;
+                    st.pending = { uri: '', tint: false, error: e.message || 'Could not use that image.' };
+                }
+                renderIconPicker();
+            }
+            function renderIconUpload(body, color) {
+                const st = editorState._iconPicker, pend = st.pending;
+                body.innerHTML = `
+                    <div class="icp-drop" id="icp-drop">
+                        <i class="fas fa-image" style="font-size:1.6rem;color:var(--text-3);"></i>
+                        <div style="margin:6px 0 4px;">Drag an image here, or press <b>Ctrl/⌘+V</b> to paste a copied one.</div>
+                        <button class="btn btn-secondary" id="icp-choose" type="button"><i class="fas fa-folder-open"></i> Choose file…</button>
+                        <button class="btn btn-secondary" id="icp-paste" type="button"><i class="fas fa-paste"></i> Paste image</button>
+                        <input type="file" id="icp-file" accept="image/*,.svg" style="display:none">
+                    </div>
+                    <div class="icp-msg" id="icp-upmsg" style="${pend && pend.error ? '' : 'display:none'};color:var(--danger);">${pend && pend.error ? escapeHtml(pend.error) : ''}</div>
+                    <div id="icp-pend"></div>
+                    <div class="icp-note">PNG, JPG, GIF, WebP, SVG or ICO. Pictures are shrunk to 128 px and saved inside the marker, so they work offline.</div>`;
+                const drop = body.querySelector('#icp-drop'), fileEl = body.querySelector('#icp-file'), upMsg = body.querySelector('#icp-upmsg');
+                body.querySelector('#icp-choose').addEventListener('click', () => fileEl.click());
+                fileEl.addEventListener('change', () => { const f = fileEl.files && fileEl.files[0]; fileEl.value = ''; if (f) icpUseFile(f); });
+                body.querySelector('#icp-paste').addEventListener('click', async () => {
+                    try {
+                        const items = await navigator.clipboard.read();
+                        for (const it of items) {
+                            const t = it.types.find(x => /^image\//.test(x));
+                            if (t) { const blob = await it.getType(t); icpUseFile(new File([blob], 'pasted-image', { type: t })); return; }
+                        }
+                        upMsg.style.display = ''; upMsg.textContent = 'There is no image on the clipboard.';
+                    } catch (e) {
+                        upMsg.style.display = ''; upMsg.textContent = 'Your browser did not allow clipboard access – press Ctrl/⌘+V instead.';
+                    }
+                });
+                ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+                ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+                drop.addEventListener('drop', (e) => { const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) icpUseFile(f); });
+                if (pend && pend.uri) {
+                    const box = body.querySelector('#icp-pend');
+                    const draw = () => {
+                        const value = (pend.tint ? 'mask:' : 'img:') + pend.uri;
+                        box.innerHTML = `
+                            <div class="icp-preview">
+                                <div class="icp-preview-box">${iconGlyphHTML(value, pend.tint ? color : '')}</div>
+                                <div style="flex:1;min-width:0;">
+                                    <label class="icp-check"><input type="checkbox" id="icp-tint" ${pend.tint ? 'checked' : ''}><span>Paint with the marker colour<small>Best for single-colour images with a transparent background.</small></span></label>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" id="icp-use" type="button" style="width:100%;margin-top:10px;justify-content:center;"><i class="fas fa-check"></i> Use this image</button>`;
+                        box.querySelector('#icp-tint').addEventListener('change', (e) => { pend.tint = e.target.checked; draw(); });
+                        box.querySelector('#icp-use').addEventListener('click', () => closeIconPicker(value));
+                    };
+                    draw();
+                }
+            }
+            // paste an image anywhere while the picker is open, and Esc goes back to the Style tab
+            document.addEventListener('paste', (e) => {
+                if (!editorState || !editorState._iconPicker) return;
+                const files = e.clipboardData && e.clipboardData.files;
+                const f = files && Array.prototype.find.call(files, x => /^image\//.test(x.type));
+                if (!f) return;
+                e.preventDefault();
+                icpUseFile(f);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && editorState && editorState._iconPicker) { e.preventDefault(); closeIconPicker(); }
+            });
 
             async function saveEditorStyle(opts) {
                 if (!editorState || !editorState.node) return;
@@ -7839,7 +9196,7 @@ document.head.appendChild(s);})();</script>
             }
             fileInput.addEventListener('change', (event) => loadHgtFiles(event.target.files));
             function persistTile(key, arrayBuffer, width, height) {
-                return dbPut('terrain', { key, buffer: arrayBuffer, width, height, ts: Date.now() }).catch(() => {});
+                return dbPut('terrain', { key, buffer: arrayBuffer, width, height, ts: Date.now() }).catch(() => {}).then(() => { try { scheduleStorageCheck(); } catch (e) {} });
             }
             async function loadPersistedTiles() {
                 try {
@@ -8560,7 +9917,7 @@ document.head.appendChild(s);})();</script>
                         }
                     }
                 }
-                if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !e.target.matches('input, textarea')) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !e.target.matches('input, textarea') && !(editorState && editorState._iconPicker)) {
                     if (clipboard && clipboard.type === 'placemark') {
                         const target = mouseTracker.latlng || null;
                         const folder = currentFolderId ? findNode(currentFolderId) : null;
@@ -9885,7 +11242,7 @@ document.head.appendChild(s);})();</script>
                 SETTINGS.theme = p;
                 saveSettings();
                 applyTheme();
-                if (activeSection === 'settings') renderStaticSection('settings');
+                rerenderSettings();
             }
             if (_mqDark && _mqDark.addEventListener) _mqDark.addEventListener('change', () => { if (themePref() === 'system') applyTheme(); });
             function buildThemePicker() {
@@ -10299,7 +11656,7 @@ document.head.appendChild(s);})();</script>
                     { title: 'Show links panel', icon: 'fa-link', run: goSection('links') },
                     { title: 'Show terrain panel', icon: 'fa-mountain', run: goSection('terrain') },
                     { title: 'Show layers panel', icon: 'fa-layer-group', run: goSection('layers') },
-                    { title: 'Open settings', icon: 'fa-gear', run: goSection('settings') },
+                    { title: 'Open settings', icon: 'fa-gear', run: () => openSettingsOverlay() },
                     { title: 'Clear all drawings', icon: 'fa-eraser', run: () => clearAllDrawings() }
                 ];
             }
@@ -11141,6 +12498,126 @@ document.head.appendChild(s);})();</script>
             }
             document.getElementById('sb-stress').addEventListener('click', openStressTest);
 
+            // ==================== CHANGELOG ====================
+            // Source of truth for the in-app changelog page (Settings > About > Changelog, route #changelog). Newest entry first.
+            // Rules: skills/changelog-keeper/SKILL.md. Never edit, reorder or delete past entries. APP_VERSION must equal CHANGELOG[0].v.
+            /* CHANGELOG:START */
+            const APP_VERSION = "1.1.0";
+            const CHANGELOG = [
+                { v: "1.1.0", date: "2026-11-24", changes: [
+                    { t: "added", text: "Overlay mode in the Layers tab: draw a second map on top" },
+                    { t: "added", text: "Overlay opacity slider from 0 to 100 percent" },
+                    { t: "added", text: "Pick colours to make see-through, with a dropper on the map" },
+                    { t: "added", text: "Overlay choice, opacity and colours are remembered between visits" },
+                    { t: "added", text: "Changelog page under Settings > About" }
+                ]},
+                { v: "1.0.0", date: "2026-11-11", changes: [
+                    { t: "added", text: "Changelog started; earlier changes were not recorded" }
+                ]}
+            ];
+            /* CHANGELOG:END */
+            const CL_SEEN_KEY = 'ae-changelog-seen';
+            const CL_TYPES = ['added', 'changed', 'fixed', 'removed'];
+            const clView = document.getElementById('cl-view'), clList = document.getElementById('cl-list'), clSearch = document.getElementById('cl-search');
+            let clFilter = 'all', clQuery = '', clPushed = false;
+            function clSeen() { try { return localStorage.getItem(CL_SEEN_KEY); } catch (e) { return null; } }
+            function clUnread() { return clSeen() !== APP_VERSION; }
+            function clRefreshDots() {              // the unread dot lives on the Settings button and the Changelog row only
+                const on = clUnread();
+                const rail = document.getElementById('rail-settings');
+                if (rail) rail.classList.toggle('has-dot', on);
+                document.querySelectorAll('.settings-nav-btn[data-group="about"], .cl-row').forEach(el => el.classList.toggle('has-dot', on));
+            }
+            function clMarkSeen() { try { localStorage.setItem(CL_SEEN_KEY, APP_VERSION); } catch (e) {} clRefreshDots(); }
+            function clMarkdown() {
+                const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+                return '# Changelog\n\n' + CHANGELOG.map(e => '## ' + e.v + ' — ' + e.date + '\n\n' + e.changes.map(c =>
+                    '- **' + cap(c.t) + ':** ' + c.text + (c.cause ? ' _(cause: ' + c.cause + ')_' : (c.why ? ' _(' + c.why + ')_' : ''))).join('\n')).join('\n\n') + '\n';
+            }
+            function clRender() {
+                document.getElementById('cl-ver').textContent = 'v' + APP_VERSION;
+                clList.textContent = '';
+                const q = clQuery.trim().toLowerCase();
+                let shown = 0;
+                CHANGELOG.forEach((ent, idx) => {
+                    const rows = ent.changes.filter(c => (clFilter === 'all' || c.t === clFilter) &&
+                        (!q || (c.text + ' ' + (c.cause || c.why || '')).toLowerCase().includes(q)));
+                    if (!rows.length) return;
+                    shown++;
+                    const det = document.createElement('details');
+                    det.className = 'cl-entry';
+                    det.open = idx === 0 || !!q || clFilter !== 'all';       // newest open, older collapsed (all open while filtering)
+                    const sum = document.createElement('summary');
+                    const vs = document.createElement('span'); vs.textContent = 'v' + ent.v;
+                    const ds = document.createElement('small'); ds.textContent = ent.date;
+                    sum.append(vs, ds);
+                    det.appendChild(sum);
+                    const items = document.createElement('div');
+                    items.className = 'cl-items';
+                    rows.forEach(c => {
+                        const it = document.createElement('div'); it.className = 'cl-item';
+                        const tag = document.createElement('span');
+                        const t = CL_TYPES.indexOf(c.t) >= 0 ? c.t : 'changed';
+                        tag.className = 'cl-tag ' + t; tag.textContent = t;
+                        const tx = document.createElement('span'); tx.textContent = c.text;
+                        it.append(tag, tx);
+                        const why = c.cause || c.why;
+                        if (why) { const cs = document.createElement('div'); cs.className = 'cl-cause'; cs.textContent = (c.cause ? 'Cause: ' : 'Why: ') + why; it.appendChild(cs); }
+                        items.appendChild(it);
+                    });
+                    det.appendChild(items);
+                    clList.appendChild(det);
+                });
+                if (!shown) { const e = document.createElement('div'); e.className = 'cl-empty'; e.textContent = 'No changes match.'; clList.appendChild(e); }
+                document.querySelectorAll('#cl-chips .cl-chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.f === clFilter ? 'true' : 'false'));
+            }
+            ['all', ...CL_TYPES].forEach(f => {
+                const b = document.createElement('button');
+                b.type = 'button'; b.className = 'cl-chip'; b.dataset.f = f; b.textContent = f.charAt(0).toUpperCase() + f.slice(1);
+                b.addEventListener('click', () => { clFilter = f; clRender(); });
+                document.getElementById('cl-chips').appendChild(b);
+            });
+            clSearch.addEventListener('input', () => { clQuery = clSearch.value; clRender(); });
+            function clCopyFallback(md, done) {
+                const ta = document.createElement('textarea');
+                ta.value = md; ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); done(); } catch (e) { showToast('Could not copy', 'fa-triangle-exclamation'); }
+                ta.remove();
+            }
+            document.getElementById('cl-copy').addEventListener('click', () => {
+                const md = clMarkdown(), done = () => showToast('Changelog copied as Markdown', 'fa-copy');
+                if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(md).then(done, () => clCopyFallback(md, done));
+                else clCopyFallback(md, done);
+            });
+            document.getElementById('cl-dl').addEventListener('click', () => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([clMarkdown()], { type: 'text/markdown' }));
+                a.download = 'CHANGELOG.md';
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+            });
+            function clShow() {
+                clView.classList.add('open'); clView.setAttribute('aria-hidden', 'false'); document.body.classList.add('cl-open');
+                clMarkSeen(); clRender();
+                document.getElementById('cl-back').focus();
+            }
+            function clHide() { clView.classList.remove('open'); clView.setAttribute('aria-hidden', 'true'); document.body.classList.remove('cl-open'); }
+            function clSync() {                     // the page is a route: #changelog
+                if (location.hash === '#changelog') clShow(); else { clPushed = false; clHide(); }
+            }
+            function clOpen() { if (location.hash === '#changelog') { clShow(); return; } clPushed = true; location.hash = 'changelog'; }
+            function clBack() {
+                if (clPushed) { clPushed = false; history.back(); return; }      // we added the history entry, so undo it
+                try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+                clHide();
+            }
+            document.getElementById('cl-back').addEventListener('click', clBack);
+            window.addEventListener('hashchange', clSync);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && clView.classList.contains('open')) { e.preventDefault(); e.stopImmediatePropagation(); clBack(); }
+            }, true);
+
             // ==================== INIT ====================
             (async function init() {
                 await loadSettings();
@@ -11160,6 +12637,8 @@ document.head.appendChild(s);})();</script>
                 if (currentLayer) { currentLayer.addTo(map); attachTileErrorWatch(currentLayer, PROVIDERS[savedProvider]); }
                 currentProviderKey = savedProvider;
                 if (drawnItems.bringToFront) drawnItems.bringToFront();
+                if (ovCfg().key) setOverlay(ovCfg().key, true);          // restore the saved overlay
+                clRefreshDots(); clSync();                              // unread dot; open the changelog if the URL is #changelog
 
                 if (SETTINGS.subrailWidth && SETTINGS.subrailWidth > 220) {
                     subrail.style.setProperty('--subrail-w', SETTINGS.subrailWidth + 'px');
