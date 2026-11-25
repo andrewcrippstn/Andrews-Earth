@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   ============================================================
-  BUILD: 2026-11-24 11:12:03 (local)
+  BUILD: 2026-11-25 11:44:21 (local)
   ------------------------------------------------------------
   MAINTENANCE RULE — READ BEFORE EDITING THIS FILE:
   Whenever the code in this file is modified in any way,
@@ -61,6 +61,9 @@ window.AE_IMAGES={"icons": [{"rel": "icon", "type": "image/svg+xml", "sizes": nu
 (I.icons||[]).forEach(function(i){var l=document.createElement('link');l.rel=i.rel;if(i.type)l.type=i.type;if(i.sizes)l.sizes=i.sizes;l.href=i.href;document.head.appendChild(l);});
 function brand(){var el=document.querySelector('.brand-mark');if(el&&I.brandMark&&!el.querySelector('img')){var im=document.createElement('img');im.src=I.brandMark;im.alt='';im.width=30;im.height=30;el.appendChild(im);}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',brand);else brand();})();</script>
+<!-- CUSTOM SERVICES (optional): your own map services, kept OUT of the shared source. Copy custom/services.example.js to custom/services.js and edit it;
+     it sets window.AE_CUSTOM_SERVICES. If the file is missing nothing happens. tools/build-single.py embeds it in the single file. Keep this loader. -->
+<script data-custom-services>window.__aeCustomReady=Promise.resolve();</script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -276,6 +279,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     .ov-actions { display: flex; gap: 6px; }
     .ov-actions .btn { flex: 1; padding: 6px 8px; font-size: 0.72rem; }
     #map.ov-picking, #map.ov-picking .leaflet-interactive, #map.ov-picking .leaflet-grab { cursor: crosshair !important; }
+    /* a drawing / link tool is active: crosshair everywhere (markers and lines would otherwise show the pointer hand) */
+    #map.tool-cursor, #map.tool-cursor .leaflet-grab, #map.tool-cursor .leaflet-interactive, #map.tool-cursor .leaflet-marker-icon, #map.tool-cursor .leaflet-marker-draggable, #map.tool-cursor.leaflet-dragging { cursor: crosshair !important; }
     .ov-chip { position: fixed; z-index: 9500; pointer-events: none; display: none; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border-hi); box-shadow: 0 4px 14px rgba(0,0,0,0.25); font: 500 0.68rem 'IBM Plex Mono', monospace; color: var(--text); }
     .ov-chip.show { display: flex; }
     .ov-chip i { display: block; width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.35); }
@@ -308,6 +313,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     .cl-tag.fixed { background: rgba(217,119,6,0.16); color: #b45309; }
     .cl-tag.removed { background: rgba(220,38,38,0.14); color: #dc2626; }
     .cl-empty { color: var(--text-3); font-size: 0.8rem; padding: 24px 0; text-align: center; }
+    /* ---- custom service form (Layers panel) ---- */
+    .cs-form { gap: 10px; }
+    .cs-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+    .cs-field[hidden], .cs-form [hidden] { display: none !important; }
+    .cs-field > label { font-size: 0.7rem; font-weight: 600; color: var(--text-2); }
+    .cs-field input, .cs-field select { width: 100%; box-sizing: border-box; padding: 6px 10px; border: 1px solid var(--border-hi); border-radius: 6px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.8rem; }
+    .cs-field input:focus, .cs-field select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+    .cs-row2 { display: flex; gap: 6px; }
+    .cs-hint { font-size: 0.66rem; color: var(--text-3); line-height: 1.35; }
 
     .toggle-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 6px; cursor: pointer; transition: all 0.15s ease; user-select: none; }
     .toggle-row:hover { border-color: var(--border-hi); }
@@ -3585,7 +3599,7 @@ return {
         <button class="sb-seg" id="sb-perf" title="Temporary: map complexity and frame rate. Click to copy diagnostics."><i class="fas fa-gauge-high"></i> <span id="sb-perf-text">…</span></button>
         <span class="sb-seg sb-progress" id="sb-progress" hidden><span id="sb-progress-label"></span><span class="sb-progress-track"><span class="sb-progress-fill" id="sb-progress-fill"></span></span></span>
         <div class="terrain-status" id="terrain-status"><i class="fas fa-circle" style="font-size: 0.5rem; color: var(--text-3);"></i> No terrain loaded</div>
-        <!-- BUILD-FOOTER --><span class="sb-seg sb-build" id="sb-build" title="Build date and time (local)">Build 2026-11-24 11:12:03</span>
+        <!-- BUILD-FOOTER --><span class="sb-seg sb-build" id="sb-build" title="Build date and time (local)">Build 2026-11-25 11:44:21</span>
     </div>
 
     <input type="file" id="file-input" accept=".hgt,.HGT" multiple style="display:none">
@@ -3710,7 +3724,8 @@ return {
                 mapLabelFont: 'Inter',
                 mapLabelShowDesc: false,
                 mapLabelMinZoom: 0,
-                mapLabelMaxZoom: 22,
+                mapLabelMaxZoom: 25,
+                mapMaxZoom: 25,             // Settings > Map display: how far the map zooms in (10 to 25)
                 // Large-data options (Settings → Large datasets)
                 perfCanvas: true,           // draw paths/polygons on one canvas (needs a reload)
                 perfSimplify: true,         // simplify long paths when zoomed out
@@ -3734,7 +3749,7 @@ return {
             };
             try {
                 const saved = localStorage.getItem('telco-flags');
-                if (saved) Object.assign(FLAGS, JSON.parse(saved));
+                if (saved) { Object.assign(FLAGS, JSON.parse(saved)); if (FLAGS.mapLabelMaxZoom === 22) FLAGS.mapLabelMaxZoom = 25; }   // 22 used to mean "no upper limit"
             } catch (e) {}
             // One-time switch to the new defaults (canvas rendering + path simplification on) for browsers that already saved the old ones.
             // After this it is just a normal setting: turn it off in Settings → Performance and it stays off.
@@ -4055,6 +4070,15 @@ return {
                     const cached = tileCache.get(url);
                     if (cached && cached.url) { tile.src = cached.url; cacheHits++; setTimeout(() => done(null, tile), 0); return tile; }
                     cacheMisses++;
+                    if (this.options.headers) {   // a service that wants request headers (custom service): fetch the tile with them
+                        fetch(url, { mode: 'cors', headers: this.options.headers }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); }).then(blob => {
+                            const objUrl = URL.createObjectURL(blob);
+                            touchCache(url, { blob, url: objUrl, ts: Date.now() });
+                            tile.onload = () => done(null, tile); tile.onerror = (e) => done(e, tile);
+                            tile.src = objUrl;
+                        }).catch(e => done(e, tile));
+                        return tile;
+                    }
                     tile.crossOrigin = 'anonymous';
                     tile.onload = () => {
                         fetch(url, { mode: 'cors' }).then(r => r.blob()).then(blob => {
@@ -4071,10 +4095,12 @@ return {
             function cachedTileLayer(url, options) { return new CachedTileLayer(url, options); }
 
             // ==================== MAP ====================
+            const MAP_ZOOM_CEILING = 25;   // the closest the map can ever zoom; Settings > Map display can set a lower limit (mapMaxZoom)
+            function mapMaxZoom() { return clampMaxZoom(FLAGS.mapMaxZoom); }
             const _mapOpts = {
                 center: [-42.0, 146.6], zoom: 7,
                 zoomControl: false, attributionControl: true,
-                minZoom: 2, maxZoom: 19,
+                minZoom: 2, maxZoom: mapMaxZoom(),
                 worldCopyJump: true, doubleClickZoom: false,
                 scrollWheelZoom: true
             };
@@ -4142,6 +4168,7 @@ return {
                     this._inCluster = {}; this._cluster = null; this._useCluster = false;
                     this._culled = {}; this._cullOn = false; this._cb = null; this._dec = {}; this._decOn = false; this._decPending = 0;
                 },
+                bringToFront: function () { L.FeatureGroup.prototype.bringToFront.call(this); if (typeof raiseEditedNode === 'function') raiseEditedNode(); return this; },
                 _wantCluster: function (layer) { return this._useCluster && this._cluster && layer instanceof L.Marker && !layer._pinned; },
                 isClustered: function (layer) { return !!(layer && this._inCluster[L.stamp(layer)]); },
                 addLayer: function (layer) {
@@ -4481,6 +4508,7 @@ return {
                 minimap = L.map('minimap', {
                     center: map.getCenter(),
                     zoom: Math.max(2, map.getZoom() - 4),
+                    maxZoom: MAP_ZOOM_CEILING - 4,         // follows the main map all the way in (its tiles are stretched past level 16)
                     zoomControl: false,
                     attributionControl: false,
                     dragging: false,
@@ -4492,7 +4520,7 @@ return {
                     touchZoom: false
                 });
                 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-                    maxZoom: 16
+                    maxNativeZoom: 16, maxZoom: MAP_ZOOM_CEILING - 4
                 }).addTo(minimap);
                 minimapViewportRect = L.rectangle(map.getBounds(), {
                     color: '#4d7c0f', weight: 2, fillColor: '#65a30d', fillOpacity: 0.15, interactive: false
@@ -4608,7 +4636,6 @@ return {
                 'usgs-topo': { name: 'USGS Topo', group: 'Terrain', icon: 'fa-layer-group', url: 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}', attribution: 'USGS', maxZoom: 19 },
 
                 // ---- Minimal / Clean ----
-                'none': { name: 'No base layer', group: 'Minimal / Clean', icon: 'fa-ban', url: null, attribution: '', maxZoom: 22 },
                 'light-gray': { name: 'Light Gray', group: 'Minimal / Clean', icon: 'fa-square', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', attribution: '© Esri', maxZoom: 19 },
                 'dark-gray': { name: 'Dark Gray', group: 'Minimal / Clean', icon: 'fa-square-full', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', attribution: '© Esri', maxZoom: 19 },
 
@@ -4618,15 +4645,106 @@ return {
 
             let currentLayer = null;
             let currentProviderKey = 'satellite';
+            // ---- custom map services ----
+            // Two sources, both shown in the Layers list (Base and Overlay): window.AE_CUSTOM_SERVICES (custom/services.js, embedded by the
+            // single-file build; read only) and the ones added in the Layers panel (SETTINGS.customServices, saved in this browser only).
+            // Types: xyz, arcgis-tile, wms, arcgis-export (Web Mercator only). {apiKey} in the url or a header value is replaced by the
+            // entry's apiKey. Invalid entries are skipped, never fatal.
+            /* CUSTOM-PURE:START */
+            const AE_CUSTOM_TYPES = ['xyz', 'wms', 'arcgis-export', 'arcgis-tile'];
+            function aeCustomProviders(list) {
+                const out = {}, used = {};
+                const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                (Array.isArray(list) ? list : []).forEach((d, i) => {
+                    if (!d || typeof d !== 'object') return;
+                    const subst = (s) => String(s).replace(/\{apiKey\}/g, d.apiKey == null ? '' : String(d.apiKey));
+                    const url = typeof d.url === 'string' ? subst(d.url).trim() : '';
+                    if (!/^https?:\/\//i.test(url)) return;
+                    const type = AE_CUSTOM_TYPES.indexOf(d.type) >= 0 ? d.type : 'xyz';
+                    let id = 'custom-' + String(d.id || d.name || (i + 1)).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                    while (used[id]) id += '-x';
+                    used[id] = 1;
+                    const maxZoom = Math.max(1, Math.min(25, +d.maxZoom || 19));
+                    const p = {
+                        name: String(d.name || d.id || ('Custom service ' + (i + 1))).trim().slice(0, 80),
+                        group: String(d.group || 'Custom services').trim().slice(0, 60),
+                        icon: /^fa-[a-z0-9-]+$/.test(String(d.icon || '')) ? d.icon : 'fa-plug',
+                        attribution: d.attribution ? esc(d.attribution) : '', maxZoom, custom: true, defId: String(d.id || '')
+                    };
+                    if (type === 'xyz' || type === 'arcgis-tile') {
+                        p.url = type === 'xyz' ? url : url.replace(/\/+$/, '') + '/tile/{z}/{y}/{x}';
+                        if (+d.maxNativeZoom > 0) p.maxNativeZoom = Math.min(25, +d.maxNativeZoom);
+                        if (d.subdomains) p.subdomains = String(d.subdomains);
+                        if (d.headers && typeof d.headers === 'object') { p.headers = {}; Object.keys(d.headers).forEach(k => { p.headers[k] = subst(d.headers[k]); }); }
+                    } else if (type === 'wms') {
+                        if (!d.layers) return;
+                        p.url = url; p.wms = { layers: String(d.layers), format: String(d.format || 'image/png'), transparent: d.transparent !== false, version: String(d.version || '1.3.0') };
+                    } else {
+                        if (d.layers == null || d.layers === '') return;
+                        p.url = url.replace(/\/+$/, ''); p.esri = { layers: String(d.layers).replace(/\s+/g, '') };
+                    }
+                    out[id] = p;
+                });
+                return out;
+            }
+            // What is wrong with a service entered in the form ('' when it is fine). pageIsHttps: a secure page cannot load http tiles.
+            function customDefProblem(d, pageIsHttps) {
+                if (!d || !String(d.name || '').trim()) return 'Give the service a name.';
+                const url = String(d.url || '').trim();
+                if (!/^https?:\/\//i.test(url)) return 'The address must start with https:// (or http://).';
+                if (pageIsHttps && /^http:\/\//i.test(url)) return 'This page is secure (https), so the service address must be https too.';
+                const type = AE_CUSTOM_TYPES.indexOf(d.type) >= 0 ? d.type : 'xyz';
+                if (type === 'xyz' && !(/\{z\}/.test(url) && /\{x\}/.test(url) && /\{-?y\}/.test(url))) return 'A tile address needs {z}, {x} and {y} in it.';
+                if (type === 'wms' && !String(d.layers || '').trim()) return 'Enter the WMS layer name (or names, separated by commas).';
+                if (type === 'arcgis-export' && !/^\s*\d+(\s*,\s*\d+)*\s*$/.test(String(d.layers == null ? '' : d.layers))) return 'Enter the layer id as a number, for example 38 (several: 38,40).';
+                const usesKey = /\{apiKey\}/.test(url) || (d.headers && Object.keys(d.headers).some(k => /\{apiKey\}/.test(String(d.headers[k]))));
+                if (usesKey && !String(d.apiKey || '').trim()) return 'The address or header uses {apiKey}, but no API key was entered.';
+                if (d.headers && Object.keys(d.headers).some(k => !/^[A-Za-z0-9-]+$/.test(k))) return 'A header name can only use letters, numbers and hyphens.';
+                if (d.maxZoom != null && d.maxZoom !== '' && !(+d.maxZoom >= 1 && +d.maxZoom <= 25)) return 'Max zoom must be a number from 1 to 25.';
+                if (d.maxNativeZoom != null && d.maxNativeZoom !== '' && !(+d.maxNativeZoom >= 1 && +d.maxNativeZoom <= 25)) return 'Native zoom must be a number from 1 to 25.';
+                return '';
+            }
+            /* CUSTOM-PURE:END */
+            let _buildCustomDefs = [];
+            function customUserDefs() { return Array.isArray(SETTINGS.customServices) ? SETTINGS.customServices : (SETTINGS.customServices = []); }
+            function rebuildCustomProviders() {         // drop every custom provider and re-add: build-time ones first, then the ones from the Layers panel
+                Object.keys(PROVIDERS).forEach(k => { if (PROVIDERS[k].custom) delete PROVIDERS[k]; });
+                [[_buildCustomDefs, 'build'], [customUserDefs(), 'user']].forEach(([defs, source]) => {
+                    const add = aeCustomProviders(defs);
+                    Object.keys(add).forEach(k => { if (!PROVIDERS[k]) { add[k].source = source; PROVIDERS[k] = add[k]; } });
+                });
+            }
+            function registerCustomServices() {
+                try { _buildCustomDefs = Array.isArray(window.AE_CUSTOM_SERVICES) ? window.AE_CUSTOM_SERVICES.slice() : []; } catch (e) { _buildCustomDefs = []; }
+                window.AE_CUSTOM_SERVICES = null;
+                try {
+                    rebuildCustomProviders();
+                    const n = Object.keys(PROVIDERS).filter(k => PROVIDERS[k].custom).length;
+                    if (n) console.info('Custom map services: ' + n);
+                } catch (e) { console.warn('Custom map services ignored', e); }
+            }
+
+            // Zoom limits. `top` is the map's maximum zoom (Settings > Map display). A service that reached 19 (the old map limit) is
+            // stretched up to it; a service that stops lower (NASA, OpenTopoMap) keeps its own cap. maxNativeZoom is the last level it really has.
+            /* ZOOM-PURE:START */
+            function clampMaxZoom(v) { const n = Math.round(+v); return Number.isFinite(n) ? Math.max(10, Math.min(25, n)) : 25; }
+            function tileZoomOpts(p, top) {
+                top = top || 25;
+                const cap = p.maxZoom || 19, maxZoom = cap >= 19 ? top : Math.min(cap, top);
+                return { maxZoom, maxNativeZoom: Math.min(p.maxNativeZoom || cap, maxZoom) };
+            }
+            /* ZOOM-PURE:END */
             function makeTileLayer(key) {
                 const p = PROVIDERS[key];
                 if (!p || !p.url) return null;
+                const zo = tileZoomOpts(p, mapMaxZoom());
                 if (p.wms) {   // WMS basemap (e.g. AHO maritime charts): tiled GetMap requests in EPSG:3857
-                    return L.tileLayer.wms(p.url, Object.assign({ attribution: p.attribution, maxZoom: p.maxZoom, uppercase: true, opacity: 1 }, p.wms));
+                    return L.tileLayer.wms(p.url, Object.assign({ attribution: p.attribution, maxZoom: zo.maxZoom, uppercase: true, opacity: 1 }, p.wms));
                 }
-                const opts = { attribution: p.attribution, maxZoom: p.maxZoom };
-                if (p.maxNativeZoom) opts.maxNativeZoom = p.maxNativeZoom;
+                if (p.esri) return makeEsriLayer(p, {});     // ArcGIS map service drawn on demand (see ARCGIS DYNAMIC LAYERS)
+                const opts = { attribution: p.attribution, maxZoom: zo.maxZoom, maxNativeZoom: zo.maxNativeZoom };
                 if (p.subdomains) opts.subdomains = p.subdomains;
+                if (p.headers) opts.headers = p.headers;
                 return cachedTileLayer(p.url, opts);
             }
             function switchProvider(key) {
@@ -4640,6 +4758,47 @@ return {
                 saveProviderLocal(key);
                 if (drawnItems.bringToFront) drawnItems.bringToFront();
                 showToast('Map: ' + PROVIDERS[key].name, 'fa-map');
+            }
+
+            // Re-create the base and overlay layers (after a service changed or the zoom limit moved).
+            function remakeBaseLayer() {
+                if (currentLayer) { map.removeLayer(currentLayer); currentLayer = null; }
+                if (!PROVIDERS[currentProviderKey]) { switchProvider('satellite'); return; }          // the service was deleted: fall back
+                currentLayer = makeTileLayer(currentProviderKey);
+                if (currentLayer) { currentLayer.addTo(map); attachTileErrorWatch(currentLayer, PROVIDERS[currentProviderKey]); }
+                if (drawnItems.bringToFront) drawnItems.bringToFront();
+            }
+            function remakeOverlayLayer() {
+                const wanted = SETTINGS.overlay && SETTINGS.overlay.key;
+                if (overlayLayer) { map.removeLayer(overlayLayer); overlayLayer = null; }
+                if (wanted && PROVIDERS[wanted]) setOverlay(wanted, true);
+                else if (wanted) { SETTINGS.overlay.key = null; saveSettings(); showToast('The overlay service was removed', 'fa-layer-group'); }
+            }
+            function reapplyCustomServices() { remakeBaseLayer(); remakeOverlayLayer(); }
+            function applyMaxZoom() {
+                FLAGS.mapMaxZoom = clampMaxZoom(FLAGS.mapMaxZoom); saveFlags();
+                const z = mapMaxZoom();
+                map.setMaxZoom(z);                                       // also zooms out if the map is closer than the new limit
+                remakeBaseLayer(); remakeOverlayLayer();
+                showToast('Maximum zoom: ' + z, 'fa-magnifying-glass-plus');
+            }
+
+            // ==================== ARCGIS DYNAMIC LAYERS ====================
+            // Some LIST data (property boundaries, tenure, land use...) is not pre-made tiles: the ArcGIS map service draws it on
+            // demand. A provider with esri: { layers: '38' } asks the service's /export endpoint for each tile (Web Mercator, so it
+            // lines up with every basemap) with only those layer ids shown. Layer ids come from the service listing
+            // (.../Public/CadastreAndAdministrative/MapServer?f=pjson). Layers have their own zoom limits: outside them the service
+            // sends a transparent image. Drawn with opacity only (the images are used as plain pictures, no pixel reads).
+            const EsriExportLayer = L.TileLayer.extend({
+                getTileUrl: function (coords) {
+                    const nwse = this._tileCoordsToNwSe(coords), crs = this._crs;
+                    const a = crs.project(nwse[0]), b = crs.project(nwse[1]), s = this.getTileSize();
+                    return this._url + '/export?bbox=' + [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y)].join(',') +
+                        '&bboxSR=3857&imageSR=3857&size=' + s.x + ',' + s.y + '&format=png32&transparent=true&layers=show:' + this.options.esriLayers + '&f=image';
+                }
+            });
+            function makeEsriLayer(p, extra) {
+                return new EsriExportLayer(p.url, Object.assign({ attribution: p.attribution, maxZoom: tileZoomOpts(p, mapMaxZoom()).maxZoom, esriLayers: String(p.esri.layers) }, extra));
             }
 
             // ==================== OVERLAY TILES (Layers tab: Base | Overlay) ====================
@@ -4699,7 +4858,7 @@ return {
                 if (!o || typeof o !== 'object') o = SETTINGS.overlay = {};
                 if (!(o.key && PROVIDERS[o.key] && PROVIDERS[o.key].url)) o.key = null;
                 const op = Number(o.opacity);
-                o.opacity = Math.max(0, Math.min(100, Number.isFinite(op) && o.opacity !== null && o.opacity !== '' ? op : 60));
+                o.opacity = Math.max(0, Math.min(100, Number.isFinite(op) && o.opacity !== null && o.opacity !== '' ? op : 100));
                 if (!Array.isArray(o.colours)) o.colours = [];
                 // tidy IN PLACE: rows in the Layers tab hold these very objects, so replacing them would make slider edits vanish
                 for (let i = o.colours.length - 1; i >= 0; i--) { const c = o.colours[i]; if (!c || !ovHexToRgb(c.hex)) o.colours.splice(i, 1); }
@@ -4710,10 +4869,10 @@ return {
             let _ovSaveTimer = null;
             function ovSaveSoon() { clearTimeout(_ovSaveTimer); _ovSaveTimer = setTimeout(saveSettings, 350); }
 
-            function ovFetchBitmap(url) {           // through the shared tile cache; one download serves both layers
+            function ovFetchBitmap(url, headers) {           // through the shared tile cache; one download serves both layers
                 const hit = tileCache.get(url);
                 const blobP = (hit && hit.blob) ? Promise.resolve(hit.blob)
-                    : fetch(url, { mode: 'cors' }).then(r => {
+                    : fetch(url, headers ? { mode: 'cors', headers } : { mode: 'cors' }).then(r => {
                         if (!r.ok) { const e = new Error('HTTP ' + r.status); e.http = r.status; throw e; }
                         return r.blob();
                     }).then(blob => { touchCache(url, { blob, url: URL.createObjectURL(blob), ts: Date.now() }); return blob; });
@@ -4734,7 +4893,7 @@ return {
                 },
                 createTile: function (coords, done) {
                     const self = this, tile = document.createElement('canvas'), url = this.getTileUrl(coords);
-                    ovFetchBitmap(url).then(function (bm) {
+                    ovFetchBitmap(url, this.options.headers).then(function (bm) {
                         if (tile._dead) { try { bm.close(); } catch (_) {} return; }
                         tile._src = bm; self._paint(tile); done(null, tile);
                     }, function (err) {
@@ -4795,12 +4954,14 @@ return {
                 const p = PROVIDERS[key];
                 if (!p || !p.url) return null;
                 const cfg = ovCfg();
+                const zo = tileZoomOpts(p, mapMaxZoom());
                 if (p.wms) {   // WMS (e.g. maritime charts): drawn with opacity only, its images do not allow pixel reads
-                    return L.tileLayer.wms(p.url, Object.assign({ attribution: p.attribution, maxZoom: p.maxZoom, uppercase: true, pane: 'overlayTilePane', opacity: cfg.opacity / 100 }, p.wms));
+                    return L.tileLayer.wms(p.url, Object.assign({ attribution: p.attribution, maxZoom: zo.maxZoom, uppercase: true, pane: 'overlayTilePane', opacity: cfg.opacity / 100 }, p.wms));
                 }
-                const opts = { attribution: p.attribution, maxZoom: p.maxZoom, pane: 'overlayTilePane', opacity: cfg.opacity / 100 };
-                if (p.maxNativeZoom) opts.maxNativeZoom = p.maxNativeZoom;
+                if (p.esri) return makeEsriLayer(p, { pane: 'overlayTilePane', opacity: cfg.opacity / 100 });
+                const opts = { attribution: p.attribution, maxZoom: zo.maxZoom, maxNativeZoom: zo.maxNativeZoom, pane: 'overlayTilePane', opacity: cfg.opacity / 100 };
                 if (p.subdomains) opts.subdomains = p.subdomains;
+                if (p.headers) opts.headers = p.headers;
                 const l = new KnockoutTileLayer(p.url, opts);
                 l.setRules(cfg.colours);
                 l.on('pixelsblocked', () => {
@@ -4968,7 +5129,7 @@ return {
                 head.appendChild(h);
                 card.appendChild(head);
 
-                if (p.wms) { card.appendChild(note('This service is drawn with opacity only; its images cannot be recoloured.')); return card; }
+                if (p.wms || p.esri) { card.appendChild(note('This service is drawn with opacity only; its images cannot be recoloured.')); return card; }
                 if (overlayLayer && overlayLayer._noPixels) { card.appendChild(note('This service does not allow colour changes, so only opacity applies.', true)); return card; }
 
                 if (cfg.colours.length) {
@@ -5003,7 +5164,9 @@ return {
                     : 'Use Pick from map, then click the overlay (the colour under the pointer is shown). Pick as many as you like.'));
                 return card;
             }
+            let layersView = 'list', customEditId = null;   // the Layers tab shows the provider list, or the custom-service form
             function renderLayersSection() {
+                if (layersView === 'custom') { renderCustomServiceForm(); return; }
                 const cfg = ovCfg(), isOv = layersMode === 'overlay';
                 const keepTop = subrailBody.scrollTop;
                 subrailBody.innerHTML = '';
@@ -5020,6 +5183,13 @@ return {
                 });
                 subrailBody.appendChild(tabs);
                 if (isOv) subrailBody.appendChild(ovBuildControls(cfg));
+                const addBtn = document.createElement('button');
+                addBtn.type = 'button'; addBtn.className = 'btn btn-secondary';
+                addBtn.style.cssText = 'width:100%;margin-top:8px;padding:7px 10px;font-size:0.74rem;';
+                addBtn.innerHTML = '<i class="fas fa-plus"></i> ';
+                addBtn.appendChild(document.createTextNode('Add a custom service'));
+                addBtn.addEventListener('click', () => { customEditId = null; layersView = 'custom'; renderStaticSection('layers'); });
+                subrailBody.appendChild(addBtn);
 
                 const mkRow = (item, active, onClick) => {
                     const row = document.createElement('div');
@@ -5029,8 +5199,22 @@ return {
                         '<div class="tree-item-icon" style="width:22px;height:22px;border-radius:6px;"><i class="fas ' + item.icon + '" style="font-size:0.65rem;"></i></div>' +
                         '<div style="flex:1;font-weight:500;"></div>';
                     row.lastElementChild.textContent = item.name;
+                    if (item.custom) {
+                        if (item.source === 'user') {
+                            const ed = document.createElement('button');
+                            ed.type = 'button'; ed.className = 'ov-ibtn'; ed.title = 'Edit this custom service'; ed.setAttribute('aria-label', 'Edit ' + item.name);
+                            ed.innerHTML = '<i class="fas fa-pen"></i>';
+                            ed.addEventListener('click', (e) => { e.stopPropagation(); customEditId = item.defId; layersView = 'custom'; renderStaticSection('layers'); });
+                            ed.addEventListener('keydown', (e) => e.stopPropagation());
+                            row.appendChild(ed);
+                        } else {
+                            const lk = document.createElement('span');
+                            lk.className = 'ov-ibtn'; lk.title = 'Added when the app was built (read only)'; lk.innerHTML = '<i class="fas fa-lock" style="font-size:0.62rem;"></i>';
+                            row.appendChild(lk);
+                        }
+                    }
                     row.addEventListener('click', onClick);
-                    row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } });
+                    row.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === row) { e.preventDefault(); onClick(); } });
                     return row;
                 };
                 const headStyle = 'font-family: "IBM Plex Mono", monospace; font-size: 0.6rem; text-transform: none; letter-spacing: 0.14em; color: var(--text-3); font-weight: 500; padding: 14px 4px 8px;';
@@ -5041,7 +5225,7 @@ return {
                 const groups = {}, groupOrder = [];
                 Object.keys(PROVIDERS).forEach(key => {
                     const p = PROVIDERS[key];
-                    if (isOv && !p.url) return;      // "No base layer" is not an overlay
+                    if (isOv && !p.url) return;
                     if (!groups[p.group]) { groups[p.group] = []; groupOrder.push(p.group); }
                     groups[p.group].push(Object.assign({ key }, p));
                 });
@@ -5057,6 +5241,109 @@ return {
                     });
                 });
                 subrailBody.scrollTop = keepTop;
+            }
+
+            // ---- add / edit / delete a custom service (saved in this browser; the API key never goes into a file) ----
+            function renderCustomServiceForm() {
+                ovStopPick(true);
+                const defs = customUserDefs(), editing = customEditId ? defs.find(x => x.id === customEditId) : null;
+                const d = editing || { type: 'xyz', group: 'Custom services', maxZoom: 19 };
+                const hk = d.headers ? Object.keys(d.headers)[0] : '';
+                const backToList = () => { layersView = 'list'; customEditId = null; renderStaticSection('layers'); };
+                subrailBody.innerHTML = '';
+                const card = document.createElement('div');
+                card.className = 'ov-card cs-form'; card.style.marginTop = '8px';
+                const head = document.createElement('div');
+                head.className = 'ov-line'; head.style.cssText = 'font-weight:600;color:var(--text);';
+                const back = document.createElement('button');
+                back.type = 'button'; back.className = 'ov-ibtn'; back.title = 'Back to the layers'; back.setAttribute('aria-label', 'Back to the layers');
+                back.innerHTML = '<i class="fas fa-arrow-left"></i>'; back.addEventListener('click', backToList);
+                const ttl = document.createElement('span'); ttl.textContent = editing ? 'Edit custom service' : 'Add a custom service';
+                head.append(back, ttl); card.appendChild(head);
+
+                const inp = (val, ph, type) => { const i = document.createElement('input'); i.type = type || 'text'; i.value = val == null ? '' : String(val); if (ph) i.placeholder = ph; i.autocomplete = 'off'; i.spellcheck = false; return i; };
+                const field = (id, label, control, hint) => {
+                    const f = document.createElement('div'); f.className = 'cs-field';
+                    const l = document.createElement('label'); l.htmlFor = id; l.textContent = label; control.id = id;
+                    f.append(l, control);
+                    let h = null; if (hint !== undefined) { h = document.createElement('div'); h.className = 'cs-hint'; h.textContent = hint; f.appendChild(h); }   // '' = a hint filled in later
+                    f._label = l; f._hint = h; card.appendChild(f); return f;
+                };
+                const name = inp(d.name, 'e.g. My orthophoto');
+                const type = document.createElement('select');
+                [['xyz', 'Tile address ({z}/{x}/{y})'], ['arcgis-tile', 'ArcGIS tiles (MapServer)'], ['wms', 'WMS'], ['arcgis-export', 'ArcGIS map service, drawn on demand']].forEach(([v, l]) => {
+                    const o = document.createElement('option'); o.value = v; o.textContent = l; if (v === (d.type || 'xyz')) o.selected = true; type.appendChild(o);
+                });
+                const url = inp(d.url, 'https://'), layers = inp(d.layers, ''), apiKey = inp(d.apiKey, 'optional', 'password');
+                const hName = inp(hk, 'Header name'), hVal = inp(hk ? d.headers[hk] : '', 'Header value');
+                const group = inp(d.group || 'Custom services'), attr = inp(d.attribution, '© owner');
+                const maxZ = inp(d.maxZoom || 19, '', 'number'), natZ = inp(d.maxNativeZoom || '', 'optional', 'number');
+                [maxZ, natZ].forEach(i => { i.min = '1'; i.max = '25'; });
+                field('cs-name', 'Name', name);
+                field('cs-type', 'Type', type);
+                const fUrl = field('cs-url', 'Address', url, '');
+                const fLayers = field('cs-layers', 'Layers', layers, '');
+                field('cs-key', 'API key (optional)', apiKey, 'Replaces {apiKey} in the address and header. Saved in this browser only, never in a file.');
+                const hdr = document.createElement('div'); hdr.className = 'cs-field';
+                const hl = document.createElement('label'); hl.textContent = 'Header (optional)';
+                const hrow = document.createElement('div'); hrow.className = 'cs-row2'; hName.id = 'cs-hname'; hVal.id = 'cs-hval'; hrow.append(hName, hVal);
+                const hh = document.createElement('div'); hh.className = 'cs-hint'; hh.textContent = 'For services that want a header, for example Authorization and Bearer {apiKey}. The service must allow cross-origin requests.';
+                hdr.append(hl, hrow, hh); card.appendChild(hdr);
+                field('cs-group', 'Group in the list', group);
+                field('cs-attr', 'Attribution (optional)', attr);
+                const zrow = document.createElement('div'); zrow.className = 'cs-row2';
+                const zf1 = document.createElement('div'); zf1.className = 'cs-field'; const zl1 = document.createElement('label'); zl1.htmlFor = 'cs-maxz'; zl1.textContent = 'Max zoom'; maxZ.id = 'cs-maxz'; zf1.append(zl1, maxZ);
+                const zf2 = document.createElement('div'); zf2.className = 'cs-field'; const zl2 = document.createElement('label'); zl2.htmlFor = 'cs-natz'; zl2.textContent = 'Last real zoom'; natZ.id = 'cs-natz'; zf2.append(zl2, natZ);
+                zrow.append(zf1, zf2); card.appendChild(zrow);
+                const msg = document.createElement('div'); msg.className = 'ov-note warn'; msg.hidden = true; msg.setAttribute('role', 'alert'); card.appendChild(msg);
+                card.addEventListener('input', () => { msg.hidden = true; }); card.addEventListener('change', () => { msg.hidden = true; });   // an old complaint goes away as soon as you edit
+
+                const HINTS = { 'xyz': 'Use {z} {x} {y} where the zoom and tile numbers go, for example https://tiles.example.com/{z}/{x}/{y}.png',
+                    'arcgis-tile': 'The MapServer address, ending in /MapServer. Tiles come from its cache.',
+                    'wms': 'The WMS address, without the ? part.', 'arcgis-export': 'The MapServer address, ending in /MapServer. Drawn on demand, opacity only.' };
+                const syncType = () => {
+                    const t = type.value, tiles = t === 'xyz' || t === 'arcgis-tile';
+                    fUrl._hint.textContent = HINTS[t];
+                    fLayers.hidden = tiles; fLayers._label.textContent = t === 'wms' ? 'WMS layer name(s)' : 'ArcGIS layer id(s)';
+                    layers.placeholder = t === 'wms' ? 'name1,name2' : '38';
+                    hdr.hidden = !tiles; zf2.hidden = !tiles;
+                };
+                type.addEventListener('change', syncType); syncType();
+
+                const act = document.createElement('div'); act.className = 'ov-actions';
+                const save = document.createElement('button'); save.type = 'button'; save.className = 'btn btn-primary'; save.textContent = 'Save';
+                const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'btn btn-secondary'; cancel.textContent = 'Cancel'; cancel.addEventListener('click', backToList);
+                act.append(save, cancel); card.appendChild(act);
+                save.addEventListener('click', () => {
+                    const t = type.value, tiles = t === 'xyz' || t === 'arcgis-tile';
+                    const def = { id: editing ? editing.id : 'u-' + Date.now().toString(36), name: name.value.trim(), type: t, url: url.value.trim(), apiKey: apiKey.value,
+                        group: group.value.trim() || 'Custom services', attribution: attr.value.trim(), maxZoom: maxZ.value === '' ? 19 : +maxZ.value };
+                    if (!tiles) def.layers = layers.value.trim();
+                    if (tiles && natZ.value !== '') def.maxNativeZoom = +natZ.value;
+                    if (tiles && hName.value.trim()) def.headers = { [hName.value.trim()]: hVal.value };
+                    const problem = customDefProblem(def, location.protocol === 'https:') || (Object.keys(aeCustomProviders([def])).length ? '' : 'This service could not be added. Check the address.');
+                    if (problem) { msg.textContent = problem; msg.hidden = false; return; }
+                    if (editing) defs[defs.indexOf(editing)] = def; else defs.push(def);
+                    saveSettings(); rebuildCustomProviders(); reapplyCustomServices();
+                    showToast((editing ? 'Saved ' : 'Added ') + def.name, 'fa-plug');
+                    backToList();
+                });
+                if (editing) {
+                    const del = document.createElement('button'); del.type = 'button'; del.className = 'btn btn-danger'; del.textContent = 'Delete'; del.style.cssText = 'flex:0 0 auto;';
+                    let armed = 0;
+                    del.addEventListener('click', () => {
+                        if (!armed || Date.now() - armed > 4000) { armed = Date.now(); del.textContent = 'Click again to delete'; return; }
+                        const at = defs.indexOf(editing), copy = editing;
+                        defs.splice(at, 1);
+                        saveSettings(); rebuildCustomProviders(); reapplyCustomServices();
+                        showToast('Deleted ' + copy.name, 'fa-trash', { action: { label: 'Undo', fn: () => { defs.splice(at, 0, copy); saveSettings(); rebuildCustomProviders(); reapplyCustomServices(); if (activeSection === 'layers') renderStaticSection('layers'); } } });
+                        backToList();
+                    });
+                    act.appendChild(del);
+                }
+                subrailBody.appendChild(card);
+                subrailBody.scrollTop = 0;
+                name.focus();
             }
 
             // ==================== INDEXEDDB ====================
@@ -5237,6 +5524,11 @@ return {
                 apply(node.layer);
             }
 
+            // Whatever is being edited stays top-most, however often the group is re-ordered or the shape is rebuilt.
+            function raiseEditedNode() {
+                try { if (editorState && editorState.node && !editorState.isBulkSelection) bringNodeToFront(editorState.node); } catch (e) {}
+            }
+
             // ==================== PERSISTENCE ====================
             let _persistTimer = null;
             function persistTree() {
@@ -5285,6 +5577,28 @@ return {
             }
 
             // ==================== FOCUS NODE ====================
+            // Keep the places list scrolled to a node. Long folders (over 200 rows) only draw a window of rows, so the window is moved
+            // first; the row may not exist for a few frames (a render can be pending), so it retries.
+            /* SCROLL-PURE:START */
+            function listWindowStart(idx, windowSize) { return Math.max(0, idx - Math.floor(windowSize / 2)); }
+            function scrollTargetFor(rowTop, rowH, viewTop, viewH, margin) {   // new scrollTop, or null when the row is already comfortably in view
+                margin = margin == null ? 24 : margin;
+                if (rowTop >= viewTop + margin && rowTop + rowH <= viewTop + viewH - margin) return null;
+                return Math.max(0, Math.round(rowTop - (viewH - rowH) / 2));
+            }
+            /* SCROLL-PURE:END */
+            function placesNodesHere() {
+                const folder = currentFolderId ? findNode(currentFolderId) : null;
+                return sortNodes((folder ? (folder.children || []) : treeNodes).filter(n => !(n.name === 'Terrain (HGT)' || n.type === 'terrain')));
+            }
+            function scrollPlacesTo(node, tries) {
+                tries = tries || 0;
+                const row = subrailBody.querySelector('.fx-row[data-node-id="' + CSS.escape(node.id) + '"]');
+                if (!row) { if (tries < 40) requestAnimationFrame(() => scrollPlacesTo(node, tries + 1)); return; }
+                const bodyRect = subrailBody.getBoundingClientRect(), r = row.getBoundingClientRect();
+                const target = scrollTargetFor(r.top - bodyRect.top + subrailBody.scrollTop, r.height, subrailBody.scrollTop, subrailBody.clientHeight);
+                if (target != null) subrailBody.scrollTo({ top: target, behavior: 'smooth' });
+            }
             function focusNodeInTree(node) {
                 if (!node) return;
                 activeSection = 'places';
@@ -5298,16 +5612,26 @@ return {
                 selectedNodeId = node.id;
                 multiSelection.clear();
                 bringNodeToFront(node);
+                let virtualTop = null;
+                if (!inPlacesSearch()) {
+                    const list = placesNodesHere(), idx = list.findIndex(n => n.id === node.id);
+                    if (list.length > 200 && idx >= 0) { _renderWindowStart = listWindowStart(idx, VIRTUAL_WINDOW); _lastRenderedFolderId = currentFolderId; virtualTop = idx * 30; }
+                }
                 renderTree();
-                requestAnimationFrame(() => {
-                    const row = subrailBody.querySelector(`.fx-row[data-node-id="${node.id}"]`);
-                    if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                });
+                if (virtualTop != null) subrailBody.scrollTop = Math.max(0, virtualTop - subrailBody.clientHeight / 2);
+                requestAnimationFrame(() => scrollPlacesTo(node));
             }
 
             function bindLayerFocus(node, layer) {
                 if (!layer || !layer.on) return;
                 layer.on('click', (e) => {
+                    // Placing a new marker ON this marker: markers do not pass clicks on to the map, so forward one at this marker's
+                    // exact position (the new marker lands here) and do not select this marker.
+                    if (drawState && drawState.type === 'placemark' && layer.getLatLng && !(e && e._synthetic)) {
+                        const at = layer.getLatLng();
+                        map.fire('click', { latlng: at, layerPoint: map.latLngToLayerPoint(at), containerPoint: map.latLngToContainerPoint(at), originalEvent: e && e.originalEvent, _synthetic: true });
+                        return;
+                    }
                     bringNodeToFront(node);
                     focusNodeInTree(node);
                     if (typeof followInspector === 'function') followInspector(node);
@@ -5327,7 +5651,7 @@ return {
                 if (node.type === 'placemark' && layer.dragging) {
                     layer.dragging.enable();
                     layer.on('drag', () => {
-                        const ll = layer.getLatLng();
+                        const ll = snapDraggedMarker(layer, node);
                         node.meta.lat = ll.lat;
                         node.meta.lng = ll.lng;
                         if (editorState && editorState.node === node) {
@@ -5337,29 +5661,10 @@ return {
                             if (lngEl) lngEl.value = ll.lng.toFixed(6);
                         }
                     });
-                    layer.on('dragend', async () => { await persistTreeNow(); updateMapLabels(); });
-                } else if (['path','measure','polygon','measure-area'].includes(node.type) && layer) {
-                    layer.on('mousedown', (ev) => {
-                        if (!editorState || editorState.node !== node) return;
-                        L.DomEvent.stopPropagation(ev);
-                        const start = ev.latlng;
-                        map.dragging.disable();
-                        const onMove = (mev) => {
-                            const dLat = mev.latlng.lat - start.lat;
-                            const dLng = mev.latlng.lng - start.lng;
-                            start.lat = mev.latlng.lat;
-                            start.lng = mev.latlng.lng;
-                            moveLayerBy(node, dLat, dLng);
-                        };
-                        const onUp = async () => {
-                            map.dragging.enable();
-                            map.off('mousemove', onMove);
-                            map.off('mouseup', onUp);
-                            await persistTreeNow();
-                            renderTree();
-                        };
-                        map.on('mousemove', onMove);
-                        map.on('mouseup', onUp);
+                    layer.on('dragend', async () => {
+                        const ll = snapDraggedMarker(layer, node, true);
+                        node.meta.lat = ll.lat; node.meta.lng = ll.lng;
+                        await persistTreeNow(); updateMapLabels();
                     });
                 }
             }
@@ -5391,37 +5696,6 @@ return {
                         if (node.layer && node.layer.dragging) node.layer.dragging.disable();
                         if (node.layer) { node.layer.off('drag', onDrag); node.layer.off('dragend', onDragEnd); }
                     });
-                } else if (['path','measure','polygon','measure-area'].includes(node.type) && node.layer) {
-                    let dragging = false;
-                    let start = null;
-                    const onDown = (ev) => {
-                        L.DomEvent.stopPropagation(ev);
-                        dragging = true;
-                        start = L.latLng(ev.latlng.lat, ev.latlng.lng);
-                        map.dragging.disable();
-                    };
-                    const onMove = (ev) => {
-                        if (!dragging) return;
-                        const dLat = ev.latlng.lat - start.lat;
-                        const dLng = ev.latlng.lng - start.lng;
-                        start = L.latLng(ev.latlng.lat, ev.latlng.lng);
-                        moveLayerBy(node, dLat, dLng);
-                    };
-                    const onUp = async () => {
-                        if (!dragging) return;
-                        dragging = false;
-                        map.dragging.enable();
-                        await persistTreeNow();
-                        renderTree();
-                    };
-                    node.layer.on('mousedown', onDown);
-                    map.on('mousemove', onMove);
-                    map.on('mouseup', onUp);
-                    cleanups.push(() => {
-                        if (node.layer) node.layer.off('mousedown', onDown);
-                        map.off('mousemove', onMove);
-                        map.off('mouseup', onUp);
-                    });
                 } else if (node.type === 'los') {
                     const centerMarker = L.marker([node.meta.lat, node.meta.lng], {
                         icon: L.divIcon({
@@ -5432,7 +5706,7 @@ return {
                         draggable: true, zIndexOffset: 2000
                     }).addTo(map);
                     const onDrag = () => {
-                        const ll = centerMarker.getLatLng();
+                        const ll = snapDraggedMarker(centerMarker, node);
                         node.meta.lat = ll.lat;
                         node.meta.lng = ll.lng;
                         rebuildLOSLayer(node);
@@ -5445,7 +5719,7 @@ return {
                     };
                     const onDragEnd = async () => { await persistTreeNow(); updateMapLabels(); };
                     centerMarker.on('drag', onDrag);
-                    centerMarker.on('dragend', onDragEnd);
+                    centerMarker.on('dragend', () => { const ll = snapDraggedMarker(centerMarker, node, true); node.meta.lat = ll.lat; node.meta.lng = ll.lng; rebuildLOSLayer(node); onDragEnd(); });
                     cleanups.push(() => { map.removeLayer(centerMarker); });
                 }
                 return () => cleanups.forEach(fn => { try { fn(); } catch(e){} });
@@ -5542,7 +5816,7 @@ return {
             function drawMapLabelsNow() {
                 if (!FLAGS.showMapLabels) { if (mapLabelGroup) clearMapLabels(); return; }
                 const _lz = map.getZoom();
-                if (_lz < (FLAGS.mapLabelMinZoom || 0) || _lz > (FLAGS.mapLabelMaxZoom || 22)) { clearMapLabels(); return; }   // outside the chosen zoom range
+                if (_lz < (FLAGS.mapLabelMinZoom || 0) || _lz > (FLAGS.mapLabelMaxZoom || 25)) { clearMapLabels(); return; }   // outside the chosen zoom range
                 if (!mapLabelGroup) mapLabelGroup = L.featureGroup().addTo(map);
                 const cfg = mapLabelCfg();
                 ensureLabelFont(cfg.font);
@@ -5633,6 +5907,7 @@ return {
 
             function renderTree0() {
                 if (ovPickIdx !== null && activeSection !== 'layers') ovStopPick(true);
+                if (activeSection !== 'layers') layersView = 'list';          // leaving the Layers tab closes the custom-service form
                 if (_renderSuspend) { _renderPending = true; return; } updateRailVisibility();
                 updateSubrailChrome();
                 if (activeSection === 'places') renderPlacesSection();
@@ -5886,11 +6161,11 @@ return {
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;">
                         <div>
                             <label>Show from zoom</label>
-                            <input type="number" id="ml-min-zoom" value="${FLAGS.mapLabelMinZoom || 0}" min="0" max="22" step="1" style="width:100%;padding:8px 12px;border:1px solid var(--border-hi);border-radius:8px;background:var(--surface);color:var(--text);font-family:inherit;">
+                            <input type="number" id="ml-min-zoom" value="${FLAGS.mapLabelMinZoom || 0}" min="0" max="25" step="1" style="width:100%;padding:8px 12px;border:1px solid var(--border-hi);border-radius:8px;background:var(--surface);color:var(--text);font-family:inherit;">
                         </div>
                         <div>
                             <label>…up to zoom</label>
-                            <input type="number" id="ml-max-zoom" value="${FLAGS.mapLabelMaxZoom || 22}" min="0" max="22" step="1" style="width:100%;padding:8px 12px;border:1px solid var(--border-hi);border-radius:8px;background:var(--surface);color:var(--text);font-family:inherit;">
+                            <input type="number" id="ml-max-zoom" value="${FLAGS.mapLabelMaxZoom || 25}" min="0" max="25" step="1" style="width:100%;padding:8px 12px;border:1px solid var(--border-hi);border-radius:8px;background:var(--surface);color:var(--text);font-family:inherit;">
                         </div>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:0.78rem;color:var(--text-2);">
@@ -5934,8 +6209,8 @@ return {
                     FLAGS.mapLabelOffsetY = parseInt(document.getElementById('ml-offset-y').value) || 0;
                     FLAGS.mapLabelShowDesc = document.getElementById('ml-show-desc').checked;
                     let zmin = parseInt(document.getElementById('ml-min-zoom').value, 10), zmax = parseInt(document.getElementById('ml-max-zoom').value, 10);
-                    zmin = isNaN(zmin) ? 0 : Math.max(0, Math.min(22, zmin));
-                    zmax = isNaN(zmax) ? 22 : Math.max(0, Math.min(22, zmax));
+                    zmin = isNaN(zmin) ? 0 : Math.max(0, Math.min(25, zmin));
+                    zmax = isNaN(zmax) ? 25 : Math.max(0, Math.min(25, zmax));
                     if (zmin > zmax) { const sw = zmin; zmin = zmax; zmax = sw; }
                     FLAGS.mapLabelMinZoom = zmin;
                     FLAGS.mapLabelMaxZoom = zmax;
@@ -7343,13 +7618,13 @@ return {
             }
             function refreshSnapZoneMode() {
                 const inEditorVertices = editorState && editorState.activeTab === 'vertices';
-                const drawing = drawState && drawState.type !== 'placemark';
+                const drawing = !!drawState;          // includes placing a marker, so the snap zones show
                 setSnapZoneActive(!!(SETTINGS.snapToMarkers && (inEditorVertices || drawing)));
             }
             map.on('zoomend', () => { if (snapZoneActive) rebuildSnapZoneLayer(); });
-            function updateSnapPreview(containerPoint) {
+            function updateSnapPreview(containerPoint, excludeIds) {
                 if (!SETTINGS.snapToMarkers || !containerPoint) { hideSnapPreview(); return; }
-                const snap = findSnapTargetPixel(containerPoint);
+                const snap = findSnapTargetPixel(containerPoint, excludeIds);
                 if (snapRingLayer) { map.removeLayer(snapRingLayer); snapRingLayer = null; }
                 if (snap) {
                     snapRingLayer = L.circleMarker(snap.latlng, {
@@ -7393,6 +7668,34 @@ return {
             function applySnapFromEvent(e, originalLatLng) {
                 return applySnapFromContainerPoint(e.containerPoint || map.latLngToContainerPoint(originalLatLng), originalLatLng);
             }
+
+            // A marker being dragged snaps to the nearest other marker (same setting and distance as drawing). Shows the snap ring
+            // while dragging; `final` is the drop. The marker's own node is excluded, so it never snaps to itself.
+            function snapDraggedMarker(layer, node, final) {
+                let ll = layer.getLatLng();
+                if (!SETTINGS.snapToMarkers) return ll;
+                const cp = map.latLngToContainerPoint(ll), ex = new Set([node.id]);
+                const snap = findSnapTargetPixel(cp, ex);
+                if (final) hideSnapPreview(); else updateSnapPreview(cp, ex);
+                if (snap) {
+                    layer.setLatLng(snap.latlng); ll = snap.latlng;
+                    if (final) showToast('Snapped to “' + snap.node.name + '”', 'fa-magnet');
+                }
+                return ll;
+            }
+            /* VERTEX-PURE:START */
+            function nearestSegmentInsertIndex(pts, p, closed) {   // pts: screen points of the vertices, p: the pointer. Returns the index a new vertex takes
+                let best = 1, bestD = Infinity;
+                const n = pts.length, segs = (closed && n >= 3) ? n : n - 1;
+                for (let i = 0; i < segs; i++) {
+                    const a = pts[i], b = pts[(i + 1) % n], dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy;
+                    let t = l2 ? ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2 : 0; t = Math.max(0, Math.min(1, t));
+                    const ex = a.x + t * dx - p.x, ey = a.y + t * dy - p.y, d = ex * ex + ey * ey;
+                    if (d < bestD) { bestD = d; best = i + 1; }
+                }
+                return best;
+            }
+            /* VERTEX-PURE:END */
 
             // ==================== STATIC SECTIONS ====================
             function renderStaticSection(section) {
@@ -7827,6 +8130,9 @@ return {
                         box.appendChild(perfNumberRow('Max handles in view', 'If more would show, none are drawn until you zoom in', 'perfVertexMax', 20, 5000, async () => {}));
                     }
                 } else if (group === 'display') {
+                    box.appendChild(settingsHeading('Zoom'));
+                    box.appendChild(perfNumberRow('Maximum zoom level', 'How far you can zoom in, 10 to 25 (default 25). Imagery is stretched past its real detail (about level 19), so it gets softer; a lower limit keeps the map sharper.', 'mapMaxZoom', 10, 25, async () => applyMaxZoom()));
+                    box.appendChild(settingsHeading('Placemarks and labels'));
                     box.appendChild(perfToggleRow('Only draw markers in view', 'Keeps off-screen placemark markers out of the page and brings them back as you pan. Big speed-up with thousands of placemarks.', 'perfMarkerCull', async (on) => { drawnItems.setCull(on); }));
                     box.appendChild(perfNumberRow('Max labels shown', 'Map labels are only built for placemarks in view; if more would show, the ones nearest the centre win (default 600)', 'mapLabelMax', 20, 5000, async () => { updateMapLabels(); }));
                     box.appendChild(perfToggleRow('Declutter placemarks (Google Earth style)', 'When more icons are in view than the cap below, overlapping icons are hidden (look-alike icons first) and come back as you zoom in. No clusters.', 'perfDeclutter', async (on) => { drawnItems.declutter(on); }));
@@ -8233,7 +8539,8 @@ return {
                     { key: 'style', icon: 'fa-palette', label: 'Style' }
                 ];
                 if (canEditVertices) tabs.push({ key: 'vertices', icon: 'fa-bezier-curve', label: 'Vertices' });
-                const activeTab = startTab && tabs.find(t => t.key === startTab) ? startTab : 'properties';
+                // a path or polygon opens on Vertices (the on-map vertex handles); everything else on Properties
+                const activeTab = startTab && tabs.find(t => t.key === startTab) ? startTab : (canEditVertices ? 'vertices' : 'properties');
 
                 editorState = { node, activeTab, tabs, isShape, isLOS, isPlacemark, isFolder, canEditVertices, _newIcon: null };
                 editorPanelTitle.childNodes[0].nodeValue = node.name + ' ';
@@ -9626,10 +9933,68 @@ return {
                     if (previewShape) {
                         editorGroup.addLayer(previewShape);
                         previewShape.on('click', onPreviewClick);
+                        previewShape.on('mousedown', onPreviewDown);
                     }
+                }
+                function numberedVertexIcon(n) {
+                    return L.divIcon({
+                        className: '',
+                        html: `<div style="width:18px;height:18px;border-radius:50%;background:#fff;border:2.5px solid ${color};display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;color:${color};box-shadow:0 1px 4px rgba(0,0,0,0.3);">${n}</div>`,
+                        iconSize: [18, 18], iconAnchor: [9, 9]
+                    });
+                }
+                let _gestureAt = 0;
+                // Press on the line and keep the button down: a numbered vertex follows the pointer (snapping like any vertex);
+                // release drops it there. Esc cancels. A plain click does the same in one go.
+                function onPreviewDown(e) {
+                    if (e.originalEvent && e.originalEvent.button) return;        // left button only
+                    L.DomEvent.stop(e);                                          // no map pan, and nothing underneath gets the press
+                    const pts = work.map(v => map.latLngToContainerPoint([v.lat, v.lng]));
+                    const insertIndex = nearestSegmentInsertIndex(pts, e.containerPoint, isPolygon);
+                    removePending();
+                    const pm = L.marker(e.latlng, { icon: numberedVertexIcon(insertIndex + 1), interactive: false, keyboard: false, zIndexOffset: 1500 });
+                    editorGroup.addLayer(pm);
+                    pending = { lat: e.latlng.lat, lng: e.latlng.lng, marker: pm, insertIndex };
+                    redrawPendingTempLine();
+                    _gestureAt = Date.now();
+                    map.dragging.disable();
+                    const follow = (ev) => {
+                        if (!pending) return;
+                        let ll = ev.latlng;
+                        if (SETTINGS.snapToMarkers) {
+                            updateSnapPreview(ev.containerPoint);
+                            const snap = findSnapTargetPixel(ev.containerPoint, new Set([node.id]));
+                            if (snap) ll = snap.latlng;
+                        }
+                        pending.lat = ll.lat; pending.lng = ll.lng;
+                        pm.setLatLng(ll);
+                        redrawPendingTempLine();
+                    };
+                    const end = (commit) => {
+                        map.off('mousemove', follow);
+                        document.removeEventListener('mouseup', onUp, true);
+                        document.removeEventListener('keydown', onKey, true);
+                        map.dragging.enable();
+                        hideSnapPreview();
+                        _gestureAt = Date.now();
+                        if (!pending) return;
+                        if (commit) {
+                            const p = pending;
+                            work.splice(p.insertIndex, 0, { lat: p.lat, lng: p.lng });
+                            removePending();
+                            renderRows(); renderMarkers(); renderPreview(); renderMidpoints();
+                            commitVertices({ keepHidden: true });
+                        } else removePending();
+                    };
+                    const onUp = () => end(true);
+                    const onKey = (ev) => { if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); end(false); } };
+                    map.on('mousemove', follow);
+                    document.addEventListener('mouseup', onUp, true);
+                    document.addEventListener('keydown', onKey, true);
                 }
                 function onPreviewClick(e) {
                     L.DomEvent.stopPropagation(e);
+                    if (Date.now() - _gestureAt < 500) return;      // the press-and-hold gesture already handled this click
                     const clickLL = e.latlng;
                     let bestIdx = 1, bestDist = Infinity;
                     for (let i = 0; i < work.length - 1; i++) {
@@ -9640,14 +10005,7 @@ return {
                         if (d < bestDist) { bestDist = d; bestIdx = i + 1; }
                     }
                     removePending();
-                    const pendingMarker = L.marker(clickLL, {
-                        icon: L.divIcon({
-                            className: '',
-                            html: `<div style="width:16px;height:16px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);cursor:crosshair;"></div>`,
-                            iconSize: [16, 16], iconAnchor: [8, 8]
-                        }),
-                        draggable: true, zIndexOffset: 1500
-                    });
+                    const pendingMarker = L.marker(clickLL, { icon: numberedVertexIcon(bestIdx + 1), interactive: false, keyboard: false, zIndexOffset: 1500 });
                     editorGroup.addLayer(pendingMarker);
                     pending = { lat: clickLL.lat, lng: clickLL.lng, marker: pendingMarker, insertIndex: bestIdx };
 
@@ -9718,21 +10076,30 @@ return {
                         });
                         midMarker.on('dragstart', () => {
                             work.splice(insertIndex, 0, { lat: midLat, lng: midLng });
+                            midMarker.setOpacity(0);              // the numbered vertex below takes over from the small dot
                             renderRows();
                             renderMarkers();
                             renderPreview();
                         });
                         midMarker.on('drag', (ev) => {
-                            const ll = ev.target.getLatLng();
+                            let ll = ev.target.getLatLng();
+                            if (SETTINGS.snapToMarkers) {
+                                const cp = map.latLngToContainerPoint(ll);
+                                updateSnapPreview(cp);
+                                const snap = findSnapTargetPixel(cp, new Set([node.id]));
+                                if (snap) { ev.target.setLatLng(snap.latlng); ll = snap.latlng; }
+                            }
                             if (work[insertIndex]) {
                                 work[insertIndex].lat = ll.lat;
                                 work[insertIndex].lng = ll.lng;
+                                if (vertexMarkers[insertIndex]) vertexMarkers[insertIndex].setLatLng(ll);   // the new numbered vertex stays under the pointer
                                 renderPreview();
                                 updateMidpointsOnly();
                                 updateRowInputs(insertIndex);
                             }
                         });
                         midMarker.on('dragend', async () => {
+                            hideSnapPreview();
                             renderMidpoints();
                             await commitVertices({ keepHidden: true });
                         });
@@ -9834,6 +10201,7 @@ return {
                     bindLayerFocus(node, newLayer);
                     if (!keepHidden && wasVisible) newLayer.addTo(drawnItems);
                     if (drawnItems.bringToFront) drawnItems.bringToFront();
+                    raiseEditedNode();                // the rebuilt shape goes back on top
                     renderTree();
                     await persistTreeNow();
                     updateMapLabels();
@@ -9849,7 +10217,7 @@ return {
                         <button class="btn btn-secondary" id="ed-vert-add" style="flex:1;"><i class="fas fa-plus"></i> Add at end</button>
                     </div>
                     <div class="editor-hint">
-                        <div style="margin-bottom:4px;"><b>Click</b> on the line to start a new vertex — it follows the cursor, click again to drop it.</div>
+                        <div style="margin-bottom:4px;"><b>Press and hold</b> on the line to add a vertex: its number follows the pointer, release to drop it. <b>Esc</b> cancels.</div>
                         <div><b>Drag</b> the small midpoint dots to insert a vertex between two existing ones. They follow their segment live.</div>
                         <div style="margin-top:4px;">Drag a numbered vertex to move it — midpoints update as you drag.</div>
                     </div>
@@ -12642,7 +13010,7 @@ return {
                 losTrackingNode = node;
                 losTrackingMouseLatLng = null;
                 losTrackingEndpoint = null;
-                map.getContainer().style.cursor = 'crosshair';
+                setMapToolCursor(true, 'track');
                 if (losTrackingHintEl) losTrackingHintEl.classList.add('show');
             }
 
@@ -12652,7 +13020,7 @@ return {
                 losTrackingEndpoint = null;
                 if (losTrackingRAF) { cancelAnimationFrame(losTrackingRAF); losTrackingRAF = null; }
                 losPreviewGroup.clearLayers();
-                map.getContainer().style.cursor = '';
+                setMapToolCursor(false, 'track');
                 if (losTrackingHintEl) losTrackingHintEl.classList.remove('show');
             }
 
@@ -12782,11 +13150,18 @@ return {
                 }
             });
 
+            // Which tools want the crosshair: 'draw' (drawing tools), 'place' (placing a link), 'track' (a link following the pointer).
+            // '*' switches all of them off. It is a CSS class with !important, so markers and lines cannot override it.
+            const _toolCursorSrc = new Set();
+            function setMapToolCursor(on, src) {
+                if (src === '*') _toolCursorSrc.clear(); else if (on) _toolCursorSrc.add(src); else _toolCursorSrc.delete(src);
+                map.getContainer().classList.toggle('tool-cursor', _toolCursorSrc.size > 0);
+            }
             function clearDrawModeUI() { document.querySelectorAll('.map-tool').forEach(el => el.classList.remove('active')); }
             function cancelActiveDraw() {
                 if (drawState) { if (drawState.tempLayer) map.removeLayer(drawState.tempLayer); drawState = null; }
                 clearDrawModeUI();
-                map.getContainer().style.cursor = '';
+                setMapToolCursor(false, '*');
                 hideSnapPreview();
                 hideDrawStatus();
                 refreshSnapZoneMode();
@@ -12798,7 +13173,7 @@ return {
                 clearDrawModeUI();
                 const btn = document.getElementById(type === 'placemark' ? 'tool-placemark' : type === 'path' ? 'tool-path' : type === 'polygon' ? 'tool-polygon' : type === 'measure' ? 'tool-measure' : type === 'measure-area' ? 'tool-measure-area' : '');
                 if (btn) btn.classList.add('active');
-                map.getContainer().style.cursor = 'crosshair';
+                setMapToolCursor(true, 'draw');
                 if (type === 'placemark') {
                     showToast('Click on the map to place a marker', 'fa-map-pin');
                     showDrawStatus('Click map to place a marker', false);
@@ -12873,7 +13248,7 @@ return {
                 if (pts.length < minPts) {
                     showToast(isPoly ? 'Need at least 3 points for a polygon' : 'Need at least 2 points', 'fa-info-circle');
                     drawState = null; clearDrawModeUI();
-                    map.getContainer().style.cursor = '';
+                    setMapToolCursor(false, '*');
                     hideSnapPreview();
                     hideDrawStatus();
                     refreshSnapZoneMode();
@@ -12881,7 +13256,7 @@ return {
                 }
                 const latlngs = pts.slice();
                 drawState = null; clearDrawModeUI();
-                map.getContainer().style.cursor = '';
+                setMapToolCursor(false, '*');
                 hideSnapPreview();
                 hideDrawStatus();
                 refreshSnapZoneMode();
@@ -12953,10 +13328,10 @@ return {
                 drawState.lastClickTime = now;
 
                 if (drawState.type === 'placemark') {
-                    const latlng = raw;
+                    const latlng = applySnapFromEvent(e, raw);       // a new marker snaps onto an existing marker
                     const result = await openNewNodeModal({ type: 'placemark', name: 'New placemark', meta: { icon: DEFAULT_ICON, color: '#4d7c0f', desc: '', lat: latlng.lat, lng: latlng.lng } });
                     drawState = null; clearDrawModeUI();
-                    map.getContainer().style.cursor = '';
+                    setMapToolCursor(false, '*');
                     hideSnapPreview();
                     hideDrawStatus();
                     refreshSnapZoneMode();
@@ -13039,11 +13414,11 @@ return {
                 clearDrawModeUI();
                 const btn = document.getElementById('tool-los');
                 if (btn) btn.classList.add('active');
-                map.getContainer().style.cursor = 'crosshair';
+                setMapToolCursor(true, 'place');
                 showToast('Click the map to place the link’s first site', 'fa-satellite-dish');
                 showDrawStatus('Click the map to place the link’s first site', false);
                 map.once('click', async (e) => {
-                    map.getContainer().style.cursor = '';
+                    setMapToolCursor(false, 'place');
                     clearDrawModeUI();
                     hideSnapPreview();
                     hideDrawStatus();
@@ -14095,7 +14470,7 @@ return {
             }
 
             // ---- labels follow the zoom range
-            map.on('zoomend', () => { if (FLAGS.showMapLabels && ((FLAGS.mapLabelMinZoom || 0) > 0 || (FLAGS.mapLabelMaxZoom || 22) < 22)) updateMapLabels(); });
+            map.on('zoomend', () => { if (FLAGS.showMapLabels && ((FLAGS.mapLabelMinZoom || 0) > 0 || (FLAGS.mapLabelMaxZoom || 25) < 25)) updateMapLabels(); });
 
             // ---- header search: icon that expands, suggestions while typing
             const geoToggle = document.getElementById('gps-search-toggle');
@@ -14794,8 +15169,32 @@ return {
             // Source of truth for the in-app changelog page (Settings > About > Changelog, route #changelog). Newest entry first.
             // Rules: skills/changelog-keeper/SKILL.md. Never edit, reorder or delete past entries. APP_VERSION must equal CHANGELOG[0].v.
             /* CHANGELOG:START */
-            const APP_VERSION = "1.1.0";
+            const APP_VERSION = "1.4.0";
             const CHANGELOG = [
+                { v: "1.4.0", date: "2026-11-25", changes: [
+                    { t: "added", text: "Maximum zoom level setting under Settings > Map display" },
+                    { t: "added", text: "Add, edit and delete custom map services in the Layers panel" },
+                    { t: "fixed", text: "A new marker can be placed on an existing marker with snap", cause: "Placing ignored snap, and clicking a marker only selected it" },
+                    { t: "fixed", text: "The minimap keeps zooming in as the main map zooms", cause: "It was held at zoom 16 to match its map tiles" },
+                    { t: "removed", text: "The 31 extra LIST layers and “No base layer”" }
+                ]},
+                { v: "1.3.0", date: "2026-11-24", changes: [
+                    { t: "added", text: "Map zooms in to level 25 (was 20)" },
+                    { t: "added", text: "Press and hold a path line to place a numbered vertex" },
+                    { t: "added", text: "Add your own map services when building (custom/services.js)" },
+                    { t: "changed", text: "Paths and polygons now open on Vertices; whole-shape dragging removed" },
+                    { t: "fixed", text: "Snap to markers now works while dragging a marker", cause: "Snapping only ran when drawing or moving vertices" },
+                    { t: "fixed", text: "Crosshair cursor shows when a drawing tool is chosen", cause: "Marker and line cursor rules overrode it" },
+                    { t: "fixed", text: "Selecting an item on the map scrolls the list to it", cause: "Long lists draw only some rows, so the row was missing" },
+                    { t: "fixed", text: "A new vertex’s number follows the pointer while dragging", cause: "Only the small midpoint dot moved; the number stayed behind" },
+                    { t: "fixed", text: "The item being edited stays on top of other items", cause: "Rebuilding the shape or reordering sent it back" }
+                ]},
+                { v: "1.2.0", date: "2026-11-24", changes: [
+                    { t: "added", text: "Zoom in one level closer than before (maximum zoom 20)" },
+                    { t: "added", text: "TAS Property Boundaries layer, in both Base and Overlay lists" },
+                    { t: "added", text: "30 more LIST layers: tenure, reserves, councils, land use, marine" },
+                    { t: "changed", text: "Overlay opacity now starts at 100 percent" }
+                ]},
                 { v: "1.1.0", date: "2026-11-24", changes: [
                     { t: "added", text: "Overlay mode in the Layers tab: draw a second map on top" },
                     { t: "added", text: "Overlay opacity slider from 0 to 100 percent" },
@@ -14913,6 +15312,8 @@ return {
             // ==================== INIT ====================
             (async function init() {
                 await loadSettings();
+                try { await window.__aeCustomReady; } catch (e) {}
+                registerCustomServices();                                   // custom map services added at build time (if any)
                 applyTheme();
                 applyProfileHeight();
 

@@ -1,6 +1,6 @@
 ---
 name: single-file-build-pipeline
-description: Use whenever someone asks for a single-file HTML app, game or tool (especially one with embedded images, sprites, fonts or other base64 data), whenever an existing single HTML file has grown large or contains base64 assets, when an app is already split into a readable source file plus optional asset or plug-in files, or when they want to "build and open" with one click. The deliverable stays ONE self-contained HTML file, but it is produced by a build script from a source project, never edited by hand. Two layouts: A (src/ template with placeholders and a one-click run_build.bat) and B (a readable index.html edited directly, with heavy data in optional runtime-loaded files and a script that embeds them).
+description: Use whenever someone asks for a single-file HTML app, game or tool (especially one with embedded images, sprites, fonts or other base64 data), whenever an existing single HTML file has grown large or contains base64 assets, when an app is already split into a readable source file plus optional asset or plug-in files, when writing or updating an AGENTS.md for such a project, or when they want to "build and open" with one click. The deliverable stays ONE self-contained HTML file, but it is produced by a build script from a source project, never edited by hand. Two layouts: A (src/ template with placeholders and a one-click run_build.bat) and B (a readable index.html edited directly, with heavy data in optional runtime-loaded files and a script that embeds them).
 ---
 
 # Source project + build script that produces the single file
@@ -78,7 +78,18 @@ Split `app.js` into several files only when it passes about 150 KB. A single wel
 5. Say plainly what could not be tested (for example live third-party services).
 
 ## 7. AGENTS.md and skills
-- `AGENTS.md` (about 10 lines): read order, build and test commands, "edit `src/` only, never `dist/`", how to publish, and the closing line to use after changes ("Build stamp set to ...").
+`AGENTS.md` is the first file any AI (or new person) reads. It exists so nobody has to open the big or heavy files to learn how the project works. Keep it short (about 40 to 70 lines), accurate and current: updating it is part of every change that moves something.
+
+**Sections, in this order** (Andrew's Earth's `AGENTS.md` is the worked example):
+1. **Read order**: this file, then the header comment of the main source file, then any plug-in `README-AI.md`, then the skills.
+2. **Project layout (as it is today)**: one line per file or folder, and mark what is **generated** ("never hand-edit") and what is **heavy data** ("never read or edit"). Say what the build command is.
+3. **Rules after ANY code change**: the build stamp (where, format), what must keep working (hooks), the rebuild command, and the closing line to use ("new build stamp, changelog lines, STATUS block").
+4. **Where things are**: the search words for each feature (a banner comment, a function name, a `*-PURE:START` marker) with one sentence on what it does and where its state lives. This is what saves an AI from reading 10,000 lines.
+5. **Checking your work**: the commands, and the marked slices that can be tested alone.
+6. **Skills**: a table of skill name, when to use it, and any project-specific difference ("this project uses Layout B; where they differ this file wins").
+7. **Handover naming**: file and chat names, so versions never collide.
+
+Never put a secret in `AGENTS.md`, a skill, or the source. If a service needs a key, say so and point at the private config (section 10).
 - `skills/<codebase>/SKILL.md`: layout, workflow, a map of the main code sections and global state, asset formats (for example sprite sheet frame sizes), conventions and gotchas, feature status (built and not built).
 - Domain skills (for example input handling, difficulty rules) as separate SKILL.md files with frontmatter `name` and `description`. Update a skill whenever you change the behaviour it describes.
 
@@ -110,7 +121,22 @@ project/
 - **Build stamp.** Without a clock-stamping `build.py`, keep one manual stamp (`YYYY-MM-DD HH:MM:SS`, local time) in the header comment and one in the page footer (`BUILD-FOOTER`), updated on every code change. Take the time from the system clock in the owner's time zone, never from memory.
 - **"Self-contained" has limits.** CDN libraries, web fonts and live map or API services may stay external. Say so, and say what does not work offline.
 - **Adding a feature to a large file.** Put it in one clearly commented block with its design notes. Reuse the app's existing helpers, caches, settings store and styles. Give new map layers their own pane or new elements their own ids. Persist state in the existing settings store. Keep pure logic between `PURE:START/END` markers so it can be tested (section 6). Record the change in the changelog block (`changelog-keeper`).
+- **Private build-time config (your own services, keys).** Anything the owner must add without putting it in shared source (a map service with a key, for example) goes in an optional git-ignored file, `custom/<name>.js`, that sets one global (`window.AE_CUSTOM_SERVICES = [...]`). Ship a `custom/<name>.example.js` with the format documented at the top and only commented-out samples, and add the real file to `.gitignore`. Load it with the same optional loader as heavy assets (timeout, silent failure). The build script embeds it, fills `${ENV_NAME}` placeholders from the environment (escaped for a JS string, and **failing loudly** if a variable is unset), and prints a warning: the built file now contains the secret and must not be published. The app validates every entry, skips bad ones instead of crashing, whitelists anything that reaches markup (for example an icon class), and sets the global to `null` after reading it. Test it in a scratch copy with hostile values (quotes, backslashes, `</script>`), a missing variable, and no file at all; also confirm the real project folder holds no private file.
 - **Skills still apply.** `AGENTS.md` lists them and says where this project differs from Layout A.
+
+## 11. Lessons from Andrew's Earth (check these when changing a big single-file app)
+- **Raising a global limit** (for example the maximum zoom): search for everything that assumed the old number. Here that was the minimap (it has its own tile limit), a settings range and its default, and saved user settings where the old maximum meant "no limit" (migrate it, otherwise the feature silently starts limiting).
+- **A visual state that other CSS fights** (a cursor): do not set it inline on a parent. Rules on child elements (markers, vector lines) override inheritance. Use a class with `!important` on the container and its children, and check `getComputedStyle` in a real browser.
+- **Windowed (virtual) lists**: "scroll to this item" must first move the window so the row exists, then scroll, and retry for a few frames because a render may be pending. Centre the row only if it is not comfortably in view.
+- **Objects that are rebuilt** (a shape recreated after each edit) lose state such as z-order. Re-apply it at the rebuild, and prefer overriding the group method that re-orders everything over patching every call site.
+- **Press-and-hold gestures**: disable map dragging for the gesture, listen for the release on `document` (the pointer may leave the map), cancel on Esc, clean every listener up, and ignore the click event that follows the release.
+- **Dragging something that snaps**: exclude the dragged item from its own snap targets, show the snap ring while dragging, and report the snap only on drop.
+- **Layers that need a sign-in or key** are a decision for the owner, not a default: ask, keep them out of the source, and use the private config pattern above.
+- **"Revert to this list"**: when the owner supplies the list, load it as a test fixture and compare it with the code entry by entry (`deepStrictEqual`) before editing, and keep the test. It proves nothing else drifted and catches "extra" entries that were added earlier.
+- **A form that edits settings in the page** (for example custom services, with a key field): validate with a pure function that returns a plain-language reason, build the DOM with `textContent` (never inject user text as HTML, and escape anything that reaches an attribution or label), clear an old error as soon as the user edits, make delete a two-step action with Undo, keep secrets in the browser's own storage rather than a file, and never show a saved key back on screen. Drive the real form code with clicks in headless Chromium: the first version of this form never opened because one element was missing, and only that test showed it.
+- **"Place a new thing on an existing thing"** needs three checks: the click reaches the map (markers swallow clicks by default), the snap function is actually applied on that path, and the snap targets are shown while placing.
+- **A limit that was clamped to protect something** (the minimap held at zoom 16) will look like a bug once the main limit rises. Prefer letting the dependent view stretch its content to following a clamp.
+- **Say what could not be tested.** Third-party services and the full map could not be exercised offline; the tests above cover the logic, the tile loading and the UI pieces, and the summary should say so.
 
 ## Checklist
 - [ ] Source of truth is `src/` and `assets/`; `dist/` is generated
@@ -126,3 +152,5 @@ Layout B additions:
 - [ ] `tools/build-single.py` fails loudly on a missing marker and was run after the last change
 - [ ] Build stamp (header and footer) updated from the real clock in the owner's time zone
 - [ ] Inline scripts pass `node --check`; pure logic and canvas/fetch code were tested as in section 6
+- [ ] `AGENTS.md` follows the section list in section 7 and was updated for this change
+- [ ] No secret anywhere in the source, `AGENTS.md` or skills; private config is git-ignored with an example file

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Builds andrews-earth-single.html: index.html with assets/ae-images.js and the three dino-egg/*.js files
 embedded, so the whole app is ONE file (Leaflet / Font Awesome / Google Fonts still come from their CDNs).
-Run from anywhere:  python3 tools/build-single.py"""
-import pathlib,re
+Optional: custom/services.js (your own map services) is embedded too. ${ENV_NAME} placeholders in it are filled from the
+environment, so a key never has to be saved in a file. Run from anywhere:  python3 tools/build-single.py"""
+import pathlib,re,os,sys
 root=pathlib.Path(__file__).resolve().parent.parent
 rd=lambda p:(root/p).read_text(encoding='utf-8')
 def safe(t):                      # keep the embedded text from ending / confusing its <script> element
@@ -33,5 +34,22 @@ blocks=''.join('<script type="text/plain" data-embedded="%s">\n%s\n</script>\n'%
 # they must exist before the main script runs the loader, so put them right after <body>
 i=html.index('<body>')+len('<body>')
 html=html[:i]+'\n'+blocks+html[i:]
+
+# 4. custom map services (optional): custom/services.js -> embedded. ${ENV_NAME} placeholders come from the environment.
+a=html.index('<script data-custom-services>');b=html.index('</script>',a)+len('</script>')
+cust=root/'custom'/'services.js'
+if cust.exists():
+    txt=cust.read_text(encoding='utf-8');missing=[]
+    def fill(m):
+        v=os.environ.get(m.group(1))
+        if v is None: missing.append(m.group(1));return ''
+        return v.replace('\\','\\\\').replace('"','\\"').replace("'","\\'")      # safe inside a JS string literal
+    txt=re.sub(r'\$\{([A-Z0-9_]+)\}',fill,txt)
+    if missing: sys.exit('custom/services.js uses ${NAME} placeholders with no environment variable set: '+', '.join(sorted(set(missing))))
+    html=html[:a]+'<script data-custom-services>'+txt.replace('</script','<\\/script')+'\nwindow.__aeCustomReady=Promise.resolve();</script>'+html[b:]
+    print('custom services embedded from custom/services.js')
+    print('WARNING: the built file now CONTAINS those service addresses and any keys. Do not publish or share it.')
+else:
+    html=html[:a]+'<script data-custom-services>window.__aeCustomReady=Promise.resolve();</script>'+html[b:]
 (root/'andrews-earth-single.html').write_text(html,encoding='utf-8')
 print('wrote andrews-earth-single.html',len(html)//1024,'KB')
