@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   ============================================================
-  BUILD: 2026-11-25 11:44:21 (local)
+  BUILD: 2026-11-26 13:18:05 (local)
   ------------------------------------------------------------
   MAINTENANCE RULE — READ BEFORE EDITING THIS FILE:
   Whenever the code in this file is modified in any way,
@@ -61,12 +61,6 @@ s.onload=function(){try{var I=window.AE_IMAGES;if(!I)return;
 function brand(){var el=document.querySelector('.brand-mark');if(el&&I.brandMark&&!el.querySelector('img')){var im=document.createElement('img');im.src=I.brandMark;im.alt='';im.width=30;im.height=30;el.appendChild(im);}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',brand);else brand();}catch(e){}finally{done();}};
 s.onerror=function(){console.info('assets/ae-images.js not found: running without the embedded icon images.');done();};
-document.head.appendChild(s);})();</script>
-<!-- CUSTOM SERVICES (optional): your own map services, kept OUT of the shared source. Copy custom/services.example.js to custom/services.js and edit it;
-     it sets window.AE_CUSTOM_SERVICES. If the file is missing nothing happens. tools/build-single.py embeds it in the single file. Keep this loader. -->
-<script data-custom-services>(function(){var s=document.createElement('script');s.src='custom/services.js';
-var done;window.__aeCustomReady=new Promise(function(res){done=res;setTimeout(res,4000);});
-s.onload=function(){done();};s.onerror=function(){console.info('custom/services.js not found: no custom map services.');done();};
 document.head.appendChild(s);})();</script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -735,6 +729,31 @@ document.head.appendChild(s);})();</script>
     /* larger grab area for the splitter (stays inside the overflow:hidden sub-rail) */
     .subrail-resizer { width: 8px; }
     .subrail-resizer:hover, .subrail-resizer.dragging { background: linear-gradient(to left, var(--accent-soft-hi) 0 4px, transparent 4px); }
+    /* the splitter sits over the panel's right edge: keep a gutter so a scrollbar never runs under it */
+    .subrail-inner { box-sizing: border-box; padding-right: 8px; }
+    .breadcrumb-up { background: transparent; border: 1px solid transparent; color: var(--text-2); width: 22px; height: 22px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.68rem; }
+    .breadcrumb-up:hover:not(:disabled) { background: var(--surface-2); color: var(--text-1); }
+    .breadcrumb-up:disabled, .breadcrumb-back:disabled { opacity: 0.35; cursor: default; }
+    .fx-lock { opacity: 0.35; }
+    .fx-row:hover .fx-lock, .fx-lock.is-locked, .fx-lock.is-mixed, .fx-lock:focus-visible { opacity: 1; }
+    .fx-lock.is-locked { color: var(--accent); }
+    .fx-lock.is-mixed { color: var(--text-2); }
+    .fx-row.locked-item .fx-label { font-style: italic; }
+    .ae-flags { margin-bottom: 12px; }
+    .flag-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px; margin-bottom: 4px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-size: 0.78rem; text-align: left; cursor: pointer; }
+    .flag-row:hover { border-color: var(--border-hi); }
+    .flag-row[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent-border); }
+    .flag-row[aria-checked="mixed"] { border-style: dashed; }
+    .flag-switch { width: 30px; height: 18px; border-radius: 9px; background: var(--surface-3); border: 1px solid var(--border-hi); position: relative; flex-shrink: 0; transition: background 0.15s ease; }
+    .flag-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: left 0.15s ease; }
+    .flag-row[aria-checked="true"] .flag-switch { background: var(--accent-fill); border-color: var(--accent); }
+    .flag-row[aria-checked="true"] .flag-switch::after { left: 14px; }
+    .flag-row[aria-checked="mixed"] .flag-switch::after { left: 8px; }
+    .flag-label { flex: 1; }
+    .flag-mixed { font-size: 0.64rem; color: var(--text-3); }
+    .locked-banner { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; color: var(--text-2); }
+    .locked-ui > *:not(.ae-flags):not(.locked-banner) { pointer-events: none; opacity: 0.6; }
+    .locked-ui .copy-btn { pointer-events: auto; }
     .h-icon:disabled { opacity: 0.35; cursor: default; }
     .h-icon:disabled:hover { background: transparent; color: var(--text-2); }
     .fx-row[aria-current="true"] { outline-offset: -2px; }
@@ -1096,8 +1115,23 @@ document.head.appendChild(s);})();</script>
 <script>
 (function(){
  var boot=document.getElementById('boot'),img=document.getElementById('boot-img');
+ /* INTROURL-PURE:START */
+ function cleanIntroSearch(search){
+  var body=(search||'').charAt(0)==='?'?search.slice(1):(search||'');
+  if(!body)return '';
+  var dec=function(s){try{return decodeURIComponent(s.replace(/\+/g,' '));}catch(e){return s;}};
+  var keep=body.split('&').filter(function(p){
+   if(p==='')return false;
+   var i=p.indexOf('='),k=dec(i<0?p:p.slice(0,i)),v=i<0?'':dec(p.slice(i+1));
+   if(k==='skipintro'||k==='nointro')return false;
+   if(k==='intro'&&(v==='0'||v==='off'))return false;
+   return true;});
+  return keep.length?'?'+keep.join('&'):'';
+ }
+ /* INTROURL-PURE:END */
  var q=new URLSearchParams(location.search);
  var skip=q.has('nointro')||q.has('skipintro')||q.get('intro')==='0'||q.get('intro')==='off'||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+ try{var cleaned=cleanIntroSearch(location.search);if(cleaned!==location.search&&window.history&&history.replaceState)history.replaceState(history.state,'',location.pathname+cleaned+location.hash);}catch(e){}   // the intro was skipped by the address: drop only those options (a refresh plays the intro again)
  var ready=new Promise(function(r){window.__bootResolve=r;setTimeout(r,20000);});
  function hide(){boot.classList.add('out');setTimeout(function(){boot.remove();},650);}
  (async function(){
@@ -1310,7 +1344,7 @@ document.head.appendChild(s);})();</script>
         <button class="sb-seg" id="sb-perf" title="Temporary: map complexity and frame rate. Click to copy diagnostics."><i class="fas fa-gauge-high"></i> <span id="sb-perf-text">…</span></button>
         <span class="sb-seg sb-progress" id="sb-progress" hidden><span id="sb-progress-label"></span><span class="sb-progress-track"><span class="sb-progress-fill" id="sb-progress-fill"></span></span></span>
         <div class="terrain-status" id="terrain-status"><i class="fas fa-circle" style="font-size: 0.5rem; color: var(--text-3);"></i> No terrain loaded</div>
-        <!-- BUILD-FOOTER --><span class="sb-seg sb-build" id="sb-build" title="Build date and time (local)">Build 2026-11-25 11:44:21</span>
+        <!-- BUILD-FOOTER --><span class="sb-seg sb-build" id="sb-build" title="Build date and time (local)">Build 2026-11-26 13:18:05</span>
     </div>
 
     <input type="file" id="file-input" accept=".hgt,.HGT" multiple style="display:none">
@@ -1879,7 +1913,7 @@ document.head.appendChild(s);})();</script>
                     this._inCluster = {}; this._cluster = null; this._useCluster = false;
                     this._culled = {}; this._cullOn = false; this._cb = null; this._dec = {}; this._decOn = false; this._decPending = 0;
                 },
-                bringToFront: function () { L.FeatureGroup.prototype.bringToFront.call(this); if (typeof raiseEditedNode === 'function') raiseEditedNode(); return this; },
+                bringToFront: function () { L.FeatureGroup.prototype.bringToFront.call(this); if (typeof raiseEditedNode === 'function') raiseEditedNode(); if (typeof applyZOrder === 'function') applyZOrder(); return this; },
                 _wantCluster: function (layer) { return this._useCluster && this._cluster && layer instanceof L.Marker && !layer._pinned; },
                 isClustered: function (layer) { return !!(layer && this._inCluster[L.stamp(layer)]); },
                 addLayer: function (layer) {
@@ -2357,8 +2391,8 @@ document.head.appendChild(s);})();</script>
             let currentLayer = null;
             let currentProviderKey = 'satellite';
             // ---- custom map services ----
-            // Two sources, both shown in the Layers list (Base and Overlay): window.AE_CUSTOM_SERVICES (custom/services.js, embedded by the
-            // single-file build; read only) and the ones added in the Layers panel (SETTINGS.customServices, saved in this browser only).
+            // Custom services are added, edited and deleted in the Layers panel (SETTINGS.customServices, saved in this browser only) and are
+            // shown in the Layers list (Base and Overlay).
             // Types: xyz, arcgis-tile, wms, arcgis-export (Web Mercator only). {apiKey} in the url or a header value is replaced by the
             // entry's apiKey. Invalid entries are skipped, never fatal.
             /* CUSTOM-PURE:START */
@@ -2416,18 +2450,13 @@ document.head.appendChild(s);})();</script>
                 return '';
             }
             /* CUSTOM-PURE:END */
-            let _buildCustomDefs = [];
             function customUserDefs() { return Array.isArray(SETTINGS.customServices) ? SETTINGS.customServices : (SETTINGS.customServices = []); }
-            function rebuildCustomProviders() {         // drop every custom provider and re-add: build-time ones first, then the ones from the Layers panel
+            function rebuildCustomProviders() {         // drop every custom provider and re-add the ones from the Layers panel
                 Object.keys(PROVIDERS).forEach(k => { if (PROVIDERS[k].custom) delete PROVIDERS[k]; });
-                [[_buildCustomDefs, 'build'], [customUserDefs(), 'user']].forEach(([defs, source]) => {
-                    const add = aeCustomProviders(defs);
-                    Object.keys(add).forEach(k => { if (!PROVIDERS[k]) { add[k].source = source; PROVIDERS[k] = add[k]; } });
-                });
+                const add = aeCustomProviders(customUserDefs());
+                Object.keys(add).forEach(k => { if (!PROVIDERS[k]) { add[k].source = 'user'; PROVIDERS[k] = add[k]; } });
             }
             function registerCustomServices() {
-                try { _buildCustomDefs = Array.isArray(window.AE_CUSTOM_SERVICES) ? window.AE_CUSTOM_SERVICES.slice() : []; } catch (e) { _buildCustomDefs = []; }
-                window.AE_CUSTOM_SERVICES = null;
                 try {
                     rebuildCustomProviders();
                     const n = Object.keys(PROVIDERS).filter(k => PROVIDERS[k].custom).length;
@@ -2911,18 +2940,12 @@ document.head.appendChild(s);})();</script>
                         '<div style="flex:1;font-weight:500;"></div>';
                     row.lastElementChild.textContent = item.name;
                     if (item.custom) {
-                        if (item.source === 'user') {
-                            const ed = document.createElement('button');
-                            ed.type = 'button'; ed.className = 'ov-ibtn'; ed.title = 'Edit this custom service'; ed.setAttribute('aria-label', 'Edit ' + item.name);
-                            ed.innerHTML = '<i class="fas fa-pen"></i>';
-                            ed.addEventListener('click', (e) => { e.stopPropagation(); customEditId = item.defId; layersView = 'custom'; renderStaticSection('layers'); });
-                            ed.addEventListener('keydown', (e) => e.stopPropagation());
-                            row.appendChild(ed);
-                        } else {
-                            const lk = document.createElement('span');
-                            lk.className = 'ov-ibtn'; lk.title = 'Added when the app was built (read only)'; lk.innerHTML = '<i class="fas fa-lock" style="font-size:0.62rem;"></i>';
-                            row.appendChild(lk);
-                        }
+                        const ed = document.createElement('button');
+                        ed.type = 'button'; ed.className = 'ov-ibtn'; ed.title = 'Edit this custom service'; ed.setAttribute('aria-label', 'Edit ' + item.name);
+                        ed.innerHTML = '<i class="fas fa-pen"></i>';
+                        ed.addEventListener('click', (e) => { e.stopPropagation(); customEditId = item.defId; layersView = 'custom'; renderStaticSection('layers'); });
+                        ed.addEventListener('keydown', (e) => e.stopPropagation());
+                        row.appendChild(ed);
                     }
                     row.addEventListener('click', onClick);
                     row.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === row) { e.preventDefault(); onClick(); } });
@@ -3177,6 +3200,175 @@ document.head.appendChild(s);})();</script>
                 renderTree();
             }
 
+            // ==================== SHARED ITEM FLAGS, LOCK, Z-ORDER (one mechanism, used by list, map, selection and properties) ====================
+            /* NODEFLAG-PURE:START */
+            const NODE_FLAGS = {
+                visible:          { types: null,                                             direct: false },
+                labelVisible:     { types: ['placemark'],                                    direct: false },
+                pathLabelVisible: { types: ['path', 'polygon', 'measure', 'measure-area'],   direct: true  },   // never reached through a folder
+                locked:           { types: null,                                             direct: false }
+            };
+            const NODE_FLAG_ORDER = ['visible', 'labelVisible', 'pathLabelVisible', 'locked'];
+            function isFolderNode(n) { return !!n && (n.type === 'folder' || n.type === 'kml'); }
+            function flagApplies(node, flag) { const d = NODE_FLAGS[flag]; return !!(d && node && (!d.types || d.types.indexOf(node.type) >= 0)); }
+            function flagValue(node, flag) { return flag === 'locked' ? node.locked === true : node[flag] !== false; }
+            // A folder expands to everything inside it, except for flags marked direct.
+            function collectFlagTargets(nodes, flag) {
+                const out = [], seen = new Set(), d = NODE_FLAGS[flag];
+                if (!d) return out;
+                const walk = (n) => {
+                    if (!n || seen.has(n)) return;
+                    seen.add(n);
+                    if (flagApplies(n, flag)) out.push(n);
+                    if (isFolderNode(n) && !d.direct) (n.children || []).forEach(walk);
+                };
+                (nodes || []).forEach(walk);
+                return out;
+            }
+            // 'on' | 'off' | 'mixed' | 'na' (nothing the flag applies to). A folder has no state of its own: it is what is inside.
+            function flagState(nodes, flag) {
+                const t = collectFlagTargets(nodes, flag);
+                if (!t.length) return 'na';
+                let on = 0;
+                t.forEach(n => { if (flagValue(n, flag)) on++; });
+                return on === t.length ? 'on' : on === 0 ? 'off' : 'mixed';
+            }
+            function applyFlagPure(nodes, flag, value) {
+                const t = collectFlagTargets(nodes, flag);
+                t.forEach(n => { n[flag] = !!value; });
+                return t;
+            }
+            function countFlagItems(targets) { const leaves = targets.filter(n => !isFolderNode(n)); return leaves.length || targets.length; }
+            function flagToastText(flag, value, n) {
+                const s = (k, one, many) => k + ' ' + (k === 1 ? one : many);
+                if (flag === 'visible') return (value ? 'Showed ' : 'Hid ') + s(n, 'item', 'items');
+                if (flag === 'labelVisible') return (value ? 'Showed' : 'Hid') + ' labels on ' + s(n, 'marker', 'markers');
+                if (flag === 'pathLabelVisible') return (value ? 'Showed' : 'Hid') + ' labels on ' + s(n, 'path', 'paths');
+                return (value ? 'Locked ' : 'Unlocked ') + s(n, 'item', 'items');
+            }
+            // Menu entries for any set of nodes. Wording follows the state: anything on offers Hide, anything off offers Show (a mixed set offers both).
+            function flagMenuSpec(nodes) {
+                const out = [];
+                const names = {
+                    visible: ['Hide', 'Show', 'fa-eye-slash', 'fa-eye'],
+                    labelVisible: ['Marker labels: Hide', 'Marker labels: Show', 'fa-tag', 'fa-tag'],
+                    pathLabelVisible: ['Path label: Hide', 'Path label: Show', 'fa-signature', 'fa-signature'],
+                    locked: ['Unlock', 'Lock', 'fa-lock-open', 'fa-lock']       // locked is "on" when locked: any locked offers Unlock, any unlocked offers Lock
+                };
+                NODE_FLAG_ORDER.forEach(flag => {
+                    const st = flagState(nodes, flag);
+                    if (st === 'na') return;
+                    const nm = names[flag];
+                    if (st === 'on' || st === 'mixed') out.push({ flag, value: flag === 'locked' ? false : false, label: nm[0], icon: nm[2] });
+                    if (st === 'off' || st === 'mixed') out.push({ flag, value: true, label: nm[1], icon: nm[3] });
+                });
+                return out;
+            }
+            // Locking: the first locked node in a node (or, with deep, in its whole subtree).
+            function firstLocked(node, deep) {
+                if (!node) return null;
+                if (node.locked === true) return node;
+                if (deep) for (const c of (node.children || [])) { const r = firstLocked(c, true); if (r) return r; }
+                return null;
+            }
+            function lockCheck(node, deep) {
+                const hit = firstLocked(node, deep);
+                return hit ? { ok: false, node: hit, msg: '\u201c' + hit.name + '\u201d is locked' } : { ok: true };
+            }
+            // Z-order: a saved number per node. Front takes the next higher number, back the next lower; relative order inside the set is kept.
+            const Z_TYPES = ['placemark', 'path', 'polygon', 'measure', 'measure-area'];
+            function zLeaves(nodes) {
+                const out = [], seen = new Set();
+                const walk = (n) => {
+                    if (!n || seen.has(n)) return;
+                    seen.add(n);
+                    if (isFolderNode(n)) (n.children || []).forEach(walk);
+                    else if (Z_TYPES.indexOf(n.type) >= 0) out.push(n);
+                };
+                (nodes || []).forEach(walk);
+                return out;
+            }
+            function hasZ(n) { return typeof n.z === 'number' && isFinite(n.z); }
+            function zCounterOf(roots) {
+                let hi = 0, lo = 0;
+                (function w(list) { (list || []).forEach(n => { if (hasZ(n)) { if (n.z > hi) hi = n.z; if (n.z < lo) lo = n.z; } if (n.children) w(n.children); }); })(roots);
+                return { hi, lo };
+            }
+            function assignZ(nodes, mode, roots) {
+                const leaves = zLeaves(nodes);
+                if (!leaves.length) return [];
+                const c = zCounterOf(roots);
+                const order = leaves.map((n, i) => ({ n, i, k: hasZ(n) ? n.z : 0 })).sort((a, b) => (a.k - b.k) || (a.i - b.i)).map(x => x.n);
+                if (mode === 'front') order.forEach((n, i) => { n.z = c.hi + 1 + i; });
+                else order.forEach((n, i) => { n.z = c.lo - order.length + i; });
+                return order;
+            }
+            /* NODEFLAG-PURE:END */
+
+            function flagTargetsLabel(nodes) { return nodes.length === 1 ? nodes[0].name : nodes.length + ' items'; }
+            // Marks the layer of a locked placemark as not draggable (and back).
+            function syncLockedLayer(n) {
+                try {
+                    if (n.type === 'placemark' && n.layer && n.layer.dragging) { if (n.locked === true) n.layer.dragging.disable(); else n.layer.dragging.enable(); }
+                } catch (e) {}
+            }
+            // The one place that changes a flag: collects targets, sets the value, refreshes, saves once (one undo step), one toast.
+            async function applyFlag(nodes, flag, value) {
+                nodes = (nodes || []).filter(Boolean);
+                const targets = collectFlagTargets(nodes, flag);
+                if (!targets.length) { showToast('Nothing to change', 'fa-info-circle'); return 0; }
+                await busyIf(nodes, 'Updating…', async () => {
+                    if (flag === 'visible') { nodes.forEach(n => _applyVisible(n, value)); _afterVisibilityChange(); }
+                    else {
+                        applyFlagPure(nodes, flag, value);
+                        if (flag === 'locked') targets.forEach(syncLockedLayer);
+                        updateMapLabels();
+                    }
+                    renderTree();
+                    await persistTreeNow();
+                });
+                const count = countFlagItems(targets);
+                showToast(flagToastText(flag, value, count), flag === 'locked' ? (value ? 'fa-lock' : 'fa-lock-open') : (flag === 'visible' ? (value ? 'fa-eye' : 'fa-eye-slash') : 'fa-tag'));
+                if (editorState && !editorState.isBulkSelection && editorState.node && nodes.some(n => n === editorState.node || (isFolderNode(n) && nodeContains(n, editorState.node.id)))) {
+                    if (flag === 'locked') openEditorPanel(editorState.node, editorState.activeTab === 'vertices' ? 'properties' : editorState.activeTab, { noZoom: true });
+                    else refreshFlagsBlock();
+                }
+                return count;
+            }
+            // Returns false (and says why) when the node is locked. deep also checks everything inside a folder.
+            function guardLocked(node, what, deep) {
+                const r = lockCheck(node, deep);
+                if (r.ok) return true;
+                showToast(r.msg + (what ? ' \u2014 cannot ' + what : ''), 'fa-lock');
+                return false;
+            }
+            function guardLockedMany(nodes, what) {
+                for (const n of nodes) if (!guardLocked(n, what, true)) return false;
+                return true;
+            }
+            function zMenuItems(nodes) {
+                if (!zLeaves(nodes).length) return [];
+                return [
+                    { label: 'Bring to front', icon: 'fa-angles-up', action: () => applyZAction(nodes, 'front') },
+                    { label: 'Send to back', icon: 'fa-angles-down', action: () => applyZAction(nodes, 'back') }
+                ];
+            }
+            // The first menu block for every context menu (list, map object, selection): flags, a separator, then front/back.
+            function flagMenuItems(nodes) {
+                const items = flagMenuSpec(nodes).map(s => ({ label: s.label, icon: s.icon, flag: s.flag, action: () => applyFlag(nodes, s.flag, s.value) }));
+                const z = zMenuItems(nodes);
+                if (items.length && z.length) items.push({ sep: true });
+                return items.concat(z);
+            }
+            async function applyZAction(nodes, mode) {
+                const done = assignZ(nodes, mode, treeNodes);
+                if (!done.length) { showToast('Nothing to reorder', 'fa-info-circle'); return; }
+                applyZOrder(true);
+                renderTree();
+                await persistTreeNow();
+                showToast((mode === 'front' ? 'Brought ' : 'Sent ') + done.length + (done.length === 1 ? ' item ' : ' items ') + (mode === 'front' ? 'to front' : 'to back'), mode === 'front' ? 'fa-angles-up' : 'fa-angles-down');
+            }
+
             // ==================== SORT ====================
             function sortNodes(nodes) {
                 if (placesSortMode === 'default' || nodes.length < 2) return nodes;
@@ -3218,21 +3410,65 @@ document.head.appendChild(s);})();</script>
             }
 
             // ==================== BRING TO FRONT ====================
-            let _frontZ = 1000;
+            // Saved order: node.z (see NODEFLAG-PURE). Markers use zIndexOffset (z * Z_STEP); paths and polygons are re-stacked by z (polygons first,
+            // then paths, so polygons stay below paths). Markers always draw above lines: they live in a separate map layer (unchanged).
+            // The selected / edited item is raised while it is selected (one item at a time) and goes back to its saved place afterwards.
+            const Z_STEP = 2000, Z_RAISE = 500000000;
+            let _raisedNode = null, _zRaf = 0;
+            function nodeBaseOffset(node) { return hasZ(node) ? node.z * Z_STEP : 0; }
+            function _layerLeaves(layer, fn) {
+                if (!layer) return;
+                if (layer instanceof L.LayerGroup) layer.eachLayer(l => _layerLeaves(l, fn)); else fn(layer);
+            }
+            function restoreNodeZ(node) {
+                if (!node || !node.layer) return;
+                _layerLeaves(node.layer, l => { if (l.setZIndexOffset) { try { l.setZIndexOffset(nodeBaseOffset(node)); } catch (e) {} } });
+            }
+            function applyZOrder(now) {
+                if (!now) { if (_zRaf) return; _zRaf = requestAnimationFrame(() => { _zRaf = 0; applyZOrder(true); }); return; }
+                const polys = [], lines = [];
+                (function walk(nodes) {
+                    for (const n of nodes) {
+                        if (n.type === 'placemark' && n.layer && n !== _raisedNode) restoreNodeZ(n);
+                        else if (n.layer && n.visible !== false && n.layer.bringToFront && !(n.layer instanceof L.LayerGroup)) {
+                            if (n.type === 'polygon' || n.type === 'measure-area') polys.push(n); else if (n.type === 'path' || n.type === 'measure') lines.push(n);
+                        }
+                        if (n.children) walk(n.children);
+                    }
+                })(treeNodes);
+                if (polys.length + lines.length <= 1500) {
+                    const byZ = (a, b) => ((hasZ(a) ? a.z : 0) - (hasZ(b) ? b.z : 0));      // Array.sort is stable: ties keep tree order
+                    polys.sort(byZ).forEach(n => { try { if (drawnItems.hasLayer(n.layer)) n.layer.bringToFront.call(n.layer); } catch (e) {} });
+                    lines.sort(byZ).forEach(n => { try { if (drawnItems.hasLayer(n.layer)) n.layer.bringToFront.call(n.layer); } catch (e) {} });
+                }
+                if (_raisedNode && _raisedNode.layer) raiseNode(_raisedNode);
+            }
+            function raiseNode(node) {
+                _layerLeaves(node.layer, l => {
+                    if (l.setZIndexOffset) { try { l.setZIndexOffset(Z_RAISE); } catch (e) {} }
+                    if (l.bringToFront) { try { l.bringToFront(); } catch (e) {} }
+                });
+            }
             function bringNodeToFront(node) {
                 if (!node || !node.layer) return;
-                _frontZ = _frontZ + 10;
-                if (_frontZ >= 64000) _frontZ = 1000;
-                const z = _frontZ;
-                const apply = (layer) => {
-                    if (!layer) return;
-                    if (layer instanceof L.LayerGroup) { layer.eachLayer(l => apply(l)); }
-                    else {
-                        if (layer.setZIndexOffset) { try { layer.setZIndexOffset(z); } catch(e){} }
-                        if (layer.bringToFront) { try { layer.bringToFront(); } catch(e){} }
-                    }
-                };
-                apply(node.layer);
+                if (_raisedNode && _raisedNode !== node) {
+                    const prev = _raisedNode;
+                    _raisedNode = node;
+                    restoreNodeZ(prev);
+                    applyZOrder(true);       // puts the previous one back in its saved place (and raises the new one)
+                } else _raisedNode = node;
+                raiseNode(node);
+            }
+            // After a selection change: if the raised item is neither selected nor being edited, it returns to its saved position.
+            function syncRaised() {
+                if (!_raisedNode) return;
+                const id = _raisedNode.id;
+                const keep = selectedNodeId === id || multiSelection.has(id) || (typeof editorState !== 'undefined' && editorState && editorState.node && editorState.node.id === id);
+                if (keep) return;
+                const prev = _raisedNode;
+                _raisedNode = null;
+                restoreNodeZ(prev);
+                applyZOrder();
             }
 
             // Whatever is being edited stays top-most, however often the group is re-ordered or the shape is rebuilt.
@@ -3255,6 +3491,7 @@ document.head.appendChild(s);})();</script>
                     return {
                         id: node.id, name: node.name, type: node.type,
                         visible: node.visible !== false, expanded: node.expanded !== false,
+                        labelVisible: node.labelVisible !== false, pathLabelVisible: node.pathLabelVisible !== false, locked: node.locked === true, z: hasZ(node) ? node.z : undefined,
                         archivedFrom: node.archivedFrom || null,
                         meta: JSON.parse(JSON.stringify(node.meta || {})),
                         children: (node.children || []).map(toPlain)
@@ -3281,6 +3518,8 @@ document.head.appendChild(s);})();</script>
                 return {
                     id: p.id, name: p.name, type: p.type,
                     visible: p.visible !== false, expanded: p.expanded !== false,
+                    labelVisible: p.labelVisible !== false, pathLabelVisible: p.pathLabelVisible !== false, locked: p.locked === true,
+                    z: (typeof p.z === 'number' && isFinite(p.z)) ? p.z : undefined,
                     archivedFrom: p.archivedFrom || null,
                     meta: sanitizeMeta(p.meta || {}), layer: null,
                     children: (p.children || []).map(fromPlain)
@@ -3335,6 +3574,16 @@ document.head.appendChild(s);})();</script>
 
             function bindLayerFocus(node, layer) {
                 if (!layer || !layer.on) return;
+                // Right-click on an item on the map: the same menu as the Places list (flags, front/back, copy, export...). Not while drawing.
+                layer.on('contextmenu', (e) => {
+                    if (drawState) return;
+                    if (e.originalEvent) { L.DomEvent.stop(e.originalEvent); L.DomEvent.preventDefault(e.originalEvent); }
+                    const oe = e.originalEvent;
+                    if (!oe) return;
+                    if (!(multiSelection.size > 0 && multiSelection.has(node.id))) { selectedNodeId = node.id; lastSelectedId = node.id; multiSelection.clear(); renderTree(); }
+                    if (multiSelection.size > 0 && multiSelection.has(node.id)) showBulkContextMenu(oe.clientX, oe.clientY);
+                    else showContextMenu(oe.clientX, oe.clientY, node);
+                });
                 layer.on('click', (e) => {
                     // Placing a new marker ON this marker: markers do not pass clicks on to the map, so forward one at this marker's
                     // exact position (the new marker lands here) and do not select this marker.
@@ -3360,7 +3609,14 @@ document.head.appendChild(s);})();</script>
             function attachLayerDrag(node, layer) {
                 if (!layer) return;
                 if (node.type === 'placemark' && layer.dragging) {
-                    layer.dragging.enable();
+                    if (node.locked !== true) layer.dragging.enable();
+                    layer.on('mousedown', (me) => {          // a locked marker does not move: say why when someone tries to drag it
+                        if (node.locked !== true || !me.originalEvent) return;
+                        const sx = me.originalEvent.clientX, sy = me.originalEvent.clientY;
+                        const mv = (ev) => { if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 6) { done(); guardLocked(node, 'move it'); } };
+                        const done = () => { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', done); };
+                        document.addEventListener('mousemove', mv); document.addEventListener('mouseup', done);
+                    });
                     layer.on('drag', () => {
                         const ll = snapDraggedMarker(layer, node);
                         node.meta.lat = ll.lat;
@@ -3388,7 +3644,7 @@ document.head.appendChild(s);})();</script>
                     cleanups.push(() => { drawnItems.unpin(_pl); });
                 }
                 if (node.type === 'placemark' && node.layer && node.layer.dragging) {
-                    node.layer.dragging.enable();
+                    if (node.locked !== true) node.layer.dragging.enable();
                     const onDrag = () => {
                         const ll = node.layer.getLatLng();
                         node.meta.lat = ll.lat;
@@ -3414,7 +3670,7 @@ document.head.appendChild(s);})();</script>
                             html: `<div style="width:14px;height:14px;border-radius:50%;background:#ea580c;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);"></div>`,
                             iconSize: [14, 14], iconAnchor: [7, 7]
                         }),
-                        draggable: true, zIndexOffset: 2000
+                        draggable: node.locked !== true, zIndexOffset: 2000
                     }).addTo(map);
                     const onDrag = () => {
                         const ll = snapDraggedMarker(centerMarker, node);
@@ -3477,6 +3733,7 @@ document.head.appendChild(s);})();</script>
                 drawnItems.clearLayers();
                 buildLayersFor(treeNodes);
                 if (drawnItems.bringToFront) drawnItems.bringToFront();
+                applyZOrder(true);
                 rebuildSnapZoneLayer();
                 updateMinimapDots();
                 updateMapLabels();
@@ -3511,7 +3768,7 @@ document.head.appendChild(s);})();</script>
                 const mode = cfg.textMode === 'auto' ? st.text : cfg.textMode;
                 const textColor = mode === 'black' || mode === 'dark' ? '#111827' : (mode === 'white' ? '#ffffff' : color);
                 const light = (mode === 'white');
-                return `<div style="position:absolute;left:${cfg.offX}px;top:${cfg.offY}px;transform:translateY(-50%);font-family:'${cfg.font}',sans-serif;font-size:${cfg.size}px;font-weight:500;color:${textColor};${st.css(color, light)}white-space:nowrap;pointer-events:none;line-height:1.3;"><span style="font-weight:600;">${escapeHtml(name)}</span>${cfg.showDesc && desc ? `<br><span style="font-size:${Math.max(8, cfg.size - 3)}px;font-weight:400;opacity:0.8;">${escapeHtml(desc)}</span>` : ''}</div>`;
+                return `<div data-ae-lab="1" style="position:absolute;left:${cfg.offX}px;top:${cfg.offY}px;transform:translateY(-50%);font-family:'${cfg.font}',sans-serif;font-size:${cfg.size}px;font-weight:500;color:${textColor};${st.css(color, light)}white-space:nowrap;pointer-events:none;line-height:1.3;"><span style="font-weight:600;">${escapeHtml(name)}</span>${cfg.showDesc && desc ? `<br><span style="font-size:${Math.max(8, cfg.size - 3)}px;font-weight:400;opacity:0.8;">${escapeHtml(desc)}</span>` : ''}</div>`;
             }
             let mapLabelGroup = null;
             const labelCache = new Map();      // node id -> { marker, sig, lat, lng }
@@ -3537,13 +3794,13 @@ document.head.appendChild(s);})();</script>
                     for (const n of nodes) {
                         if (n.visible === false) continue;
                         let ll = null;
-                        if (n.type === 'placemark' && n.meta.lat != null) {
+                        if (n.type === 'placemark' && n.meta.lat != null && n.labelVisible !== false) {
                             const hiddenInCluster = n.layer && drawnItems.isClustered && drawnItems.isClustered(n.layer) && !n.layer._map;
                             if (!hiddenInCluster) ll = [n.meta.lat, n.meta.lng];
-                        } else if ((n.type === 'path' || n.type === 'measure' || n.type === 'polygon' || n.type === 'measure-area') && n.meta.points && n.meta.points.length > 0) {
+                        } else if ((n.type === 'path' || n.type === 'measure' || n.type === 'polygon' || n.type === 'measure-area') && n.meta.points && n.meta.points.length > 0 && n.pathLabelVisible !== false) {
                             ll = n.meta.points[Math.floor(n.meta.points.length / 2)];
                         }
-                        if (ll && bounds.contains(ll)) cand.push({ id: n.id, lat: ll[0], lng: ll[1], name: n.name, desc: n.meta.desc, color: n.meta.color || '#4d7c0f' });
+                        if (ll && bounds.contains(ll)) cand.push({ id: n.id, lat: ll[0], lng: ll[1], name: n.name, desc: n.meta.desc, color: n.meta.color || '#4d7c0f', kind: n.type === 'placemark' ? 'placemark' : 'path' });
                         if (n.children) walk(n.children);
                     }
                 })(treeNodes);
@@ -3572,11 +3829,113 @@ document.head.appendChild(s);})();</script>
                         interactive: false, zIndexOffset: 500, keyboard: false
                     });
                     mapLabelGroup.addLayer(marker);
-                    labelCache.set(c.id, { marker, sig, lat: c.lat, lng: c.lng });
+                    labelCache.set(c.id, { marker, sig, lat: c.lat, lng: c.lng, kind: c.kind });
                 }
                 labelCache.forEach((ent, id) => { if (!keep.has(id)) { mapLabelGroup.removeLayer(ent.marker); labelCache.delete(id); } });
+                scheduleCallouts();
             }
             map.on('moveend', () => { if (FLAGS.showMapLabels) updateMapLabels(); });
+
+            // ==================== MAP LABEL CALLOUTS ====================
+            // Screen-space greedy placement so marker labels do not draw over each other or over marker icons. The maths is pure (tested in Node).
+            /* CALLOUT-PURE:START */
+            function calloutRectsOverlap(a, b, pad) {
+                pad = pad || 0;
+                return a.x < b.x + b.w + pad && a.x + a.w + pad > b.x && a.y < b.y + b.h + pad && a.y + a.h + pad > b.y;
+            }
+            // items: [{id, x, y, w, h}] anchor point and label size in screen px. obstacles: [{x, y, w, h}] (marker icons, fixed labels).
+            // opts: offX, offY (the plain label position: left edge offX, vertically centred on offY), gap, iconHalf, leaderMin, maxItems.
+            // Returns { skipped, out: { id: { dx, dy, leader, lx, ly, moved, clear } } }: dx,dy = label box top-left relative to the anchor;
+            // leader = draw a line from the anchor to the nearest point (lx, ly) of the box.
+            function placeCallouts(items, obstacles, opts) {
+                opts = opts || {};
+                const gap = opts.gap == null ? 10 : opts.gap, iconHalf = opts.iconHalf == null ? 9 : opts.iconHalf;
+                const offX = opts.offX == null ? gap : opts.offX, offY = opts.offY == null ? 0 : opts.offY;
+                const leaderMin = opts.leaderMin == null ? 14 : opts.leaderMin, maxItems = opts.maxItems == null ? 2000 : opts.maxItems;
+                if (items.length > maxItems) return { skipped: true, out: {} };
+                const out = {}, CELL = 64, grid = new Map();      // spatial hash so thousands of obstacles stay cheap
+                const cells = (r) => { const c = [], x0 = Math.floor(r.x / CELL), x1 = Math.floor((r.x + r.w) / CELL), y0 = Math.floor(r.y / CELL), y1 = Math.floor((r.y + r.h) / CELL); for (let i = x0; i <= x1; i++) for (let j = y0; j <= y1; j++) c.push(i + ',' + j); return c; };
+                const addRect = (r, pad) => { cells({ x: r.x - pad, y: r.y - pad, w: r.w + 2 * pad, h: r.h + 2 * pad }).forEach(k => { let a = grid.get(k); if (!a) grid.set(k, a = []); a.push(r); }); };
+                obstacles.forEach(o => addRect(o, 0));
+                const blocked = (r) => {
+                    for (const k of cells(r)) { const a = grid.get(k); if (a) for (let i = 0; i < a.length; i++) if (calloutRectsOverlap(r, a[i], a[i]._pad || 0)) return true; }
+                    return false;
+                };
+                const near = Math.max(gap, iconHalf + 2);
+                for (const it of items) {
+                    const w = it.w, h = it.h;
+                    const cands = [{ dx: offX, dy: offY - h / 2 }];                        // the plain position first
+                    for (let k = 1; k <= 6; k++) {
+                        const r = near + (k - 1) * Math.max(10, h);
+                        cands.push({ dx: r, dy: -h / 2 }, { dx: -r - w, dy: -h / 2 }, { dx: -w / 2, dy: -r - h }, { dx: -w / 2, dy: r });
+                        if (k >= 2) cands.push({ dx: r, dy: -r - h }, { dx: r, dy: r }, { dx: -r - w, dy: -r - h }, { dx: -r - w, dy: r });
+                        for (let j = 1; j <= k; j++) {                                    // columns of labels beside the marker
+                            const sh = j * (h + 2);
+                            cands.push({ dx: near, dy: -h / 2 - sh }, { dx: near, dy: -h / 2 + sh }, { dx: -near - w, dy: -h / 2 - sh }, { dx: -near - w, dy: -h / 2 + sh });
+                        }
+                    }
+                    let pick = null;
+                    for (const c of cands) {
+                        const rect = { x: it.x + c.dx, y: it.y + c.dy, w, h };
+                        if (!blocked(rect)) { pick = c; break; }
+                    }
+                    const clear = !!pick;
+                    if (!pick) pick = cands[0];
+                    const rect = { x: it.x + pick.dx, y: it.y + pick.dy, w, h };
+                    rect._pad = 1; addRect(rect, 1);
+                    const lx = Math.min(Math.max(0, pick.dx), pick.dx + w), ly = Math.min(Math.max(0, pick.dy), pick.dy + h);   // nearest point of the box to the anchor
+                    const dist = Math.sqrt(lx * lx + ly * ly);
+                    out[it.id] = { dx: pick.dx, dy: pick.dy, leader: clear && dist > leaderMin, lx, ly, moved: !(pick.dx === cands[0].dx && pick.dy === cands[0].dy), clear };
+                }
+                return { skipped: false, out };
+            }
+            /* CALLOUT-PURE:END */
+            let _calloutTimer = 0;
+            function scheduleCallouts() { clearTimeout(_calloutTimer); _calloutTimer = setTimeout(runCallouts, 140); }
+            function runCallouts() {
+                if (!FLAGS.showMapLabels || !mapLabelGroup) return;
+                const cfg = mapLabelCfg();
+                const items = [], labs = [], obstacles = [];
+                labelCache.forEach((ent, id) => {
+                    const el = ent.marker && ent.marker.getElement && ent.marker.getElement();
+                    const lab = el && el.querySelector('[data-ae-lab]');
+                    if (!lab) return;
+                    lab.style.left = cfg.offX + 'px'; lab.style.top = cfg.offY + 'px';          // back to the plain position
+                    const old = el.querySelector('.ae-leader'); if (old) old.remove();
+                    const p = map.latLngToContainerPoint([ent.lat, ent.lng]);
+                    const w = lab.offsetWidth, h = lab.offsetHeight;
+                    if (ent.kind === 'placemark') { items.push({ id, x: p.x, y: p.y, w, h }); labs.push({ id, lab, el }); }
+                    else obstacles.push({ x: p.x + cfg.offX, y: p.y + cfg.offY - h / 2, w, h });      // path labels stay where they are, others avoid them
+                });
+                if (!items.length) return;
+                const size = map.getSize();
+                (function icons(nodes) {
+                    for (const n of nodes) {
+                        if (n.type === 'placemark' && n.visible !== false && n.meta.lat != null && n.layer && n.layer._map) {
+                            const p = map.latLngToContainerPoint([n.meta.lat, n.meta.lng]);
+                            if (p.x > -40 && p.y > -40 && p.x < size.x + 40 && p.y < size.y + 40) obstacles.push({ x: p.x - 9, y: p.y - 9, w: 18, h: 18 });
+                        }
+                        if (n.children) icons(n.children);
+                    }
+                })(treeNodes);
+                if (obstacles.length > 6000) return;
+                const res = placeCallouts(items, obstacles, { offX: cfg.offX, offY: cfg.offY, gap: Math.max(cfg.offX, 10), iconHalf: 9, leaderMin: 14, maxItems: 2000 });
+                if (res.skipped) return;            // too many labels: plain labels
+                labs.forEach(({ id, lab, el }) => {
+                    const r = res.out[id];
+                    if (!r || !r.moved) return;
+                    const h = lab.offsetHeight;
+                    lab.style.left = r.dx + 'px';
+                    lab.style.top = (r.dy + h / 2) + 'px';             // the label is centred on its top by translateY(-50%)
+                    if (r.leader) {
+                        const len = Math.sqrt(r.lx * r.lx + r.ly * r.ly), ang = Math.atan2(r.ly, r.lx) * 180 / Math.PI;
+                        const ln = document.createElement('div');
+                        ln.className = 'ae-leader';
+                        ln.style.cssText = 'position:absolute;left:0;top:0;height:0;border-top:1px solid rgba(71,85,105,0.85);pointer-events:none;transform-origin:0 0;width:' + len.toFixed(1) + 'px;transform:rotate(' + ang.toFixed(1) + 'deg);';
+                        lab.parentNode.insertBefore(ln, lab);
+                    }
+                });
+            }
 
             // ==================== RENDER ====================
             const subrailBody = document.getElementById('subrail-body');
@@ -4016,6 +4375,62 @@ document.head.appendChild(s);})();</script>
                 }
             });
 
+            // Folder history (Back) and drop validity. Pure; tested in Node.
+            /* NAV-PURE:START */
+            function navObserve(h, cur) {                // call whenever the current folder may have changed; pushes the folder we left
+                if (h.last === cur) return false;
+                if (h.last !== undefined) { h.stack.push(h.last); if (h.stack.length > 50) h.stack.shift(); }
+                h.last = cur;
+                return true;
+            }
+            function navCanBack(h, exists) { return h.stack.some(t => t !== h.last && (t === null || exists(t))); }
+            function navBack(h, exists) {                // the folder to go back to (or null); never pushes
+                while (h.stack.length) {
+                    const t = h.stack.pop();
+                    if (t === h.last) continue;
+                    if (t !== null && !exists(t)) continue;       // that folder was deleted
+                    h.last = t;
+                    return { id: t };
+                }
+                return null;
+            }
+            function navFind(nodes, id, parent) {
+                for (const n of (nodes || [])) {
+                    if (n.id === id) return { node: n, parent: parent || null };
+                    const r = navFind(n.children, id, n);
+                    if (r) return r;
+                }
+                return null;
+            }
+            function navContains(anc, id) { return (anc.children || []).some(c => c.id === id || navContains(c, id)); }
+            // May `draggedId` be dropped on folder `targetId` (null = top level)? An upstream folder is fine; itself and its own contents are not.
+            function dropMoveCheck(roots, draggedId, targetId) {
+                const d = navFind(roots, draggedId, null);
+                if (!d) return { ok: false, reason: 'missing' };
+                if (targetId == null) return (d.parent ? { ok: true, reason: '' } : { ok: false, reason: 'already' });
+                const t = navFind(roots, targetId, null);
+                if (!t || !(t.node.type === 'folder' || t.node.type === 'kml')) return { ok: false, reason: 'missing' };
+                if (targetId === draggedId) return { ok: false, reason: 'self' };
+                if (navContains(d.node, targetId)) return { ok: false, reason: 'inside' };
+                if (d.parent && d.parent.id === targetId) return { ok: false, reason: 'already' };
+                return { ok: true, reason: '' };
+            }
+            /* NAV-PURE:END */
+            const navHist = { stack: [], last: undefined };
+            function navGoBack() {
+                const r = navBack(navHist, id => !!findNode(id));
+                if (!r) return;
+                currentFolderId = r.id;
+                multiSelection.clear();
+                renderTree();
+            }
+            function navGoUp() {
+                if (!currentFolderId) return;
+                const loc = findParent(currentFolderId);
+                currentFolderId = loc && loc.parent ? loc.parent.id : null;
+                multiSelection.clear();
+                renderTree();
+            }
             let breadcrumbExpanded = false, _bcFolder = undefined;
             function renderBreadcrumb() {
                 if (_bcFolder !== currentFolderId) { _bcFolder = currentFolderId; breadcrumbExpanded = false; }
@@ -4032,21 +4447,26 @@ document.head.appendChild(s);})();</script>
                 breadcrumbEl.classList.toggle('vertical', vertical);
                 breadcrumbEl.setAttribute('aria-label', 'Folder path');
 
-                const mkBack = () => {
+                const mkBack = () => {                       // Back: the folder you were in before (history)
                     const backBtn = document.createElement('button');
                     backBtn.className = 'breadcrumb-back';
                     backBtn.innerHTML = '<i class="fas fa-arrow-left"></i>';
-                    backBtn.title = 'Back';
-                    backBtn.setAttribute('aria-label', 'Back');
-                    backBtn.disabled = !currentFolderId;
-                    backBtn.addEventListener('click', () => {
-                        if (!currentFolderId) return;
-                        const loc = findParent(currentFolderId);
-                        currentFolderId = loc && loc.parent ? loc.parent.id : null;
-                        multiSelection.clear();
-                        renderTree();
-                    });
+                    const can = navCanBack(navHist, id => !!findNode(id));
+                    backBtn.title = can ? 'Back to the previous folder (Alt+Left)' : 'Back (no earlier folder)';
+                    backBtn.setAttribute('aria-label', 'Back to the previous folder');
+                    backBtn.disabled = !can;
+                    backBtn.addEventListener('click', navGoBack);
                     return backBtn;
+                };
+                const mkUp = () => {                         // Up: the parent folder
+                    const upBtn = document.createElement('button');
+                    upBtn.className = 'breadcrumb-up';
+                    upBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+                    upBtn.title = currentFolderId ? 'Up to the parent folder (Alt+Up)' : 'Up (already at the top level)';
+                    upBtn.setAttribute('aria-label', 'Up to the parent folder');
+                    upBtn.disabled = !currentFolderId;
+                    upBtn.addEventListener('click', navGoUp);
+                    return upBtn;
                 };
                 const mkMore = () => {
                     const moreBtn = document.createElement('button');
@@ -4084,6 +4504,7 @@ document.head.appendChild(s);})();</script>
                     breadcrumbEl.innerHTML = '';
                     breadcrumbEl.classList.toggle('expanded', !!expanded);
                     breadcrumbEl.appendChild(mkBack());
+                    breadcrumbEl.appendChild(mkUp());
                     const collapsed = start > 0 && !expanded;
                     const needEllipsis = expanded || start > 1;
                     if (collapsed) breadcrumbEl.appendChild(mkCrumb(0, true));
@@ -4097,6 +4518,8 @@ document.head.appendChild(s);})();</script>
                         el.title = expanded ? 'Collapse path' : (hidden ? 'Show full path: ' + hidden : 'Show full path');
                         el.setAttribute('aria-label', expanded ? 'Collapse folder path' : 'Show full folder path');
                         el.addEventListener('click', () => { breadcrumbExpanded = !breadcrumbExpanded; renderBreadcrumb(); });
+                        const hiddenParents = items.slice(1, start);
+                        if (!expanded && hiddenParents.length) attachBreadcrumbDrop(el, hiddenParents[hiddenParents.length - 1].id);   // drop on the "…": nearest hidden parent
                         breadcrumbEl.appendChild(el);
                     }
                     const from = collapsed ? start : 0;
@@ -4178,21 +4601,17 @@ document.head.appendChild(s);})();</script>
                 if (!draggedId) return;
                 const dragged = findNode(draggedId);
                 if (!dragged) return;
-                const loc = findParent(draggedId);
-                const currentParentId = loc && loc.parent ? loc.parent.id : null;
-                if (currentParentId === targetFolderId) { showToast('Already there'); return; }
-                if (targetFolderId) {
-                    const target = findNode(targetFolderId);
-                    if (!target) return;
-                    let anc = loc && loc.parent;
-                    while (anc) {
-                        if (anc.id === targetFolderId) { showToast('Cannot move folder into itself'); return; }
-                        const p = findParent(anc.id);
-                        anc = p && p.parent ? p.parent : null;
-                    }
+                // An upstream folder is a normal target. Only the item itself, or a folder inside it, is refused.
+                const chk = dropMoveCheck(treeNodes, draggedId, targetFolderId);
+                if (!chk.ok) {
+                    if (chk.reason === 'already') showToast('Already there');
+                    else if (chk.reason === 'self' || chk.reason === 'inside') showToast('Cannot move a folder into itself');
+                    return;
                 }
-                removeNode(draggedId);
+                if (!guardLocked(dragged, 'move', true)) return;
                 const target = targetFolderId ? findNode(targetFolderId) : null;
+                if (target && !guardLocked(target, 'move into it')) return;
+                removeNode(draggedId);
                 if (target && (target.type === 'folder' || target.type === 'kml')) {
                     if (!target.children) target.children = [];
                     target.children.push(dragged);
@@ -4339,6 +4758,17 @@ document.head.appendChild(s);})();</script>
                 matches.forEach(({ node, parents }) => subrailBody.appendChild(buildSearchResultRow(node, parents)));
             }
 
+            // The lock icon beside the eye. A folder shows what is inside: all locked, none, or mixed.
+            function makeLockBtn(node) {
+                const st = flagState([node], 'locked');
+                const b = document.createElement('div');
+                b.className = 'fx-vis fx-lock' + (st === 'on' ? ' is-locked' : st === 'mixed' ? ' is-mixed' : '');
+                const title = st === 'on' ? 'Unlock' : (st === 'mixed' ? 'Some locked: click to lock all' : 'Lock');
+                b.title = title; b.setAttribute('aria-label', title); b.setAttribute('role', 'button');
+                b.innerHTML = '<i class="fas ' + (st === 'off' ? 'fa-lock-open' : 'fa-lock') + '"></i>';
+                b.addEventListener('click', (e) => { e.stopPropagation(); applyFlag([node], 'locked', st !== 'on'); });
+                return b;
+            }
             function buildRowBody(node, opts) {
                 opts = opts || {};
                 const row = document.createElement('div');
@@ -4350,6 +4780,7 @@ document.head.appendChild(s);})();</script>
                 if (selectedNodeId === node.id) row.classList.add('active');
                 if (multiSelection.has(node.id)) row.classList.add('multi-selected');
                 if (node.visible === false) row.classList.add('hidden-item');
+                if (flagState([node], 'locked') === 'on') row.classList.add('locked-item');
                 row.dataset.nodeId = node.id;
                 row.tabIndex = 0;
                 row.setAttribute('role', 'button');
@@ -4418,6 +4849,7 @@ document.head.appendChild(s);})();</script>
                 }
 
                 if (isFolder) {
+                    row.appendChild(makeLockBtn(node));
                     const chev = document.createElement('i');
                     chev.className = 'fas fa-chevron-right fx-chevron';
                     row.appendChild(chev);
@@ -4434,6 +4866,7 @@ document.head.appendChild(s);})();</script>
                         await persistTreeNow();
                     });
                     row.appendChild(vis);
+                    row.appendChild(makeLockBtn(node));
                 }
 
                 return row;
@@ -4600,8 +5033,16 @@ document.head.appendChild(s);})();</script>
                 row.addEventListener('mouseenter', () => hoverPreviewEnter(node));
                 row.addEventListener('mouseleave', () => hoverPreviewLeave());
 
+                row.addEventListener('mousedown', (e) => {          // a drag attempted outside the default sort order explains itself
+                    if (placesSortMode === 'default' || e.button !== 0 || e.target.closest('.fx-vis')) return;
+                    const sx = e.clientX, sy = e.clientY;
+                    const mv = (ev) => { if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 8) { done(); showToast('Switch sort to Default order to drag items', 'fa-arrow-down-wide-short'); } };
+                    const done = () => { document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', done); };
+                    document.addEventListener('mousemove', mv); document.addEventListener('mouseup', done);
+                });
                 row.addEventListener('dragstart', (e) => {
                     if (!row.draggable) { e.preventDefault(); return; }
+                    if (!guardLocked(node, 'move', true)) { e.preventDefault(); return; }
                     e.stopPropagation();
                     e.dataTransfer.setData('text/plain', node.id);
                     e.dataTransfer.effectAllowed = 'move';
@@ -4675,6 +5116,9 @@ document.head.appendChild(s);})();</script>
                     const _ids = (multiSelection.size > 1 && multiSelection.has(draggedId)) ? Array.from(multiSelection) : [draggedId];
                     const _nodes = _ids.map(i => findNode(i)).filter(n => n && n.id !== node.id && !nodeContains(n, node.id));
                     if (!_nodes.length) { showToast('Cannot move here'); return; }
+                    if (!guardLockedMany(_nodes, 'move')) return;
+                    if (target.type === 'inside' && !guardLocked(node, 'drop into it')) return;
+                    if (target.type !== 'inside') { const _pl = findParent(node.id); if (_pl && _pl.parent && !guardLocked(_pl.parent, 'drop into it')) return; }
                     _nodes.forEach(n => removeNode(n.id));
                     if (target.type === 'inside') {
                         if (!node.children) node.children = [];
@@ -4845,6 +5289,9 @@ document.head.appendChild(s);})();</script>
                 const canGeoJSON = ['placemark', 'path', 'polygon', 'measure', 'measure-area', 'los', 'folder', 'kml'].includes(t);
                 const groups = [];
 
+                // 0 - display and protection (shared with the map, the selection menu and the properties panel)
+                groups.push(flagMenuItems([node]));
+
                 // 1 - open / find
                 groups.push([
                     { label: 'Edit…', icon: 'fa-pen', action: () => openEditorPanel(node) },
@@ -4860,6 +5307,7 @@ document.head.appendChild(s);})();</script>
                 if (isShape && node.meta.points) {
                     tools.push({ label: 'Path profile', icon: 'fa-chart-area', action: () => openProfilePanel(node) });
                     tools.push({ label: 'Reverse direction', icon: 'fa-right-left', action: async () => {
+                        if (!guardLocked(node, 'reverse it')) return;
                         node.meta.points = node.meta.points.slice().reverse();
                         if (node.layer) node.layer.setLatLngs(node.meta.points);
                         renderTree();
@@ -4871,18 +5319,13 @@ document.head.appendChild(s);})();</script>
 
                 // 3 - organise
                 const organise = [];
-                if (node.visible === false) {
-                    organise.push({ label: 'Show', icon: 'fa-eye', action: () => setVisibleMany([node], true) });
-                } else {
-                    organise.push({ label: 'Hide', icon: 'fa-eye-slash', action: () => setVisibleMany([node], false) });
-                }
                 organise.push({ label: 'Move to…', icon: 'fa-folder-tree', action: () => { const px = x, py = y; setTimeout(() => showMoveToMenu(node, px, py), 0); } });
                 organise.push({ label: 'Archive', icon: 'fa-box-archive', action: () => archiveNode(node) });
                 if (isFolder) {
                     organise.push({ label: 'New folder inside…', icon: 'fa-folder-plus', action: () => promptNewFolder(node) });
                     organise.push({ label: 'Import…', icon: 'fa-file-import', action: () => openImportScreen(node.id) });
-                    if (clipboard && clipboard.type === 'placemark') {
-                        organise.push({ label: `Paste "${clipboard.name}" inside`, icon: 'fa-paste', action: () => pastePlacemarkInto(node) });
+                    if (clipboard && clipboard.type === 'nodes') {
+                        organise.push({ label: `Paste ${clipboardLabel()} inside`, icon: 'fa-paste', action: () => pasteClipboardInto(node) });
                     }
                 }
                 groups.push(organise);
@@ -4890,11 +5333,8 @@ document.head.appendChild(s);})();</script>
                 // 4 - clipboard
                 const clip = [];
                 if (isPoint) clip.push({ label: 'Copy coordinates', icon: 'fa-location-dot', action: () => copyCoords(node.meta.lat, node.meta.lng) });
-                if (t === 'placemark') {
-                    clip.push({ label: 'Copy placemark', icon: 'fa-clone', action: () => {
-                        clipboard = { type: 'placemark', meta: JSON.parse(JSON.stringify(node.meta)), name: node.name };
-                        showToast('Placemark copied', 'fa-clone');
-                    }});
+                if (CLIP_TYPES.indexOf(t) >= 0) {
+                    clip.push({ label: t === 'placemark' ? 'Copy placemark' : 'Copy', icon: 'fa-clone', action: () => copyNodesToClipboard([node]) });
                 }
                 if (canGeoJSON) {
                     clip.push({ label: 'Copy as GeoJSON', icon: 'fa-code', action: async () => {
@@ -4913,10 +5353,14 @@ document.head.appendChild(s);})();</script>
                 if (['placemark', 'path', 'polygon', 'measure', 'measure-area', 'folder', 'kml', 'los'].includes(t)) {
                     ioExportMenuItems(node).forEach(it => exp.push(it));
                 }
+                if ((t === 'path' || t === 'measure') && node.meta && node.meta.points && node.meta.points.length >= 2) {
+                    exp.push({ label: 'Export as CSV', icon: 'fa-file-csv', action: () => exportPathCsv(node) });
+                }
                 groups.push(exp);
 
                 // 6 - destructive, always last
                 groups.push([{ label: 'Delete', icon: 'fa-trash', danger: true, action: async () => {
+                    if (!guardLocked(node, 'delete', true)) return;
                     await busyIf([node], 'Deleting…', async () => {
                         await deleteNodeWithChildren(node);
                         renderTree();
@@ -4947,15 +5391,17 @@ document.head.appendChild(s);})();</script>
             }
             function showBulkContextMenu(x, y) {
                 const ids = Array.from(multiSelection);
-                const items = [
+                const selNodes = ids.map(id => findNode(id)).filter(Boolean);
+                const flagItems = flagMenuItems(selNodes);
+                const items = flagItems.concat(flagItems.length ? [{ sep: true }] : []).concat([
                     { label: `Edit ${ids.length} items…`, icon: 'fa-pen', action: () => openBulkEditorForSelection() },
-                    { label: `Export ${ids.length} items…`, icon: 'fa-file-export', action: () => openExportDialog(ids.map(id => findNode(id)).filter(Boolean)) },
-                    { sep: true },
-                    { label: `Hide ${ids.length}`, icon: 'fa-eye-slash', action: () => setVisibleMany(ids.map(id => findNode(id)).filter(Boolean), false) },
-                    { label: `Show ${ids.length}`, icon: 'fa-eye', action: () => setVisibleMany(ids.map(id => findNode(id)).filter(Boolean), true) },
+                    { label: `Export ${ids.length} items…`, icon: 'fa-file-export', action: () => openExportDialog(ids.map(id => findNode(id)).filter(Boolean)) }]);
+                if (selNodes.some(n => CLIP_TYPES.indexOf(n.type) >= 0)) items.push({ label: `Copy ${ids.length} items`, icon: 'fa-clone', action: () => copyNodesToClipboard(selNodes) });
+                items.push(
                     { sep: true },
                     { label: `Delete ${ids.length} items`, icon: 'fa-trash', danger: true, action: async () => {
                         const doomed = ids.map(id => findNode(id)).filter(Boolean);
+                        if (!guardLockedMany(doomed, 'delete')) return;
                         await busyIf(doomed, 'Deleting…', async () => {
                             for (const n of doomed) { if (findNode(n.id)) await deleteNodeWithChildren(n, { quiet: true }); }
                             updateMinimapDots(); updateMapLabels();
@@ -4966,7 +5412,7 @@ document.head.appendChild(s);})();</script>
                         });
                         showToast(`Deleted ${ids.length} item(s)`, 'fa-trash', { action: { label: 'Undo', fn: () => undoTree() } });
                     }}
-                ];
+                );
                 buildContextMenu(x, y, `${ids.length} items selected`, items);
             }
             // One menu for both the ⋯ button in the breadcrumb and a right-click on the panel background.
@@ -4976,8 +5422,8 @@ document.head.appendChild(s);})();</script>
                 const items = [];
                 items.push({ label: folder ? 'New folder here' : 'New folder', icon: 'fa-folder-plus', action: () => promptNewFolder(folder) });
                 items.push({ label: 'Import…', icon: 'fa-file-import', action: () => openImportScreen(parentFolderId) });
-                if (clipboard && clipboard.type === 'placemark') {
-                    items.push({ label: `Paste "${clipboard.name}" here`, icon: 'fa-paste', action: () => pastePlacemarkInto(folder) });
+                if (clipboard && clipboard.type === 'nodes') {
+                    items.push({ label: `Paste ${clipboardLabel()} here`, icon: 'fa-paste', action: () => pasteClipboardInto(folder) });
                 }
                 items.push({ sep: true });
                 const kids = folder ? (folder.children || []) : treeNodes;
@@ -4994,6 +5440,7 @@ document.head.appendChild(s);})();</script>
                 if (folder) {
                     items.push({ sep: true });
                     items.push({ label: 'Delete folder', icon: 'fa-trash', danger: true, action: async () => {
+                        if (!guardLocked(folder, 'delete', true)) return;
                         const _fname = folder.name;
                         await busyIf([folder], 'Deleting…', async () => {
                             await deleteNodeWithChildren(folder);
@@ -5048,28 +5495,51 @@ document.head.appendChild(s);})();</script>
             document.addEventListener('mousedown', (e) => { if (!ctxMenu.contains(e.target)) hideContextMenu(); }, true);
             map.on('mousedown click dragstart zoomstart', hideContextMenu);
 
-            // ==================== PASTE PLACEMARK ====================
-            async function pastePlacemarkInto(folder, atLatLng) {
-                if (!clipboard || clipboard.type !== 'placemark') { showToast('Nothing to paste', 'fa-info-circle'); return; }
-                const meta = JSON.parse(JSON.stringify(clipboard.meta));
-                if (atLatLng) {
-                    meta.lat = atLatLng.lat;
-                    meta.lng = atLatLng.lng;
-                } else if (meta.lat != null) {
-                    meta.lat += 0.0005;
-                    meta.lng += 0.0005;
+            // ==================== COPY / PASTE ====================
+            // Copies keep each item's own position (a paste lands exactly on the original: no offset, no snap), go into the current folder,
+            // keep the name, and are always created unlocked. Supported: placemarks, paths, polygons and measurements.
+            const CLIP_TYPES = ['placemark', 'path', 'polygon', 'measure', 'measure-area'];
+            function clipboardLabel() {
+                const it = clipboard && clipboard.items ? clipboard.items : [];
+                return it.length === 1 ? '\u201c' + it[0].name + '\u201d' : it.length + ' items';
+            }
+            function copyNodesToClipboard(nodes) {
+                const items = zLeavesInOrder(nodes).filter(n => CLIP_TYPES.indexOf(n.type) >= 0 && n.meta).map(n => ({ type: n.type, name: n.name, meta: JSON.parse(JSON.stringify(n.meta)) }));
+                if (!items.length) { showToast('Nothing to copy', 'fa-info-circle'); return false; }
+                clipboard = { type: 'nodes', items, name: items[0].name };
+                showToast(items.length === 1 ? (items[0].type === 'placemark' ? 'Placemark copied' : 'Copied \u201c' + items[0].name + '\u201d') : items.length + ' items copied', 'fa-clone');
+                return true;
+            }
+            function zLeavesInOrder(nodes) {          // the given nodes, folders expanded, in tree order
+                const out = [], seen = new Set();
+                const walk = (n) => { if (!n || seen.has(n)) return; seen.add(n); if (isFolderNode(n)) (n.children || []).forEach(walk); else out.push(n); };
+                const wanted = new Set(nodes);
+                const order = [];
+                (function t(list) { list.forEach(n => { order.push(n); if (n.children) t(n.children); }); })(treeNodes);
+                order.filter(n => wanted.has(n)).forEach(walk);
+                nodes.forEach(walk);
+                return out;
+            }
+            async function pasteClipboardInto(folder, atLatLng) {
+                if (!clipboard || clipboard.type !== 'nodes' || !clipboard.items || !clipboard.items.length) { showToast('Nothing to paste', 'fa-info-circle'); return; }
+                if (folder && !guardLocked(folder, 'paste into it')) return;
+                const made = [];
+                for (const it of clipboard.items) {
+                    const meta = JSON.parse(JSON.stringify(it.meta));
+                    if (it.type === 'placemark' && atLatLng && clipboard.items.length === 1) { meta.lat = atLatLng.lat; meta.lng = atLatLng.lng; }   // only an explicit "paste here"
+                    if (it.type === 'placemark' && (meta.lat == null || meta.lng == null)) continue;
+                    const n = createNode({ type: it.type, name: it.name, meta });         // unlocked, visible, no saved order
+                    buildLayersFor([n]);                                                   // same layers as a loaded item; no snapping
+                    if (folder) { if (!folder.children) folder.children = []; folder.children.push(n); } else treeNodes.push(n);
+                    made.push(n);
                 }
-                const marker = L.marker([meta.lat, meta.lng], { icon: makeLeafletIcon(meta.icon || DEFAULT_ICON, meta.color || '#4d7c0f', meta.ringRadius || 0, meta.ringThickness || 0) });
-                marker.bindPopup(`<b>${escapeHtml(clipboard.name)}</b>${meta.desc ? '<br>' + escapeHtml(meta.desc) : ''}`);
-                drawnItems.addLayer(marker);
-                const n = createNode({ type: 'placemark', name: clipboard.name, layer: marker, meta });
-                bindLayerFocus(n, marker);
-                attachLayerDrag(n, marker);
-                if (folder) addNodeToTree(n, folder); else addNodeToTree(n);
-                focusNodeInTree(n);
-                followInspector(n);
+                if (!made.length) { showToast('Nothing to paste', 'fa-info-circle'); return; }
+                updateMapLabels(); updateMinimapDots();
+                renderTree();
+                focusNodeInTree(made[made.length - 1]);
+                followInspector(made[made.length - 1]);
                 await persistTreeNow();
-                showToast(`Pasted "${clipboard.name}"`, 'fa-paste');
+                showToast(made.length === 1 ? 'Pasted \u201c' + made[0].name + '\u201d' : 'Pasted ' + made.length + ' items', 'fa-paste');
             }
 
             // ==================== VISIBILITY / DELETE / ARCHIVE ====================
@@ -5132,6 +5602,7 @@ document.head.appendChild(s);})();</script>
             }
             async function archiveNode(node) {
                 if (!node) return;
+                if (!guardLocked(node, 'archive', true)) return;
                 await busyIf([node], 'Archiving…', async () => {
                     const loc = findParent(node.id);
                     node.archivedFrom = loc && loc.parent ? loc.parent.id : null;
@@ -6209,6 +6680,7 @@ document.head.appendChild(s);})();</script>
                 editorPanel.classList.remove('open');
                 editorState = null;
                 editorFooter.innerHTML = '';
+                try { syncRaised(); } catch (e) {}
                 setSnapZoneActive(false);
                 if (typeof stopLOSTracking === 'function') stopLOSTracking();
                 profilePanel.classList.remove('editor-open');
@@ -6243,7 +6715,7 @@ document.head.appendChild(s);})();</script>
                 const isLOS = node.type === 'los';
                 const isPlacemark = node.type === 'placemark';
                 const isFolder = node.type === 'folder' || node.type === 'kml';
-                const canEditVertices = isShape && node.meta.points && node.meta.points.length > 0;
+                const canEditVertices = isShape && node.meta.points && node.meta.points.length > 0 && node.locked !== true;   // a locked shape opens read-only (no vertex editor)
 
                 const tabs = [
                     { key: 'properties', icon: 'fa-circle-info', label: 'Properties' },
@@ -6387,6 +6859,7 @@ document.head.appendChild(s);})();</script>
                     delBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
                     delBtn.addEventListener('click', async () => {
                         const node = editorState.node;
+                        if (!guardLocked(node, 'delete', true)) return;
                                                 closeEditorPanel();
                         await busyIf([node], 'Deleting…', async () => {
                             await deleteNodeWithChildren(node);
@@ -6410,6 +6883,68 @@ document.head.appendChild(s);})();</script>
                 if (editorState.activeTab === 'properties') renderPropertiesTab();
                 else if (editorState.activeTab === 'style') renderStyleTab();
                 else if (editorState.activeTab === 'vertices') renderVerticesTab();
+                decorateEditorBody();
+            }
+
+            // ============ DISPLAY AND PROTECTION (properties panel), LOCKED BANNER ============
+            function buildFlagsBlock(node) {
+                const wrap = document.createElement('div');
+                wrap.className = 'ae-flags';
+                wrap.setAttribute('role', 'group');
+                wrap.setAttribute('aria-label', 'Display and protection');
+                const head = document.createElement('div');
+                head.className = 'editor-section-label';
+                head.textContent = 'Display and protection';
+                wrap.appendChild(head);
+                [['visible', 'Visible'], ['labelVisible', 'Marker label'], ['pathLabelVisible', 'Path label'], ['locked', 'Locked']].forEach(([flag, text]) => {
+                    const st = flagState([node], flag);
+                    if (st === 'na') return;
+                    const row = document.createElement('button');
+                    row.type = 'button';
+                    row.className = 'flag-row';
+                    row.dataset.flag = flag; row.dataset.state = st;
+                    row.setAttribute('role', 'switch');
+                    row.setAttribute('aria-checked', st === 'mixed' ? 'mixed' : (st === 'on' ? 'true' : 'false'));
+                    const sw = document.createElement('span'); sw.className = 'flag-switch';
+                    const lab = document.createElement('span'); lab.className = 'flag-label'; lab.textContent = text;
+                    row.appendChild(sw); row.appendChild(lab);
+                    if (st === 'mixed') { const m = document.createElement('span'); m.className = 'flag-mixed'; m.textContent = 'mixed'; row.appendChild(m); }
+                    row.addEventListener('click', () => applyFlag([node], flag, st !== 'on'));
+                    wrap.appendChild(row);
+                });
+                return wrap;
+            }
+            function refreshFlagsBlock() {
+                if (!editorState || editorState.isBulkSelection || !editorState.node) return;
+                const old = editorBody.querySelector('.ae-flags');
+                if (old) old.replaceWith(buildFlagsBlock(editorState.node));
+            }
+            function decorateEditorBody() {
+                if (!editorState || editorState.isBulkSelection || !editorState.node || editorState._iconPicker) return;
+                const node = editorState.node;
+                editorBody.classList.remove('locked-ui');
+                if (editorState.activeTab === 'properties') editorBody.insertBefore(buildFlagsBlock(node), editorBody.firstChild);
+                if (node.locked === true) {
+                    editorBody.classList.add('locked-ui');
+                    const banner = document.createElement('div');
+                    banner.className = 'editor-hint locked-banner';
+                    banner.innerHTML = '<i class="fas fa-lock"></i> ';
+                    banner.appendChild(document.createTextNode('Locked: unlock to edit'));
+                    const flags = editorBody.querySelector('.ae-flags');
+                    if (flags) flags.after(banner); else editorBody.insertBefore(banner, editorBody.firstChild);
+                    editorBody.querySelectorAll('input, textarea, select, button').forEach(el => {
+                        if (el.closest('.ae-flags') || el.classList.contains('copy-btn')) return;
+                        el.disabled = true;
+                    });
+                }
+                if (editorState.activeTab === 'properties' && (node.type === 'path' || node.type === 'measure') && node.meta.points && node.meta.points.length >= 2) {
+                    const b = document.createElement('button');
+                    b.type = 'button'; b.className = 'btn btn-secondary'; b.id = 'ed-export-csv'; b.style.marginTop = '10px';
+                    b.innerHTML = '<i class="fas fa-file-csv"></i> ';
+                    b.appendChild(document.createTextNode('Export as CSV'));
+                    b.addEventListener('click', () => exportPathCsv(node));
+                    editorBody.appendChild(b);
+                }
             }
 
             // ============ BULK STYLE ============
@@ -6660,6 +7195,7 @@ document.head.appendChild(s);})();</script>
 
             async function saveBulkSelection() {
                 if (!editorState || !editorState._bulk) return;
+                if (editorState.selectionIds && !guardLockedMany(editorState.selectionIds.map(id => findNode(id)).filter(Boolean), 'edit')) return;
                 const b = editorState._bulk;
                 const tab = b.tab();
                 const newColor = b.color();
@@ -6874,6 +7410,7 @@ document.head.appendChild(s);})();</script>
             async function saveEditorProperties(opts) {
                 if (!editorState) return;
                 const node = editorState.node;
+                if (node && node.locked === true) return;                  // locked: nothing in the editor may change it
                 const nameEl = editorBody.querySelector('#ed-name');
                 const descEl = editorBody.querySelector('#ed-desc');
                 if (!nameEl || !descEl) return;
@@ -7554,6 +8091,7 @@ document.head.appendChild(s);})();</script>
             async function saveEditorStyle(opts) {
                 if (!editorState || !editorState.node) return;
                 const node = editorState.node;
+                if (node.locked === true) return;
                 const hexEl = editorBody.querySelector('#ed-hex');
                 const colorEl = editorBody.querySelector('#ed-color');
                 const color = (hexEl && hexEl.value) || (colorEl && colorEl.value) || node.meta.color || '#4d7c0f';
@@ -8392,30 +8930,6 @@ document.head.appendChild(s);})();</script>
                 let rows = [];
                 let mapping = { lat: 0, lon: 1, name: -1, desc: -1 };
 
-                function parseDelimited(text, delim) {
-                    const out = []; let row = [], cur = '', inQ = false;
-                    for (let i = 0; i < text.length; i++) {
-                        const ch = text[i];
-                        if (inQ) {
-                            if (ch === '"') { if (text[i+1] === '"') { cur += '"'; i++; } else inQ = false; }
-                            else cur += ch;
-                        } else if (ch === '"' && cur === '') inQ = true;
-                        else if (ch === delim) { row.push(cur.trim()); cur = ''; }
-                        else if (ch === '\n' || ch === '\r') {
-                            if (ch === '\r' && text[i+1] === '\n') i++;
-                            row.push(cur.trim()); out.push(row); row = []; cur = '';
-                        } else cur += ch;
-                    }
-                    row.push(cur.trim()); out.push(row);
-                    return out.filter(r => r.some(c => c !== ''));
-                }
-                function findCol(keywords, exclude = []) {
-                    for (const kw of keywords) {
-                        const idx = headers.findIndex((h, i) => !exclude.includes(i) && h.toLowerCase().includes(kw));
-                        if (idx !== -1) return idx;
-                    }
-                    return -1;
-                }
                 function buildSelectors() {
                     const sample = i => { const r = rows.find(r => (r[i] || '') !== ''); return r ? ' — ' + r[i].substring(0, 20) : ''; };
                     const options = (selected, withNone) =>
@@ -8449,15 +8963,7 @@ document.head.appendChild(s);})();</script>
                     headers = all[0];
                     rows = all.slice(1);
 
-                    let lat = findCol(['latitude', 'lat']);
-                    let lon = findCol(['longitude', 'long', 'lng', 'lon'], [lat]);
-                    if (lat < 0) lat = 0;
-                    if (lon < 0) lon = Math.min(1, headers.length - 1);
-                    let name = findCol(['name', 'tag', 'title', 'label'], [lat, lon]);
-                    if (name < 0) for (let i = 0; i < headers.length; i++) if (i !== lat && i !== lon) { name = i; break; }
-                    let desc = findCol(['desc', 'detail', 'note', 'comment'], [lat, lon, name]);
-                    if (desc < 0) for (let i = 0; i < headers.length; i++) if (i !== lat && i !== lon && i !== name) { desc = i; break; }
-                    mapping = { lat, lon, name, desc };
+                    mapping = sheetAutoMapping(headers);
 
                     mappingPanel.style.display = 'block';
                     buildSelectors();
@@ -8492,17 +8998,7 @@ document.head.appendChild(s);})();</script>
                     if (parent) addNodeToTree(importFolder, parent); else addNodeToTree(importFolder);
 
                     if (isPath) {
-                        const groups = new Map();
-                        const order = [];
-                        let skipped = 0;
-                        rows.forEach((row) => {
-                            const lat = num(row[mapping.lat]);
-                            const lon = num(row[mapping.lon]);
-                            if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) { skipped++; return; }
-                            const key = (mapping.name >= 0 && row[mapping.name]) ? String(row[mapping.name]) : '__all__';
-                            if (!groups.has(key)) { groups.set(key, []); order.push(key); }
-                            groups.get(key).push({ lat, lng: lon, desc: (mapping.desc >= 0 ? (row[mapping.desc] || '') : '') });
-                        });
+                        const { groups, order, skipped } = groupPathRows(rows, mapping);
                         if (order.length === 0) { showToast('No valid coordinates found', 'fa-exclamation-circle'); await deleteNodeWithChildren(importFolder); renderTree(); return; }
                         let pathCount = 0, dropped = 0;
                         order.forEach(key => {
@@ -9390,7 +9886,83 @@ document.head.appendChild(s);})();</script>
                 kmlInput.setAttribute('accept', IO_ACCEPT);
             });
 
+            // Every export starts with the local date and time (no colons, so it is a valid Windows name).
+            /* EXPORT-PURE:START */
+            function exportStamp(d) {
+                const p = (n) => String(n).padStart(2, '0');
+                return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '_' + p(d.getHours()) + '-' + p(d.getMinutes()) + '-' + p(d.getSeconds()) + '_';
+            }
+            function prefixExportName(name, d) { return /^\d{4}-\d\d-\d\d_\d\d-\d\d-\d\d_/.test(name) ? name : exportStamp(d || new Date()) + name; }
+            /* EXPORT-PURE:END */
+            // Path <-> CSV. Same layout the Import > Path screen reads: a header row, then one row per vertex: Latitude, Longitude, Name, Description.
+            // Rows with the same Name become one path (in row order). UTF-8 with a BOM, comma separated, CRLF line ends, up to 8 decimals.
+            /* CSVPATH-PURE:START */
+            function parseDelimited(text, delim) {
+                const out = []; let row = [], cur = '', inQ = false;
+                for (let i = 0; i < text.length; i++) {
+                    const ch = text[i];
+                    if (inQ) {
+                        if (ch === '"') { if (text[i+1] === '"') { cur += '"'; i++; } else inQ = false; }
+                        else cur += ch;
+                    } else if (ch === '"' && cur === '') inQ = true;
+                    else if (ch === delim) { row.push(cur.trim()); cur = ''; }
+                    else if (ch === '\n' || ch === '\r') {
+                        if (ch === '\r' && text[i+1] === '\n') i++;
+                        row.push(cur.trim()); out.push(row); row = []; cur = '';
+                    } else cur += ch;
+                }
+                row.push(cur.trim()); out.push(row);
+                return out.filter(r => r.some(c => c !== ''));
+            }
+            function sheetFindCol(headers, keywords, exclude) {
+                exclude = exclude || [];
+                for (const kw of keywords) {
+                    const idx = headers.findIndex((h, i) => !exclude.includes(i) && h.toLowerCase().includes(kw));
+                    if (idx !== -1) return idx;
+                }
+                return -1;
+            }
+            function sheetAutoMapping(headers) {
+                let lat = sheetFindCol(headers, ['latitude', 'lat']);
+                let lon = sheetFindCol(headers, ['longitude', 'long', 'lng', 'lon'], [lat]);
+                if (lat < 0) lat = 0;
+                if (lon < 0) lon = Math.min(1, headers.length - 1);
+                let name = sheetFindCol(headers, ['name', 'tag', 'title', 'label'], [lat, lon]);
+                if (name < 0) for (let i = 0; i < headers.length; i++) if (i !== lat && i !== lon) { name = i; break; }
+                let desc = sheetFindCol(headers, ['desc', 'detail', 'note', 'comment'], [lat, lon, name]);
+                if (desc < 0) for (let i = 0; i < headers.length; i++) if (i !== lat && i !== lon && i !== name) { desc = i; break; }
+                return { lat, lon, name, desc };
+            }
+            function sheetNum(v) { return parseFloat(String(v || '').replace(/[\u00b0,\s]/g, '')); }
+            function groupPathRows(rows, mapping) {
+                const groups = new Map(), order = [];
+                let skipped = 0;
+                rows.forEach((row) => {
+                    const lat = sheetNum(row[mapping.lat]);
+                    const lon = sheetNum(row[mapping.lon]);
+                    if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) { skipped++; return; }
+                    const key = (mapping.name >= 0 && row[mapping.name]) ? String(row[mapping.name]) : '__all__';
+                    if (!groups.has(key)) { groups.set(key, []); order.push(key); }
+                    groups.get(key).push({ lat, lng: lon, desc: (mapping.desc >= 0 ? (row[mapping.desc] || '') : '') });
+                });
+                return { groups, order, skipped };
+            }
+            function csvField(v) { const s = String(v == null ? '' : v); return /[",\r\n\t]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+            function csvCoord(v) { const s = (+v).toFixed(8).replace(/0+$/, '').replace(/\.$/, ''); return s === '-0' ? '0' : s; }
+            function pathToCsv(name, desc, points) {
+                const rows = ['Latitude,Longitude,Name,Description'];
+                const nm = csvField(name || 'Path'), ds = csvField(desc || '');
+                points.forEach(p => rows.push(csvCoord(p[0]) + ',' + csvCoord(p[1]) + ',' + nm + ',' + ds));
+                return '\ufeff' + rows.join('\r\n');
+            }
+            /* CSVPATH-PURE:END */
+            function exportPathCsv(node) {
+                if (!node || !node.meta || !node.meta.points || node.meta.points.length < 2) { showToast('Nothing to export', 'fa-info-circle'); return; }
+                downloadFile(pathToCsv(node.name, node.meta.desc || '', node.meta.points), ioSafeName(node.name) + '.csv', 'text/csv;charset=utf-8');
+                showToast('Path exported as CSV', 'fa-file-csv');
+            }
             function downloadFile(content, filename, mime) {
+                filename = prefixExportName(filename, new Date());
                 const blob = new Blob([content], { type: mime });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -10280,20 +10852,20 @@ document.head.appendChild(s);})();</script>
                     else if (e.key === 'c' || e.key === 'C') copyMouseCoords();
                 }
                 if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !e.target.matches('input, textarea')) {
-                    if (selectedNodeId) {
-                        const node = findNode(selectedNodeId);
-                        if (node && node.type === 'placemark') {
-                            clipboard = { type: 'placemark', meta: JSON.parse(JSON.stringify(node.meta)), name: node.name };
-                            showToast('Placemark copied', 'fa-clone');
-                        }
-                    }
+                    const ids = multiSelection.size > 0 ? Array.from(multiSelection) : (selectedNodeId ? [selectedNodeId] : []);
+                    const nodes = ids.map(id => findNode(id)).filter(n => n && (CLIP_TYPES.indexOf(n.type) >= 0 || isFolderNode(n)));
+                    if (nodes.length) copyNodesToClipboard(nodes);
                 }
                 if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !e.target.matches('input, textarea') && !(editorState && editorState._iconPicker)) {
-                    if (clipboard && clipboard.type === 'placemark') {
-                        const target = mouseTracker.latlng || null;
+                    if (clipboard && clipboard.type === 'nodes') {
                         const folder = currentFolderId ? findNode(currentFolderId) : null;
-                        pastePlacemarkInto(folder, target);
+                        pasteClipboardInto(folder);                  // exactly where the original was
                     }
+                }
+                // Back / Up in the Places list. Alt+Up on a focused row is "move up" (reorder), so it is left to the row.
+                if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && !_typing && !e.defaultPrevented && activeSection === 'places' && placesTab === 'places' && subrail.classList.contains('open')) {
+                    if (e.key === 'ArrowLeft') { e.preventDefault(); navGoBack(); }
+                    else if (e.key === 'ArrowUp' && !(e.target.closest && e.target.closest('.fx-row'))) { e.preventDefault(); navGoUp(); }
                 }
                 if ((e.key === 'Enter') && drawState && !e.target.matches('input, textarea')) {
                     const t = drawState.type;
@@ -11177,6 +11749,7 @@ document.head.appendChild(s);})();</script>
                 return {
                     id: n.id, name: n.name, type: n.type,
                     visible: n.visible !== false, expanded: n.expanded !== false,
+                    labelVisible: n.labelVisible !== false, pathLabelVisible: n.pathLabelVisible !== false, locked: n.locked === true, z: hasZ(n) ? n.z : undefined,
                     archivedFrom: n.archivedFrom || null,
                     meta: n.meta || {},
                     children: (n.children || []).map(_plainForUndo)
@@ -11204,7 +11777,7 @@ document.head.appendChild(s);})();</script>
             function _describeChange(a, b) {
                 if (!a || !b) return 'Changed places';
                 const A = _flattenSnap(a), B = _flattenSnap(b);
-                const added = [], removed = [], archived = [], restored = [], renamed = [], hidden = [], shown = [], moved = [], reordered = [], edited = [];
+                const added = [], removed = [], archived = [], restored = [], renamed = [], hidden = [], shown = [], moved = [], reordered = [], edited = [], labelsChanged = [], locked = [], unlocked = [], zChanged = [];
                 B.forEach((v, id) => { if (!A.has(id)) added.push(v); });
                 A.forEach((v, id) => { if (!B.has(id)) removed.push(v); });
                 B.forEach((v, id) => {
@@ -11216,6 +11789,9 @@ document.head.appendChild(s);})();</script>
                     if (ov && !nv) hidden.push(v); else if (!ov && nv) shown.push(v);
                     if (o.parent !== v.parent) moved.push(v); else if (o.idx !== v.idx) reordered.push(v);
                     if (o.metaStr !== v.metaStr) edited.push({ o, v });
+                    if ((o.n.labelVisible !== false) !== (v.n.labelVisible !== false) || (o.n.pathLabelVisible !== false) !== (v.n.pathLabelVisible !== false)) labelsChanged.push(v);
+                    if ((o.n.locked === true) !== (v.n.locked === true)) (v.n.locked === true ? locked : unlocked).push(v);
+                    if (o.n.z !== v.n.z) zChanged.push(v);
                 });
                 const roots = (list) => { const ids = new Set(list.map(y => y.n.id)); return list.filter(x => !ids.has(x.parent)); };
                 const q = (v) => '“' + _short(v.n.name) + '”';
@@ -11253,6 +11829,10 @@ document.head.appendChild(s);})();</script>
                         else labels.push('Edited ' + q(edited[0].v));
                     } else labels.push(many(edited, 'Edited'));
                 }
+                if (labelsChanged.length) labels.push('Changed labels on ' + labelsChanged.length + (labelsChanged.length === 1 ? ' item' : ' items'));
+                if (locked.length) labels.push(locked.length === 1 ? 'Locked ' + q(locked[0]) : many(locked, 'Locked'));
+                if (unlocked.length) labels.push(unlocked.length === 1 ? 'Unlocked ' + q(unlocked[0]) : many(unlocked, 'Unlocked'));
+                if (zChanged.length) labels.push('Changed stacking order of ' + zChanged.length + (zChanged.length === 1 ? ' item' : ' items'));
                 if (!labels.length) return 'Changed places';
                 if (labels.length === 1) return labels[0];
                 if (labels.length === 2) return labels.join(' · ');
@@ -11493,6 +12073,8 @@ document.head.appendChild(s);})();</script>
                 return false;
             }
             function moveNodeToFolder(node, folder) {
+                if (!guardLocked(node, 'move', true)) return false;
+                if (folder && !guardLocked(folder, 'move into it')) return false;
                 if (folder && (folder.id === node.id || nodeContains(node, folder.id))) return false;
                 const removed = removeNode(node.id);
                 if (!removed) return false;
@@ -11501,6 +12083,7 @@ document.head.appendChild(s);})();</script>
                 return true;
             }
             function reorderNode(node, delta) {
+                if (!guardLocked(node, 'reorder', true)) return false;
                 const loc = findParent(node.id);
                 if (!loc) return false;
                 const i = loc.list.findIndex(n => n.id === node.id), j = i + delta;
@@ -11565,7 +12148,7 @@ document.head.appendChild(s);})();</script>
                     if (node) { e.preventDefault(); const rc = row.getBoundingClientRect(); showMoveToMenu(node, rc.left + 24, rc.bottom); }
                 }
                 else if ((e.key === 'v' || e.key === 'V') && !e.ctrlKey && !e.metaKey) {
-                    const eye = row.querySelector('.fx-vis');
+                    const eye = row.querySelector('.fx-vis:not(.fx-lock)');
                     if (eye) { e.preventDefault(); eye.click(); refocus(); }
                 }
             });
@@ -11765,6 +12348,7 @@ document.head.appendChild(s);})();</script>
                 if (editorState && editorState.node === node) openEditorPanel(node);
             }
             function startInlineRename(node) {
+                if (!guardLocked(node, 'rename')) return;
                 const loc = findParent(node.id);
                 const parentId = loc && loc.parent ? loc.parent.id : null;
                 const placesBtn = document.querySelector('.rail-btn[data-subrail="places"]');
@@ -12502,7 +13086,7 @@ document.head.appendChild(s);})();</script>
                 try { new PerformanceObserver(l => { PERF.long += l.getEntries().length; }).observe({ entryTypes: ['longtask'] }); } catch (e) {}
             })();
             let _mmT = null;
-            function renderTree() { const t = performance.now(); renderTree0(); PERF.renderMs = Math.round(performance.now() - t); clearTimeout(_mmT); _mmT = setTimeout(updateMinimapDots, 150); }
+            function renderTree() { const t = performance.now(); navObserve(navHist, currentFolderId); renderTree0(); try { syncRaised(); } catch (e) {} PERF.renderMs = Math.round(performance.now() - t); clearTimeout(_mmT); _mmT = setTimeout(updateMinimapDots, 150); }
             function rebuildLayers() { const t = performance.now(); rebuildLayers0(); PERF.rebuildMs = Math.round(performance.now() - t); }
             async function _doPersistTree() { const t = performance.now(); const r = await _doPersistTree0(); PERF.persistMs = Math.round(performance.now() - t); return r; }
             function perfStats() {
@@ -12880,8 +13464,23 @@ document.head.appendChild(s);})();</script>
             // Source of truth for the in-app changelog page (Settings > About > Changelog, route #changelog). Newest entry first.
             // Rules: skills/changelog-keeper/SKILL.md. Never edit, reorder or delete past entries. APP_VERSION must equal CHANGELOG[0].v.
             /* CHANGELOG:START */
-            const APP_VERSION = "1.4.0";
+            const APP_VERSION = "1.5.0";
             const CHANGELOG = [
+                { v: "1.5.0", date: "2026-11-26", changes: [
+                    { t: "added", text: "Lock items from editing: list, map right-click and Properties" },
+                    { t: "added", text: "Show or hide marker labels and path labels, per item or folder" },
+                    { t: "added", text: "Bring to front and Send to back for items and folders" },
+                    { t: "added", text: "Marker labels avoid each other, with thin leader lines" },
+                    { t: "added", text: "Back and Up buttons for folders (Alt+Left, Alt+Up)" },
+                    { t: "added", text: "Export a path as CSV in the path import format" },
+                    { t: "added", text: "Copy and paste paths and polygons, with several items at once" },
+                    { t: "changed", text: "Exported file names start with the date and time" },
+                    { t: "changed", text: "Intro-skip options are removed from the address bar after use" },
+                    { t: "fixed", text: "Dropping on a parent folder name now moves the item", cause: "The drop check refused every folder above the item" },
+                    { t: "fixed", text: "Pasted items land exactly where the original was", cause: "Copies were offset or put at the mouse position" },
+                    { t: "fixed", text: "The side-panel scrollbar no longer sits under the resize handle", cause: "The handle overlapped the scrollbar on the panel edge" },
+                    { t: "removed", text: "The build-time custom/services.js file; use the Layers panel" }
+                ]},
                 { v: "1.4.0", date: "2026-11-25", changes: [
                     { t: "added", text: "Maximum zoom level setting under Settings > Map display" },
                     { t: "added", text: "Add, edit and delete custom map services in the Layers panel" },
@@ -13023,8 +13622,7 @@ document.head.appendChild(s);})();</script>
             // ==================== INIT ====================
             (async function init() {
                 await loadSettings();
-                try { await window.__aeCustomReady; } catch (e) {}
-                registerCustomServices();                                   // custom map services added at build time (if any)
+                registerCustomServices();                                   // custom map services saved in this browser
                 applyTheme();
                 applyProfileHeight();
 
